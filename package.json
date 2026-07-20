@@ -1,5 +1,5 @@
 {
-  "name": "site-creator-vinext-starter",
+  "name": "lingjing-sentinel",
   "version": "0.1.0",
   "private": true,
   "engines": {
@@ -18,7 +18,8 @@
     "next": "16.2.6",
     "react": "19.2.6",
     "react-dom": "19.2.6",
-    "react-loading-skeleton": "3.5.0"
+    "react-loading-skeleton": "3.5.0",
+    "three": "^0.185.1"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.37.1",

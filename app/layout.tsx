@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./map-enhancements.css";
+import "./algorithm.css";
+import "./modules.css";
 
 export const metadata: Metadata = {
   title: "灵境哨兵｜城市应急智能决策平台",
