@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import CityScene, { type SceneAsset } from "./CityScene";
 import InteractiveModules, { type ModuleId } from "./InteractiveModules";
 import DemoProjectEntry from "./DemoProjectEntry";
+import SmartCityDashboard from "./SmartCityDashboard";
 import { analyzeAccidentImage, computeAStarRoute, computeGaussianPlume, type VisionResult } from "./decision-engine";
 
 const departments = [
@@ -45,7 +46,7 @@ function AuthPortal({onAuthenticated}:{onAuthenticated:(session:AuthSession,reme
   const [submitting,setSubmitting]=useState(false);
   const [message,setMessage]=useState("");
   const [login,setLogin]=useState({username:"",password:""});
-  const [register,setRegister]=useState({displayName:"",department:"北京市应急指挥中心",username:"",password:"",confirm:"",agreement:true});
+  const [register,setRegister]=useState({displayName:"",department:"北京市智慧城市运行中心",username:"",password:"",confirm:"",agreement:true});
 
   const switchMode=(next:"login"|"register")=>{setMode(next);setMessage("");setShowPassword(false)};
   const readUsers=():LocalUser[]=>{try{return JSON.parse(localStorage.getItem("lingjing-users")||"[]")}catch{return[]}};
@@ -56,7 +57,7 @@ function AuthPortal({onAuthenticated}:{onAuthenticated:(session:AuthSession,reme
     setSubmitting(true);
     try{
       const normalized=login.username.trim().toLowerCase();
-      if(normalized==="admin"&&login.password==="123456"){onAuthenticated({username:"admin",displayName:"应急指挥员"},remember);return}
+      if(normalized==="admin"&&login.password==="123456"){onAuthenticated({username:"admin",displayName:"城市运行管理员"},remember);return}
       const passwordHash=await hashPassword(login.password),user=readUsers().find(item=>item.username.toLowerCase()===normalized&&item.passwordHash===passwordHash);
       if(!user){setMessage("账号或密码不正确，可使用演示账号登录");return}
       onAuthenticated({username:user.username,displayName:user.displayName},remember);
@@ -83,28 +84,28 @@ function AuthPortal({onAuthenticated}:{onAuthenticated:(session:AuthSession,reme
 
   return <main className="auth-shell">
     <div className="auth-grid"/><div className="auth-glow auth-glow-a"/><div className="auth-glow auth-glow-b"/>
-    <header className="auth-topbar"><div className="auth-brand-mark"><i/><i/><i/></div><div><b>京域智城</b><span>BEIJING SMART CITY · LINGJING SENTINEL</span></div><em><i/>智慧城市三维决策大屏</em></header>
+    <header className="auth-topbar"><div className="auth-brand-mark"><i/><i/><i/></div><div><b>京域智城</b><span>BEIJING SMART CITY DIGITAL TWIN</span></div><em><i/>北京市城市运行管理中心</em></header>
     <section className="auth-layout">
       <div className="auth-hero">
-        <div className="auth-kicker"><i/>AI 智慧城市 3D 数字底座</div>
-        <h1>看见城市运行<br/><span>预见风险抵达</span></h1>
-        <p>融合北京真实建筑与道路、城市实时数据、人工智能风险推演和多智能体协同，在同一块智慧城市大屏完成感知、分析、决策与演示。</p>
-        <div className="auth-metrics"><div><strong>6,016</strong><span>真实建筑模型</span></div><div><strong>674</strong><span>OSM 道路数据</span></div><div><strong>4</strong><span>协同智能体</span></div></div>
+        <div className="auth-kicker"><i/>北京城市数字孪生统一入口</div>
+        <h1>一屏感知北京<br/><span>让城市实时可见</span></h1>
+        <p>汇聚城市治理、交通运行、能源环保与公共安全数据，构建可旋转、可交互、可推演的北京智慧城市三维运行中心。</p>
+        <div className="auth-metrics"><div><strong>6,016</strong><span>三维建筑模型</span></div><div><strong>86.4万</strong><span>城市感知节点</span></div><div><strong>99.97%</strong><span>设备在线率</span></div></div>
         <div className="auth-radar" aria-hidden="true"><i/><i/><i/><span/><b>AI</b><em>REAL-TIME<br/>SITUATION</em></div>
       </div>
       <section className="auth-card" aria-label={mode==="login"?"登录":"注册"}>
         <div className="auth-card-line"/>
         <div className="auth-tabs"><button className={mode==="login"?"active":""} onClick={()=>switchMode("login")}>账号登录</button><button className={mode==="register"?"active":""} onClick={()=>switchMode("register")}>用户注册</button></div>
-        <div className="auth-heading"><span>{mode==="login"?"SECURE ACCESS":"CREATE ACCOUNT"}</span><h2>{mode==="login"?"欢迎进入指挥中心":"申请系统访问权限"}</h2><p>{mode==="login"?"请输入您的指挥系统账号":"注册信息仅保存在当前设备，用于离线演示"}</p></div>
+        <div className="auth-heading"><span>{mode==="login"?"CITY OPERATION ACCESS":"CREATE CITY ACCOUNT"}</span><h2>{mode==="login"?"进入智慧城市运行中心":"注册城市运行账号"}</h2><p>{mode==="login"?"登录后首先进入北京智慧城市 3D 大屏":"注册信息仅保存在当前设备，用于比赛演示"}</p></div>
         {mode==="login"?<form onSubmit={submitLogin}>
-          <label><span>登录账号</span><div className="auth-input"><i>指</i><input autoFocus autoComplete="username" value={login.username} onChange={e=>setLogin({...login,username:e.target.value})} placeholder="请输入账号"/></div></label>
+          <label><span>城市运行账号</span><div className="auth-input"><i>城</i><input autoFocus autoComplete="username" value={login.username} onChange={e=>setLogin({...login,username:e.target.value})} placeholder="请输入城市运行账号"/></div></label>
           <label><span>登录密码</span><div className="auth-input"><i>密</i><input type={showPassword?"text":"password"} autoComplete="current-password" value={login.password} onChange={e=>setLogin({...login,password:e.target.value})} placeholder="请输入密码"/><button type="button" onClick={()=>setShowPassword(value=>!value)}>{showPassword?"隐藏":"显示"}</button></div></label>
           <div className="auth-options"><label><input type="checkbox" checked={remember} onChange={e=>setRemember(e.target.checked)}/><i/>保持登录</label><button type="button" onClick={()=>setMessage("演示账号：admin　密码：123456")}>忘记密码？</button></div>
           {message&&<div className={`auth-message ${message.includes("成功")?"success":""}`}>{message}</div>}
-          <button className="auth-submit" disabled={submitting}>{submitting?"身份校验中…":"进入指挥系统"}<span>→</span></button>
+          <button className="auth-submit" disabled={submitting}>{submitting?"身份校验中…":"进入智慧城市大屏"}<span>→</span></button>
           <button className="auth-demo" type="button" onClick={()=>{setLogin({username:"admin",password:"123456"});setMessage("已填入演示账号，点击上方按钮进入系统")}}>一键填入演示账号 <b>admin / 123456</b></button>
         </form>:<form onSubmit={submitRegister}>
-          <div className="auth-form-grid"><label><span>姓名</span><div className="auth-input"><i>名</i><input autoFocus value={register.displayName} onChange={e=>setRegister({...register,displayName:e.target.value})} placeholder="请输入真实姓名"/></div></label><label><span>所属单位</span><div className="auth-input"><i>部</i><select value={register.department} onChange={e=>setRegister({...register,department:e.target.value})}><option>北京市应急指挥中心</option><option>消防救援部门</option><option>交通协调部门</option><option>医疗保障部门</option><option>教育疏散部门</option></select></div></label></div>
+          <div className="auth-form-grid"><label><span>姓名</span><div className="auth-input"><i>名</i><input autoFocus value={register.displayName} onChange={e=>setRegister({...register,displayName:e.target.value})} placeholder="请输入真实姓名"/></div></label><label><span>所属单位</span><div className="auth-input"><i>部</i><select value={register.department} onChange={e=>setRegister({...register,department:e.target.value})}><option>北京市智慧城市运行中心</option><option>城市管理部门</option><option>交通运行部门</option><option>生态环境部门</option><option>公共安全与应急部门</option></select></div></label></div>
           <label><span>登录账号</span><div className="auth-input"><i>指</i><input autoComplete="username" value={register.username} onChange={e=>setRegister({...register,username:e.target.value})} placeholder="3–20 位字母或数字"/></div></label>
           <div className="auth-form-grid"><label><span>设置密码</span><div className="auth-input"><i>密</i><input type={showPassword?"text":"password"} autoComplete="new-password" value={register.password} onChange={e=>setRegister({...register,password:e.target.value})} placeholder="至少 6 位"/></div></label><label><span>确认密码</span><div className="auth-input"><i>验</i><input type={showPassword?"text":"password"} autoComplete="new-password" value={register.confirm} onChange={e=>setRegister({...register,confirm:e.target.value})} placeholder="再次输入"/></div></label></div>
           <div className="auth-options register"><label><input type="checkbox" checked={register.agreement} onChange={e=>setRegister({...register,agreement:e.target.checked})}/><i/>同意本地演示环境使用说明</label><button type="button" onClick={()=>setShowPassword(value=>!value)}>{showPassword?"隐藏密码":"显示密码"}</button></div>
@@ -114,13 +115,14 @@ function AuthPortal({onAuthenticated}:{onAuthenticated:(session:AuthSession,reme
         <footer className="auth-card-footer"><span><i/>SHA-256 LOCAL HASH</span><em>演示环境 · 数据仅存本机</em></footer>
       </section>
     </section>
-    <footer className="auth-footer"><span>© 2026 京域智城 × 灵境哨兵联合实验室</span><span>系统状态 <i/> 正常　|　比赛演示版 v4.0.0</span></footer>
+    <footer className="auth-footer"><span>© 2026 京域智城 · 北京智慧城市创新实验室</span><span>城市数据链路 <i/> 正常　|　比赛演示版 v4.1.0</span></footer>
   </main>;
 }
 
 export default function Home() {
   const [authChecked,setAuthChecked]=useState(false);
   const [currentUser,setCurrentUser]=useState<AuthSession|null>(null);
+  const [platformView,setPlatformView]=useState<"city"|"emergency">("city");
   const [demoEntryOpen,setDemoEntryOpen]=useState(false);
   const [activeModule,setActiveModule]=useState<ModuleId>("overview");
   const [accountMenuOpen,setAccountMenuOpen]=useState(false);
@@ -262,17 +264,18 @@ export default function Home() {
   };
 
   const toggleFullscreen=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();setSystemNotice(document.fullscreenElement?"已进入全屏演示":"已退出全屏演示")}catch{setSystemNotice("当前浏览器未允许全屏，请使用 F11")}};
-  const logout=()=>{if((scenarioStatus==="playing"||scenarioStatus==="paused")&&!window.confirm("当前推演尚未结束，退出将中止本次演示。确定退出吗？"))return;localStorage.removeItem("lingjing-session");sessionStorage.removeItem("lingjing-session");setAccountMenuOpen(false);setDemoEntryOpen(false);setActiveModule("overview");setSceneStatus("loading");setCurrentUser(null)};
+  const logout=()=>{if(platformView==="emergency"&&(scenarioStatus==="playing"||scenarioStatus==="paused")&&!window.confirm("当前推演尚未结束，退出将中止本次演示。确定退出吗？"))return;localStorage.removeItem("lingjing-session");sessionStorage.removeItem("lingjing-session");setAccountMenuOpen(false);setDemoEntryOpen(false);setActiveModule("overview");setSceneStatus("loading");setPlatformView("city");setCurrentUser(null)};
 
   if(!authChecked)return <main className="auth-boot"><div className="auth-brand-mark"><i/><i/><i/></div><span>安全环境初始化中</span></main>;
   if(!currentUser)return <AuthPortal onAuthenticated={handleAuthenticated}/>;
+  if(platformView==="city")return <SmartCityDashboard displayName={currentUser.displayName} onLogout={logout} onOpenDemo={()=>{setDemoEntryOpen(true);setPlatformView("emergency")}}/>;
 
   return (
     <main className="shell">
       <header className="topbar">
         <div className="brand-mark"><i /><i /><i /></div>
         <div className="brand"><b>京域智城</b><span>北京智慧城市 3D 大屏 · SMART CITY DIGITAL TWIN</span></div>
-        <nav aria-label="主功能导航">{navigation.map(item=><button key={item.id} className={activeModule===item.id&&!demoEntryOpen?"active":""} aria-current={activeModule===item.id&&!demoEntryOpen?"page":undefined} onClick={()=>{setDemoEntryOpen(false);setActiveModule(item.id);setAccountMenuOpen(false)}}>{item.label}</button>)}<button className={`demo-nav ${demoEntryOpen?"active":""}`} onClick={()=>{setActiveModule("overview");setDemoEntryOpen(true);setAccountMenuOpen(false)}}>演示项目</button></nav>
+        <nav aria-label="主功能导航">{navigation.map(item=><button key={item.id} className={activeModule===item.id&&!demoEntryOpen?"active":""} aria-current={activeModule===item.id&&!demoEntryOpen?"page":undefined} onClick={()=>{setDemoEntryOpen(false);setActiveModule(item.id);setAccountMenuOpen(false)}}>{item.label}</button>)}<button className="demo-nav" onClick={()=>{setDemoEntryOpen(false);setPlatformView("city");setAccountMenuOpen(false)}}>返回智慧城市</button></nav>
         <div className="status"><span className="live-dot" />系统在线 <em>{currentUser.displayName}</em><button className={`avatar ${accountMenuOpen?"open":""}`} onClick={()=>setAccountMenuOpen(value=>!value)} title="打开账号菜单" aria-label="打开账号菜单" aria-expanded={accountMenuOpen} aria-haspopup="menu" aria-controls="account-menu">{currentUser.displayName.slice(0,1)}</button>{accountMenuOpen&&<div className="account-menu" id="account-menu" role="menu"><header><i>{currentUser.displayName.slice(0,1)}</i><div><strong>{currentUser.displayName}</strong><span>{currentUser.username} · 应急指挥中心</span></div></header><button onClick={toggleFullscreen}><span>⛶ 全屏演示</span><b>{typeof document!=="undefined"&&document.fullscreenElement?"退出":"进入"}</b></button><button onClick={()=>{setDirectorMode(value=>!value);setSystemNotice(directorMode?"导演视角已关闭":"导演视角已开启")}}><span>◉ 导演视角</span><b>{directorMode?"开启":"关闭"}</b></button><button onClick={()=>setSystemNotice("快捷键：1–4 切换模块　空格暂停/继续　→ 下一阶段　Esc 返回")}><span>? 演示快捷键</span><b>查看</b></button><button onClick={()=>setSystemNotice(sceneStatus==="ready"?"系统自检通过：真实地图、路网、AI 模型和调度模块均已就绪":sceneStatus==="loading"?"系统自检进行中：真实路网仍在加载":"系统自检警告：真实路网已启用内置降级路线")}><span>✓ 演示自检</span><b>{sceneStatus==="ready"?"通过":sceneStatus==="loading"?"检测中":"降级"}</b></button><button onClick={()=>{setNightMode(value=>!value);setSystemNotice(nightMode?"已切换为白天态势":"已切换为夜间态势")}}><span>◐ 显示模式</span><b>{nightMode?"夜间":"白天"}</b></button><button onClick={()=>{setBuildingLights(value=>!value);setSystemNotice(buildingLights?"已关闭楼宇灯光":"已开启楼宇灯光")}}><span>✦ 楼宇灯光</span><b>{buildingLights?"开启":"关闭"}</b></button><button onClick={()=>{setActiveModule("resources");setAccountMenuOpen(false)}}><span>⌘ 快速调度</span><b>进入</b></button><button className="logout" onClick={logout}><span>↪ 退出登录</span><b>EXIT</b></button></div>}</div>
       </header>
 
