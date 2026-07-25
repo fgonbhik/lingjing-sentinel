@@ -1,8 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import CityScene, { type SceneAsset } from "./CityScene";
-import { computeGaussianPlume } from "./decision-engine";
+import { useState } from "react";
+import SmartCityScene, { type SmartAsset } from "./SmartCityScene";
 
 type Props = {
   displayName: string;
@@ -33,9 +32,8 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
   const [autoTour, setAutoTour] = useState(false);
   const [topView, setTopView] = useState(false);
   const [trafficDensity, setTrafficDensity] = useState(36);
-  const [selectedAsset, setSelectedAsset] = useState<SceneAsset | null>(null);
+  const [selectedAsset, setSelectedAsset] = useState<SmartAsset | null>(null);
   const [sceneStatus, setSceneStatus] = useState<"loading" | "ready" | "degraded">("loading");
-  const plume = useMemo(() => computeGaussianPlume(1, 3.4), []);
 
   const switchSection = (next: string) => {
     if (next === "演示项目") {
@@ -89,7 +87,7 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
         <section className="smart-map-panel">
           <header><div><i />{section} · 北京核心区三维数字孪生</div><span>{sceneStatus === "loading" ? "正在加载城市模型" : sceneStatus === "degraded" ? "降级数据模式" : "6,016 栋建筑 · 674 段道路 · LIVE"}</span></header>
           <div className="smart-map">
-            <CityScene running={true} blocked={false} blockedRoadId={null} showRisk={false} topView={topView} nightMode={nightMode} buildingLights={buildingLights} autoTour={autoTour} suspended={false} scenarioPhase={0} scenarioTime={0} trafficDensity={trafficDensity} onSelect={setSelectedAsset} onSceneStatus={setSceneStatus} plume={plume} />
+            <SmartCityScene topView={topView} nightMode={nightMode} buildingLights={buildingLights} autoTour={autoTour} trafficDensity={trafficDensity} onSelect={setSelectedAsset} onSceneStatus={setSceneStatus} />
             <div className="smart-map-tools">
               <button onClick={() => setTopView((value) => !value)}>◈ {topView ? "自由三维" : "垂直俯视"}</button>
               <button onClick={() => setNightMode((value) => !value)}>{nightMode ? "☀ 白天" : "☾ 夜间"}</button>
@@ -97,7 +95,7 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
               <button className={autoTour ? "on" : ""} onClick={() => setAutoTour((value) => !value)}>{autoTour ? "■ 停止巡航" : "▶ 自动巡航"}</button>
               <button onClick={() => setTrafficDensity((value) => value === 18 ? 36 : value === 36 ? 54 : 18)}>车流 {trafficDensity}</button>
             </div>
-            <div className="smart-map-zoom"><button onClick={() => window.dispatchEvent(new CustomEvent("city-camera", { detail: "zoomIn" }))}>＋</button><button onClick={() => window.dispatchEvent(new CustomEvent("city-camera", { detail: "zoomOut" }))}>−</button></div>
+            <div className="smart-map-zoom"><button onClick={() => window.dispatchEvent(new CustomEvent("smart-city-camera", { detail: "zoomIn" }))}>＋</button><button onClick={() => window.dispatchEvent(new CustomEvent("smart-city-camera", { detail: "zoomOut" }))}>−</button></div>
             <div className="smart-compass">N<i /></div>
             <div className="smart-map-caption"><span>39°54′27″N　116°27′07″E</span><b>BEIJING · REAL-WORLD DIGITAL TWIN</b></div>
             {selectedAsset && <article className="smart-asset"><button onClick={() => setSelectedAsset(null)}>×</button><span>{selectedAsset.category}</span><strong>{selectedAsset.label}</strong><p>{selectedAsset.details}</p><em>{selectedAsset.meta}</em></article>}
@@ -112,7 +110,7 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
           </div>
           <div className="smart-panel district">
             <header><span>04</span><b>城区发展指数</b><em>DISTRICT DATA</em></header>
-            {districts.map(([name, score, delta], index) => <button key={name} onClick={() => { setSection(name); window.dispatchEvent(new CustomEvent("city-camera", { detail: index % 2 ? "zoomIn" : "reset" })); }}><i>{String(index + 1).padStart(2, "0")}</i><span>{name}<em><b style={{ width: `${Number(score)}%` }} /></em></span><strong>{score}</strong><small>{delta}</small></button>)}
+            {districts.map(([name, score,delta], index) => <button key={name} onClick={() => { setSection(name); window.dispatchEvent(new CustomEvent("smart-city-camera", { detail: index % 2 ? "zoomIn" : "reset" })); }}><i>{String(index + 1).padStart(2, "0")}</i><span>{name}<em><b style={{ width: `${Number(score)}%` }} /></em></span><strong>{score}</strong><small>{delta}</small></button>)}
           </div>
           <button className="smart-demo-card" onClick={onOpenDemo}><span>FEATURED AI DEMO</span><strong>危化品运输事故<br />全链路智能处置</strong><p>图片识别 · 风险扩散 · 路径重规划 · 多智能体协同</p><em>进入演示项目 →</em></button>
         </aside>
