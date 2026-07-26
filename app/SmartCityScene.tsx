@@ -30,6 +30,25 @@ type Building = {
   core?: boolean;
 };
 
+type CameraCommand =
+  | "zoomIn"
+  | "zoomOut"
+  | "reset"
+  | {
+      action: "view" | "focus";
+      view?: keyof typeof viewPresets;
+      position?: [number, number, number];
+      target?: [number, number, number];
+    };
+
+const viewPresets = {
+  panorama: { position: [118, 88, 128], target: [0, 13, 0] },
+  cbd: { position: [54, 48, 63], target: [9, 15, 4] },
+  axis: { position: [2, 59, 148], target: [0, 10, -4] },
+  top: { position: [0, 190, 0.1], target: [0, 0, 0] },
+  horizon: { position: [158, 39, 2], target: [0, 16, 0] },
+} satisfies Record<string, { position: [number, number, number]; target: [number, number, number] }>;
+
 const districts = [
   { id: "chaoyang", label: "朝阳区", x: 38, z: 18, color: 0x35efff, text: "商务活力 96.8 · 城市事件闭环率 98.1%" },
   { id: "dongcheng", label: "东城区", x: -22, z: -15, color: 0x53ffc3, text: "城市治理 92.7 · 感知设备在线率 99.9%" },
@@ -166,6 +185,15 @@ export default function SmartCityScene({
     controls.maxDistance = 265;
     controls.maxPolarAngle = Math.PI * 0.48;
     controls.target.set(0, 13, 0);
+    controls.enableRotate = true;
+    controls.enableZoom = true;
+    controls.enablePan = true;
+    controls.screenSpacePanning = true;
+    controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE;
+    controls.mouseButtons.MIDDLE = THREE.MOUSE.DOLLY;
+    controls.mouseButtons.RIGHT = THREE.MOUSE.PAN;
+    controls.touches.ONE = THREE.TOUCH.ROTATE;
+    controls.touches.TWO = THREE.TOUCH.DOLLY_PAN;
     controlsRef.current = controls;
 
     const ambient = new THREE.HemisphereLight(0xaeeeff, 0x07101d, 1.15);
@@ -497,6 +525,9 @@ export default function SmartCityScene({
       transparent: true,
       opacity: 0.72,
     });
+    let buildingMesh: THREE.InstancedMesh | null = null;
+    let buildingRecords: Building[] = [];
+    const buildingBaseColors: THREE.Color[] = [];
 
     const loadBuildings = async () => {
       try {
@@ -506,6 +537,8 @@ export default function SmartCityScene({
         if (disposed) return;
         const records = payload.buildings.filter((item) => item.points.length >= 3).slice(0, 5200);
         const mesh = new THREE.InstancedMesh(buildingGeometry, buildingMaterial, records.length);
+        buildingMesh = mesh;
+        buildingRecords = records;
         const edges = new THREE.InstancedMesh(buildingGeometry, buildingEdgeMaterial, records.length);
         const roofRecords = records.filter((item) => (item.heightMeters || 16) > 40).slice(0, 700);
         const roofs = new THREE.InstancedMesh(roofGeometry, roofMaterial, roofRecords.length);
@@ -541,6 +574,7 @@ export default function SmartCityScene({
           const distance = Math.min(1, Math.sqrt(x * x + z * z) / 110);
           color.setHSL(0.51 + distance * 0.055 + Math.random() * 0.018, 0.52, 0.31 + (1 - distance) * 0.18 + Math.random() * 0.08);
           mesh.setColorAt(index, color);
+          buildingBaseColors.push(color.clone());
         });
 
         roofRecords.forEach((item, index) => {
@@ -618,17 +652,99 @@ export default function SmartCityScene({
 
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
-    const pick = (event: PointerEvent) => {
+    const hoverColor = new THREE.Color(0x9effff);
+    let hoveredBuilding = -1;
+    let hoveredMarker: THREE.Object3D | null = null;
+    let hoverFrame = 0;
+    let pointerDown = { x: 0, y: 0 };
+
+    const setPointer = (event: PointerEvent) => {
       const rect = renderer.domElement.getBoundingClientRect();
       pointer.set(
         ((event.clientX - rect.left) / rect.width) * 2 - 1,
         -((event.clientY - rect.top) / rect.height) * 2 + 1,
       );
+    };
+
+    const restoreBuildingHover = () => {
+      if (buildingMesh && hoveredBuilding >= 0 && buildingBaseColors[hoveredBuilding]) {
+        buildingMesh.setColorAt(hoveredBuilding, buildingBaseColors[hoveredBuilding]);
+        if (buildingMesh.instanceColor) buildingMesh.instanceColor.needsUpdate = true;
+      }
+      hoveredBuilding = -1;
+    };
+
+    const restoreMarkerHover = () => {
+      if (hoveredMarker) hoveredMarker.scale.setScalar(1);
+      hoveredMarker = null;
+    };
+
+    const clearHover = () => {
+      restoreBuildingHover();
+      restoreMarkerHover();
+      renderer.domElement.style.cursor = "grab";
+    };
+
+    const hover = (event: PointerEvent) => {
+      const clientX = event.clientX;
+      const clientY = event.clientY;
+      cancelAnimationFrame(hoverFrame);
+      hoverFrame = requestAnimationFrame(() => {
+        const rect = renderer.domElement.getBoundingClientRect();
+        pointer.set(
+          ((clientX - rect.left) / rect.width) * 2 - 1,
+          -((clientY - rect.top) / rect.height) * 2 + 1,
+        );
+        raycaster.setFromCamera(pointer, camera);
+        const hit = raycaster.intersectObjects(interactive, false)[0];
+        const nextBuilding = hit?.object === buildingMesh && hit.instanceId !== undefined ? hit.instanceId : -1;
+        const nextMarker = hit?.object.userData.asset && hit?.object !== buildingMesh ? hit.object : null;
+
+        if (nextBuilding !== hoveredBuilding) {
+          restoreBuildingHover();
+          if (buildingMesh && nextBuilding >= 0) {
+            buildingMesh.setColorAt(nextBuilding, hoverColor);
+            if (buildingMesh.instanceColor) buildingMesh.instanceColor.needsUpdate = true;
+            hoveredBuilding = nextBuilding;
+          }
+        }
+        if (nextMarker !== hoveredMarker) {
+          restoreMarkerHover();
+          hoveredMarker = nextMarker;
+          hoveredMarker?.scale.setScalar(1.35);
+        }
+        renderer.domElement.style.cursor = hit ? "pointer" : "grab";
+      });
+    };
+
+    const pick = (event: PointerEvent) => {
+      if (Math.hypot(event.clientX - pointerDown.x, event.clientY - pointerDown.y) > 5) return;
+      setPointer(event);
       raycaster.setFromCamera(pointer, camera);
-      const asset = raycaster.intersectObjects(interactive, false)[0]?.object.userData.asset as SmartAsset | undefined;
+      const hit = raycaster.intersectObjects(interactive, false)[0];
+      if (hit?.object === buildingMesh && hit.instanceId !== undefined) {
+        const building = buildingRecords[hit.instanceId];
+        const buildingId = building?.id ?? hit.instanceId + 1;
+        const height = Math.round(building?.heightMeters || 16);
+        onSelect({
+          id: `building-${buildingId}`,
+          label: building?.name || `北京城市建筑 ${String(buildingId).padStart(5, "0")}`,
+          category: "北京三维建筑资产",
+          details: `建筑高度约 ${height} 米，已接入北京城市数字孪生底座，可叠加能耗、安防、交通及应急态势数据。`,
+          meta: `资产编号 BJ-${String(buildingId).padStart(6, "0")} · 实时在线 · 单击定位`,
+        });
+        return;
+      }
+      const asset = hit?.object.userData.asset as SmartAsset | undefined;
       onSelect(asset || null);
     };
-    renderer.domElement.addEventListener("pointerdown", pick);
+    const rememberPointer = (event: PointerEvent) => {
+      pointerDown = { x: event.clientX, y: event.clientY };
+    };
+    renderer.domElement.addEventListener("pointermove", hover);
+    renderer.domElement.addEventListener("pointerleave", clearHover);
+    renderer.domElement.addEventListener("pointerdown", rememberPointer);
+    renderer.domElement.addEventListener("pointerup", pick);
 
     const resize = () => {
       const width = Math.max(1, element.clientWidth);
@@ -641,15 +757,48 @@ export default function SmartCityScene({
     observer.observe(element);
     resize();
 
+    type CameraFlight = {
+      from: THREE.Vector3;
+      to: THREE.Vector3;
+      targetFrom: THREE.Vector3;
+      targetTo: THREE.Vector3;
+      start: number;
+      duration: number;
+    };
+    let cameraFlight: CameraFlight | null = null;
+    const flyTo = (position: [number, number, number], target: [number, number, number], duration = 1250) => {
+      cameraFlight = {
+        from: camera.position.clone(),
+        to: new THREE.Vector3(...position),
+        targetFrom: controls.target.clone(),
+        targetTo: new THREE.Vector3(...target),
+        start: performance.now(),
+        duration,
+      };
+      controls.enabled = false;
+    };
+
     const command = (event: Event) => {
-      const detail = (event as CustomEvent).detail;
-      if (detail === "zoomIn") camera.position.multiplyScalar(0.82);
-      if (detail === "zoomOut") camera.position.multiplyScalar(1.18);
-      if (detail === "reset") {
-        camera.position.set(118, 88, 128);
-        controls.target.set(0, 13, 0);
+      const detail = (event as CustomEvent<CameraCommand>).detail;
+      if (detail === "zoomIn" || detail === "zoomOut") {
+        const factor = detail === "zoomIn" ? 0.82 : 1.18;
+        const offset = camera.position.clone().sub(controls.target).multiplyScalar(factor);
+        camera.position.copy(controls.target).add(offset);
+        controls.update();
+        return;
       }
-      controls.update();
+      if (detail === "reset") {
+        flyTo(viewPresets.panorama.position, viewPresets.panorama.target);
+        return;
+      }
+      if (typeof detail === "object" && detail.action === "view" && detail.view && viewPresets[detail.view]) {
+        const preset = viewPresets[detail.view];
+        flyTo(preset.position, preset.target);
+        return;
+      }
+      if (typeof detail === "object" && detail.action === "focus" && detail.position && detail.target) {
+        flyTo(detail.position, detail.target, 1050);
+      }
     };
     window.addEventListener("smart-city-camera", command);
 
@@ -698,7 +847,16 @@ export default function SmartCityScene({
         pulse.position.copy(curve.getPoint((elapsed * 0.13 + index * 0.22) % 1));
       });
 
-      if (tourRef.current) {
+      if (cameraFlight) {
+        const progress = Math.min(1, (time - cameraFlight.start) / cameraFlight.duration);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        camera.position.lerpVectors(cameraFlight.from, cameraFlight.to, eased);
+        controls.target.lerpVectors(cameraFlight.targetFrom, cameraFlight.targetTo, eased);
+        if (progress >= 1) {
+          cameraFlight = null;
+          controls.enabled = true;
+        }
+      } else if (tourRef.current) {
         camera.position.x = Math.cos(elapsed * 0.075) * 150;
         camera.position.z = Math.sin(elapsed * 0.075) * 150;
         camera.position.y = 79 + Math.sin(elapsed * 0.11) * 14;
@@ -712,8 +870,12 @@ export default function SmartCityScene({
     return () => {
       disposed = true;
       cancelAnimationFrame(frame);
+      cancelAnimationFrame(hoverFrame);
       observer.disconnect();
-      renderer.domElement.removeEventListener("pointerdown", pick);
+      renderer.domElement.removeEventListener("pointermove", hover);
+      renderer.domElement.removeEventListener("pointerleave", clearHover);
+      renderer.domElement.removeEventListener("pointerdown", rememberPointer);
+      renderer.domElement.removeEventListener("pointerup", pick);
       window.removeEventListener("smart-city-camera", command);
       controls.dispose();
       renderer.dispose();

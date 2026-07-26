@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import SmartCityScene, { type SmartAsset } from "./SmartCityScene";
 
 type Props = {
@@ -34,6 +34,47 @@ const ticker = [
   "新能源消纳比例 38.7%",
 ];
 
+const viewOptions = [
+  { id: "panorama", code: "01", label: "全景" },
+  { id: "cbd", code: "02", label: "CBD" },
+  { id: "axis", code: "03", label: "中轴" },
+  { id: "top", code: "04", label: "俯瞰" },
+  { id: "horizon", code: "05", label: "天际" },
+] as const;
+
+const districtViews: Record<string, { position: [number, number, number]; target: [number, number, number] }> = {
+  朝阳: { position: [83, 45, 72], target: [38, 9, 18] },
+  海淀: { position: [-88, 48, 82], target: [-48, 9, 40] },
+  东城: { position: [-58, 42, -58], target: [-22, 9, -15] },
+  丰台: { position: [52, 43, -91], target: [12, 8, -48] },
+};
+
+function AnimatedNumber({ value, decimals = 0 }: { value: number; decimals?: number }) {
+  const [display, setDisplay] = useState(0);
+
+  useEffect(() => {
+    const start = performance.now();
+    let frame = 0;
+    const step = (time: number) => {
+      const progress = Math.min(1, (time - start) / 1450);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplay(value * eased);
+      if (progress < 1) frame = requestAnimationFrame(step);
+    };
+    frame = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(frame);
+  }, [value]);
+
+  return (
+    <>
+      {display.toLocaleString("zh-CN", {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+      })}
+    </>
+  );
+}
+
 export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }: Props) {
   const [activeNav, setActiveNav] = useState("全域态势");
   const [nightMode, setNightMode] = useState(true);
@@ -45,15 +86,31 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
   const [sceneStatus, setSceneStatus] = useState<"loading" | "ready" | "degraded">("loading");
   const [now, setNow] = useState(() => new Date());
   const [pulse, setPulse] = useState(0);
+  const [barsReady, setBarsReady] = useState(false);
+  const [activeView, setActiveView] = useState<(typeof viewOptions)[number]["id"]>("panorama");
+  const [interactionTip, setInteractionTip] = useState("左键拖拽旋转 · 滚轮缩放 · 右键平移 · 点击建筑查看详情");
+  const [tipKey, setTipKey] = useState(0);
 
   useEffect(() => {
     const clock = window.setInterval(() => setNow(new Date()), 1000);
     const heartbeat = window.setInterval(() => setPulse((value) => (value + 1) % 8), 2400);
+    const barFrame = window.requestAnimationFrame(() => setBarsReady(true));
     return () => {
       window.clearInterval(clock);
       window.clearInterval(heartbeat);
+      window.cancelAnimationFrame(barFrame);
     };
   }, []);
+
+  const showTip = useCallback((message: string) => {
+    setInteractionTip(message);
+    setTipKey((value) => value + 1);
+  }, []);
+
+  const handleSceneSelect = useCallback((asset: SmartAsset | null) => {
+    setSelectedAsset(asset);
+    if (asset) showTip(`已选中：${asset.label} · 详情卡片已展开`);
+  }, [showTip]);
 
   const time = now.toLocaleTimeString("zh-CN", { hour12: false });
   const date = now.toLocaleDateString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit" });
@@ -64,7 +121,10 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
     return "5,200 栋建筑在线 · 城市光网运行中";
   }, [sceneStatus]);
 
-  const focusDistrict = (district: typeof districtData[number], index: number) => {
+  const focusDistrict = (district: typeof districtData[number]) => {
+    setAutoTour(false);
+    setTopView(false);
+    setActiveView("panorama");
     setSelectedAsset({
       id: `district-${district.name}`,
       label: `${district.name}区`,
@@ -72,7 +132,29 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
       details: `${district.value}，当前城区综合运行指数 ${district.score}，城市感知、交通与公共服务状态正常。`,
       meta: `AI 评分 ${district.score} · 数据刷新 128ms`,
     });
-    window.dispatchEvent(new CustomEvent("smart-city-camera", { detail: index % 2 ? "zoomIn" : "reset" }));
+    const view = districtViews[district.name];
+    window.dispatchEvent(new CustomEvent("smart-city-camera", {
+      detail: { action: "focus", position: view.position, target: view.target },
+    }));
+    showTip(`正在聚焦${district.name}区 · 镜头已进入城区态势视角`);
+  };
+
+  const changeView = (view: (typeof viewOptions)[number]) => {
+    setAutoTour(false);
+    setTopView(false);
+    setActiveView(view.id);
+    window.dispatchEvent(new CustomEvent("smart-city-camera", {
+      detail: { action: "view", view: view.id },
+    }));
+    showTip(`视角切换：${view.label} · 镜头缓动飞行中`);
+  };
+
+  const resetView = () => {
+    setAutoTour(false);
+    setTopView(false);
+    setActiveView("panorama");
+    window.dispatchEvent(new CustomEvent("smart-city-camera", { detail: "reset" }));
+    showTip("三维视角已复位至北京城市全景");
   };
 
   return (
@@ -113,14 +195,14 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
           <section className="future-panel city-vitals">
             <header><span>01</span><div><b>城市生命体征</b><em>URBAN VITAL SIGNS</em></div><i>LIVE</i></header>
             <div className="vital-primary">
-              <div><span>常住人口</span><strong>2,183.2</strong><em>万人</em></div>
+              <div><span>常住人口</span><strong><AnimatedNumber value={2183.2} decimals={1} /></strong><em>万人</em></div>
               <div className="vital-wave" aria-hidden="true">{[34, 52, 41, 68, 48, 76, 57, 82, 61, 72, 55, 88].map((height, index) => <i key={index} style={{ height: `${height}%` }} />)}</div>
             </div>
             <div className="vital-grid">
-              <div><span>城市面积</span><b>16,410<small> km²</small></b><em>全域覆盖</em></div>
-              <div><span>地区生产总值</span><b>4.98<small> 万亿元</small></b><em>同比 +5.2%</em></div>
-              <div><span>轨道交通</span><b>879<small> km</small></b><em>在途 1,284 列</em></div>
-              <div><span>公园绿地</span><b>1,064<small> 处</small></b><em>绿色空间 49.8%</em></div>
+              <div><span>城市面积</span><b><AnimatedNumber value={16410} /><small> km²</small></b><em>全域覆盖</em></div>
+              <div><span>地区生产总值</span><b><AnimatedNumber value={4.98} decimals={2} /><small> 万亿元</small></b><em>同比 +5.2%</em></div>
+              <div><span>轨道交通</span><b><AnimatedNumber value={879} /><small> km</small></b><em>在途 1,284 列</em></div>
+              <div><span>公园绿地</span><b><AnimatedNumber value={1064} /><small> 处</small></b><em>绿色空间 49.8%</em></div>
             </div>
           </section>
 
@@ -161,7 +243,7 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
               buildingLights={buildingLights}
               autoTour={autoTour}
               trafficDensity={trafficDensity}
-              onSelect={setSelectedAsset}
+              onSelect={handleSceneSelect}
               onSceneStatus={setSceneStatus}
             />
 
@@ -177,20 +259,61 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
             <div className="scene-orientation"><b>N</b><i /><span>024°</span></div>
 
             <div className="scene-districts">
-              {districtData.map((district, index) => (
-                <button key={district.name} onClick={() => focusDistrict(district, index)}>
+              {districtData.map((district) => (
+                <button key={district.name} onClick={() => focusDistrict(district)}>
                   <i className={district.tone} /><span>{district.name}</span><b>{district.score}</b>
                 </button>
               ))}
             </div>
 
+            <div className="scene-view-presets" aria-label="预设三维视角">
+              <span>VIEW</span>
+              {viewOptions.map((view) => (
+                <button
+                  key={view.id}
+                  className={activeView === view.id ? "active" : ""}
+                  onClick={() => changeView(view)}
+                  aria-label={`切换至${view.label}视角`}
+                >
+                  <i>{view.code}</i><b>{view.label}</b>
+                </button>
+              ))}
+            </div>
+
+            <div key={tipKey} className="scene-operation-tip" role="status" aria-live="polite">
+              <i>⌁</i><span>{interactionTip}</span>
+            </div>
+
             <div className="scene-controls">
-              <button className={topView ? "on" : ""} onClick={() => setTopView((value) => !value)}><i>◇</i>{topView ? "自由视角" : "垂直俯视"}</button>
-              <button className={autoTour ? "on" : ""} onClick={() => setAutoTour((value) => !value)}><i>{autoTour ? "■" : "▶"}</i>{autoTour ? "停止巡航" : "自动巡航"}</button>
-              <button className={buildingLights ? "on" : ""} onClick={() => setBuildingLights((value) => !value)}><i>✦</i>建筑光网</button>
-              <button onClick={() => setNightMode((value) => !value)}><i>{nightMode ? "☀" : "☾"}</i>{nightMode ? "日间模式" : "夜间模式"}</button>
-              <button onClick={() => setTrafficDensity((value) => value === 18 ? 36 : value === 36 ? 54 : 18)}><i>⇄</i>车流 {trafficDensity}</button>
-              <button aria-label="复位三维视角" onClick={() => window.dispatchEvent(new CustomEvent("smart-city-camera", { detail: "reset" }))}><i>⌖</i>视角复位</button>
+              <button className={topView ? "on" : ""} onClick={() => {
+                const next = !topView;
+                setAutoTour(false);
+                setTopView(next);
+                setActiveView(next ? "top" : "panorama");
+                showTip(next ? "垂直俯视已开启 · 可滚轮缩放查看建筑分布" : "已恢复自由视角");
+              }}><i>◇</i>{topView ? "自由视角" : "垂直俯视"}</button>
+              <button className={autoTour ? "on" : ""} onClick={() => {
+                const next = !autoTour;
+                setAutoTour(next);
+                setTopView(false);
+                showTip(next ? "自动巡航已启动 · 手动选视角可随时接管" : "自动巡航已暂停");
+              }}><i>{autoTour ? "■" : "▶"}</i>{autoTour ? "停止巡航" : "自动巡航"}</button>
+              <button className={buildingLights ? "on" : ""} onClick={() => {
+                const next = !buildingLights;
+                setBuildingLights(next);
+                showTip(next ? "建筑光网已点亮" : "建筑光网已隐藏");
+              }}><i>✦</i>建筑光网</button>
+              <button onClick={() => {
+                const next = !nightMode;
+                setNightMode(next);
+                showTip(next ? "已切换至夜间城市模式" : "已切换至日间城市模式");
+              }}><i>{nightMode ? "☀" : "☾"}</i>{nightMode ? "日间模式" : "夜间模式"}</button>
+              <button onClick={() => {
+                const next = trafficDensity === 18 ? 36 : trafficDensity === 36 ? 54 : 18;
+                setTrafficDensity(next);
+                showTip(`动态车流密度已调整为 ${next} 辆`);
+              }}><i>⇄</i>车流 {trafficDensity}</button>
+              <button aria-label="复位三维视角" onClick={resetView}><i>⌖</i>视角复位</button>
             </div>
 
             <div className="scene-zoom">
@@ -215,7 +338,7 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
           <section className="future-panel ai-index">
             <header><span>04</span><div><b>城市智能指数</b><em>CITY AI INDEX</em></div><i>TOP 1</i></header>
             <div className="ai-score">
-              <div className="score-rings"><i /><i /><i /><strong>96.4</strong><span>综合评分</span></div>
+              <div className="score-rings"><i /><i /><i /><strong><AnimatedNumber value={96.4} decimals={1} /></strong><span>综合评分</span></div>
               <div className="score-copy"><span>AI 城市大脑</span><b>运行卓越</b><em>较昨日 +1.8%</em><p>城市治理模型实时计算中</p></div>
             </div>
             <div className="ai-dimensions">
@@ -224,17 +347,19 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
                 ["协同效率", 94],
                 ["预测准确", 96],
                 ["处置闭环", 97],
-              ].map(([name, value]) => (
-                <div key={name as string}><span>{name}</span><i><b style={{ width: `${value}%` }} /></i><em>{value}%</em></div>
+              ].map(([name, value], index) => (
+                <div key={name as string}><span>{name}</span><i><b style={{ width: barsReady ? `${value}%` : "0%", transitionDelay: `${index * 120}ms` }} /></i><em>{value}%</em></div>
               ))}
             </div>
           </section>
 
           <section className="future-panel traffic-panel">
             <header><span>05</span><div><b>交通运行脉搏</b><em>TRAFFIC MOBILITY</em></div><i>畅通</i></header>
-            <div className="traffic-number"><span>全路网交通指数</span><strong>1.42</strong><em>畅通</em></div>
+            <div className="traffic-number"><span>全路网交通指数</span><strong><AnimatedNumber value={1.42} decimals={2} /></strong><em>畅通</em></div>
             <div className="traffic-flow" aria-label="近八小时交通流量趋势">
-              {[31, 43, 52, 47, 68, 76, 64, 83, 71, 62, 54, 59, 46, 39].map((height, index) => <i key={index} style={{ height: `${height}%` }} />)}
+              {[31, 43, 52, 47, 68, 76, 64, 83, 71, 62, 54, 59, 46, 39].map((height, index) => (
+                <i key={index} style={{ height: barsReady ? `${height}%` : "0%", transitionDelay: `${index * 55}ms` }} />
+              ))}
             </div>
             <div className="traffic-meta"><span>平均车速<b>41.8 km/h</b></span><span>拥堵里程<b>28.6 km</b></span><span>信号协调率<b>92.7%</b></span></div>
           </section>
@@ -243,9 +368,9 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
             <header><span>06</span><div><b>城区运行排行</b><em>DISTRICT RANKING</em></div><i>16 区</i></header>
             <div>
               {districtData.map((district, index) => (
-                <button key={district.name} onClick={() => focusDistrict(district, index)}>
+                <button key={district.name} onClick={() => focusDistrict(district)}>
                   <i>{String(index + 1).padStart(2, "0")}</i>
-                  <span>{district.name}区<em><b style={{ width: `${district.score}%` }} /></em></span>
+                  <span>{district.name}区<em><b style={{ width: barsReady ? `${district.score}%` : "0%", transitionDelay: `${index * 120}ms` }} /></em></span>
                   <strong>{district.score}</strong>
                   <small>{district.value}</small>
                 </button>
