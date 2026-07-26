@@ -4,71 +4,623 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
-export type SmartAsset={id:string;label:string;category:string;details:string;meta:string};
-type Props={nightMode:boolean;buildingLights:boolean;autoTour:boolean;topView:boolean;trafficDensity:number;onSelect:(asset:SmartAsset|null)=>void;onSceneStatus:(status:"loading"|"ready"|"degraded")=>void};
-type Building={id:number;points:Array<[number,number]>;heightMeters?:number;name?:string;core?:boolean};
+export type SmartAsset = {
+  id: string;
+  label: string;
+  category: string;
+  details: string;
+  meta: string;
+};
 
-const districts=[
-  {id:"chaoyang",label:"朝阳区",x:35,z:18,color:0x36e1ef,text:"商务活力 96.8 · 交通畅通"},
-  {id:"dongcheng",label:"东城区",x:-27,z:-12,color:0x5be2ae,text:"城市治理 92.7 · 设备在线"},
-  {id:"haidian",label:"海淀区",x:-43,z:39,color:0x6d9fff,text:"科技创新 94.2 · 算力充足"},
-  {id:"fengtai",label:"丰台区",x:8,z:-48,color:0xffa45c,text:"交通枢纽 89.6 · 运行平稳"},
+type Props = {
+  nightMode: boolean;
+  buildingLights: boolean;
+  autoTour: boolean;
+  topView: boolean;
+  trafficDensity: number;
+  onSelect: (asset: SmartAsset | null) => void;
+  onSceneStatus: (status: "loading" | "ready" | "degraded") => void;
+};
+
+type Building = {
+  id: number;
+  points: Array<[number, number]>;
+  heightMeters?: number;
+  name?: string;
+  core?: boolean;
+};
+
+const districts = [
+  { id: "chaoyang", label: "朝阳区", x: 38, z: 18, color: 0x35efff, text: "商务活力 96.8 · 城市事件闭环率 98.1%" },
+  { id: "dongcheng", label: "东城区", x: -22, z: -15, color: 0x53ffc3, text: "城市治理 92.7 · 感知设备在线率 99.9%" },
+  { id: "haidian", label: "海淀区", x: -48, z: 40, color: 0x6a96ff, text: "科技创新 94.2 · 智算资源利用率 87.6%" },
+  { id: "fengtai", label: "丰台区", x: 12, z: -48, color: 0xffa95f, text: "交通枢纽 89.6 · 路网运行状态平稳" },
 ];
 
-function makeLabel(text:string,color:string){
-  const canvas=document.createElement("canvas");canvas.width=420;canvas.height=88;
-  const context=canvas.getContext("2d")!;context.fillStyle="rgba(3,17,26,.9)";context.fillRect(0,0,420,88);context.strokeStyle=color;context.lineWidth=3;context.strokeRect(2,2,416,84);context.fillStyle="#ecfdff";context.font="600 29px Microsoft YaHei, sans-serif";context.fillText(text,22,56);
-  const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
-  const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,transparent:true,depthTest:false}));sprite.scale.set(18,3.8,1);return sprite;
+function makeLabel(text: string, color: string) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 512;
+  canvas.height = 112;
+  const context = canvas.getContext("2d")!;
+  const gradient = context.createLinearGradient(0, 0, 512, 0);
+  gradient.addColorStop(0, "rgba(3, 15, 28, .94)");
+  gradient.addColorStop(1, "rgba(5, 39, 55, .72)");
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, 512, 112);
+  context.strokeStyle = color;
+  context.lineWidth = 3;
+  context.strokeRect(2, 2, 508, 108);
+  context.fillStyle = "#eaffff";
+  context.font = "600 32px Microsoft YaHei, sans-serif";
+  context.fillText(text, 26, 68);
+  context.fillStyle = color;
+  context.fillRect(26, 82, 160, 3);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false }));
+  sprite.scale.set(19, 4.2, 1);
+  return sprite;
 }
 
-export default function SmartCityScene({nightMode,buildingLights,autoTour,topView,trafficDensity,onSelect,onSceneStatus}:Props){
-  const host=useRef<HTMLDivElement>(null),cameraRef=useRef<THREE.PerspectiveCamera|null>(null),controlsRef=useRef<OrbitControls|null>(null);
-  const nightRef=useRef(nightMode),lightsRef=useRef(buildingLights),tourRef=useRef(autoTour),trafficRef=useRef(trafficDensity);
-  const applyModeRef=useRef<(night:boolean,lights:boolean)=>void>(()=>{});
-  useEffect(()=>{nightRef.current=nightMode;lightsRef.current=buildingLights;applyModeRef.current(nightMode,buildingLights)},[nightMode,buildingLights]);
-  useEffect(()=>{tourRef.current=autoTour},[autoTour]);useEffect(()=>{trafficRef.current=trafficDensity},[trafficDensity]);
-  useEffect(()=>{const camera=cameraRef.current,controls=controlsRef.current;if(!camera||!controls)return;if(topView){camera.position.set(0,178,.1);controls.target.set(0,0,0)}else{camera.position.set(98,90,118);controls.target.set(0,8,0)}controls.update()},[topView]);
+function addRoad(
+  scene: THREE.Scene,
+  roadMaterial: THREE.Material,
+  laneMaterial: THREE.Material,
+  width: number,
+  length: number,
+  x: number,
+  z: number,
+  rotation = 0,
+) {
+  const road = new THREE.Mesh(new THREE.PlaneGeometry(width, length), roadMaterial);
+  road.rotation.x = -Math.PI / 2;
+  road.rotation.z = rotation;
+  road.position.set(x, 1.42, z);
+  scene.add(road);
 
-  useEffect(()=>{
-    const element=host.current;
-    if(!element){onSceneStatus("degraded");return}
+  const lane = new THREE.Mesh(new THREE.PlaneGeometry(0.1, length * 0.95), laneMaterial);
+  lane.rotation.x = -Math.PI / 2;
+  lane.rotation.z = rotation;
+  lane.position.set(x, 1.46, z);
+  scene.add(lane);
+}
+
+export default function SmartCityScene({
+  nightMode,
+  buildingLights,
+  autoTour,
+  topView,
+  trafficDensity,
+  onSelect,
+  onSceneStatus,
+}: Props) {
+  const host = useRef<HTMLDivElement>(null);
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  const controlsRef = useRef<OrbitControls | null>(null);
+  const nightRef = useRef(nightMode);
+  const lightsRef = useRef(buildingLights);
+  const tourRef = useRef(autoTour);
+  const trafficRef = useRef(trafficDensity);
+  const applyModeRef = useRef<(night: boolean, lights: boolean) => void>(() => {});
+
+  useEffect(() => {
+    nightRef.current = nightMode;
+    lightsRef.current = buildingLights;
+    applyModeRef.current(nightMode, buildingLights);
+  }, [nightMode, buildingLights]);
+
+  useEffect(() => {
+    tourRef.current = autoTour;
+  }, [autoTour]);
+
+  useEffect(() => {
+    trafficRef.current = trafficDensity;
+  }, [trafficDensity]);
+
+  useEffect(() => {
+    const camera = cameraRef.current;
+    const controls = controlsRef.current;
+    if (!camera || !controls) return;
+    if (topView) {
+      camera.position.set(0, 190, 0.1);
+      controls.target.set(0, 0, 0);
+    } else {
+      camera.position.set(118, 88, 128);
+      controls.target.set(0, 13, 0);
+    }
+    controls.update();
+  }, [topView]);
+
+  useEffect(() => {
+    const element = host.current;
+    if (!element) {
+      onSceneStatus("degraded");
+      return;
+    }
+
+    let disposed = false;
     onSceneStatus("loading");
-    const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(44,1,.1,620);camera.position.set(98,90,118);cameraRef.current=camera;
-    const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:"high-performance"});renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.4));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;element.appendChild(renderer.domElement);
-    const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.06;controls.minDistance=48;controls.maxDistance=245;controls.maxPolarAngle=Math.PI*.47;controls.target.set(0,8,0);controlsRef.current=controls;
 
-    const ambient=new THREE.HemisphereLight(0xd8efff,0x25442e,1.8);scene.add(ambient);
-    const sun=new THREE.DirectionalLight(0xfff1cf,3.4);sun.position.set(-70,125,80);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-130;sun.shadow.camera.right=130;sun.shadow.camera.top=130;sun.shadow.camera.bottom=-130;scene.add(sun);
-    const groundMaterial=new THREE.MeshStandardMaterial({color:0x35533f,roughness:.9}),ground=new THREE.Mesh(new THREE.PlaneGeometry(250,250),groundMaterial);ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
-    const cityBase=new THREE.Mesh(new THREE.CylinderGeometry(106,110,1.4,96),new THREE.MeshStandardMaterial({color:0x263d35,roughness:.82}));cityBase.position.y=.65;scene.add(cityBase);
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 720);
+    camera.position.set(118, 88, 128);
+    cameraRef.current = camera;
 
-    const roadMaterial=new THREE.MeshStandardMaterial({color:0x33383b,roughness:.76,metalness:.08}),laneMaterial=new THREE.MeshBasicMaterial({color:0xf0dd9c,transparent:true,opacity:.78});
-    const makeRoad=(width:number,length:number,x:number,z:number,rotation=0)=>{const road=new THREE.Mesh(new THREE.PlaneGeometry(width,length),roadMaterial);road.rotation.x=-Math.PI/2;road.rotation.z=rotation;road.position.set(x,1.42,z);scene.add(road);const lane=new THREE.Mesh(new THREE.PlaneGeometry(.12,length*.94),laneMaterial);lane.rotation.x=-Math.PI/2;lane.rotation.z=rotation;lane.position.set(x,1.45,z);scene.add(lane)};
-    [-58,-30,0,31,60].forEach((x,index)=>makeRoad(index===2?8:5.2,210,x,0,index%2?.04:-.03));
-    [-55,-26,5,35,64].forEach((z,index)=>makeRoad(index===2?8:5.2,210,0,z,Math.PI/2+(index%2?.03:-.025)));
-    const ringMaterial=new THREE.MeshBasicMaterial({color:0x43cbd8,transparent:true,opacity:.23});[36,67,96].forEach(radius=>{const ring=new THREE.Mesh(new THREE.RingGeometry(radius-.24,radius+.24,128),ringMaterial);ring.rotation.x=-Math.PI/2;ring.position.y=1.5;scene.add(ring)});
-    const river=new THREE.Mesh(new THREE.PlaneGeometry(240,11),new THREE.MeshStandardMaterial({color:0x2b7390,roughness:.23,metalness:.18,transparent:true,opacity:.88}));river.rotation.x=-Math.PI/2;river.rotation.z=-.12;river.position.set(0,1.53,-78);scene.add(river);
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: false,
+      powerPreference: "high-performance",
+    });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.35));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.2;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
+    element.appendChild(renderer.domElement);
 
-    const interactive:THREE.Object3D[]=[];
-    districts.forEach(item=>{const group=new THREE.Group();group.position.set(item.x,1.6,item.z);const beam=new THREE.Mesh(new THREE.CylinderGeometry(.12,.28,12,12),new THREE.MeshBasicMaterial({color:item.color,transparent:true,opacity:.48}));beam.position.y=6;const head=new THREE.Mesh(new THREE.SphereGeometry(.72,18,12),new THREE.MeshStandardMaterial({color:item.color,emissive:item.color,emissiveIntensity:1.3}));head.position.y=12.6;head.userData.asset={id:item.id,label:item.label,category:"城市监管分区",details:item.text,meta:"AI 城市运行指数 · 实时更新"} satisfies SmartAsset;const halo=new THREE.Mesh(new THREE.RingGeometry(1.2,1.48,36),new THREE.MeshBasicMaterial({color:item.color,side:THREE.DoubleSide,transparent:true,opacity:.72}));halo.rotation.x=-Math.PI/2;halo.position.y=.2;const label=makeLabel(item.label,`#${item.color.toString(16).padStart(6,"0")}`);label.position.y=15;group.add(beam,head,halo,label);scene.add(group);interactive.push(head)});
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.055;
+    controls.minDistance = 46;
+    controls.maxDistance = 265;
+    controls.maxPolarAngle = Math.PI * 0.48;
+    controls.target.set(0, 13, 0);
+    controlsRef.current = controls;
 
-    const sensorPositions=new Float32Array(420*3);for(let index=0;index<420;index++){const angle=Math.random()*Math.PI*2,radius=8+Math.sqrt(Math.random())*94;sensorPositions[index*3]=Math.cos(angle)*radius;sensorPositions[index*3+1]=2+Math.random()*7;sensorPositions[index*3+2]=Math.sin(angle)*radius}
-    const sensorGeometry=new THREE.BufferGeometry();sensorGeometry.setAttribute("position",new THREE.BufferAttribute(sensorPositions,3));const sensorMaterial=new THREE.PointsMaterial({color:0x48e7f2,size:.38,transparent:true,opacity:.78}),sensors=new THREE.Points(sensorGeometry,sensorMaterial);scene.add(sensors);
+    const ambient = new THREE.HemisphereLight(0xaeeeff, 0x07101d, 1.15);
+    scene.add(ambient);
+    const sun = new THREE.DirectionalLight(0xbdefff, 2.4);
+    sun.position.set(-70, 128, 68);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(1024, 1024);
+    sun.shadow.camera.left = -130;
+    sun.shadow.camera.right = 130;
+    sun.shadow.camera.top = 130;
+    sun.shadow.camera.bottom = -130;
+    scene.add(sun);
+    const coreLight = new THREE.PointLight(0x29ddff, 22, 130, 1.7);
+    coreLight.position.set(0, 45, 0);
+    scene.add(coreLight);
 
-    const buildingMaterial=new THREE.MeshStandardMaterial({color:0xbac6c8,roughness:.48,metalness:.18,vertexColors:true}),buildingGeometry=new THREE.BoxGeometry(1,1,1);
-    const loadBuildings=async()=>{try{const response=await fetch("./beijing-buildings.json");if(!response.ok)throw new Error();const payload=await response.json() as {buildings:Building[]},records=payload.buildings.filter(item=>item.points.length>=3).slice(0,3200),mesh=new THREE.InstancedMesh(buildingGeometry,buildingMaterial,records.length),matrix=new THREE.Matrix4(),color=new THREE.Color();mesh.castShadow=true;mesh.receiveShadow=true;records.forEach((item,index)=>{const xs=item.points.map(point=>point[0]),zs=item.points.map(point=>point[1]),x=(Math.min(...xs)+Math.max(...xs))/3.5,z=(Math.min(...zs)+Math.max(...zs))/3.5,width=Math.max(.55,Math.min(7,(Math.max(...xs)-Math.min(...xs))/3.5)),depth=Math.max(.55,Math.min(7,(Math.max(...zs)-Math.min(...zs))/3.5)),height=Math.max(1.4,Math.min(55,(item.heightMeters||16)/4.4));matrix.compose(new THREE.Vector3(x,1.45+height/2,z),new THREE.Quaternion(),new THREE.Vector3(width,height,depth));mesh.setMatrixAt(index,matrix);color.setHSL(.52+Math.random()*.035,.12+Math.random()*.14,(item.core?.72:.55)+Math.random()*.17);mesh.setColorAt(index,color)});mesh.instanceMatrix.needsUpdate=true;mesh.instanceColor!.needsUpdate=true;scene.add(mesh);onSceneStatus("ready")}catch{onSceneStatus("degraded")}};void loadBuildings();
+    const groundMaterial = new THREE.MeshStandardMaterial({
+      color: 0x071d2b,
+      roughness: 0.78,
+      metalness: 0.28,
+    });
+    const ground = new THREE.Mesh(new THREE.CircleGeometry(124, 128), groundMaterial);
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = 0.65;
+    ground.receiveShadow = true;
+    scene.add(ground);
 
-    const vehicleGeometry=new THREE.BoxGeometry(1.3,.55,.7),vehicleMaterial=new THREE.MeshStandardMaterial({color:0xeaf3f4,emissive:0x355b66,emissiveIntensity:.28}),vehicles=new THREE.InstancedMesh(vehicleGeometry,vehicleMaterial,54);vehicles.instanceMatrix.setUsage(THREE.DynamicDrawUsage);vehicles.castShadow=true;scene.add(vehicles);
-    const vehicleMatrix=new THREE.Matrix4(),vehicleRoutes=Array.from({length:54},(_,index)=>({axis:index%2,lane:[-58,-30,0,31,60][index%5]+(index%3-1)*1.35,offset:(index*19)%210,speed:.16+(index%7)*.018}));
+    const cityBaseMaterial = new THREE.MeshStandardMaterial({
+      color: 0x082333,
+      metalness: 0.64,
+      roughness: 0.32,
+      emissive: 0x052b3e,
+      emissiveIntensity: 0.65,
+    });
+    const cityBase = new THREE.Mesh(new THREE.CylinderGeometry(120, 124, 2.4, 128), cityBaseMaterial);
+    cityBase.position.y = -0.5;
+    scene.add(cityBase);
 
-    applyModeRef.current=(night,lights)=>{scene.background=new THREE.Color(night?0x020812:0x9ed8f1);scene.fog=new THREE.FogExp2(night?0x07121d:0xb9dce8,night?.006:.004);ambient.intensity=night?.55:1.8;sun.intensity=night?.3:3.4;groundMaterial.color.setHex(night?0x14251f:0x35533f);roadMaterial.color.setHex(night?0x111b23:0x33383b);buildingMaterial.emissive.setHex(night&&lights?0x387f91:0);buildingMaterial.emissiveIntensity=night&&lights?.5:0;ringMaterial.opacity=night?.5:.23};applyModeRef.current(nightRef.current,lightsRef.current);
+    const grid = new THREE.GridHelper(232, 58, 0x25dff1, 0x176071);
+    grid.position.y = 1.02;
+    const gridMaterials = Array.isArray(grid.material) ? grid.material : [grid.material];
+    gridMaterials.forEach((material) => {
+      material.transparent = true;
+      material.opacity = 0.2;
+      material.depthWrite = false;
+    });
+    scene.add(grid);
 
-    const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2(),pick=(event:PointerEvent)=>{const rect=renderer.domElement.getBoundingClientRect();pointer.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(pointer,camera);onSelect(raycaster.intersectObjects(interactive,false)[0]?.object.userData.asset||null)};renderer.domElement.addEventListener("pointerdown",pick);
-    const resize=()=>{const width=Math.max(1,element.clientWidth),height=Math.max(1,element.clientHeight);camera.aspect=width/height;camera.updateProjectionMatrix();renderer.setSize(width,height,false)},observer=new ResizeObserver(resize);observer.observe(element);resize();
-    const command=(event:Event)=>{const detail=(event as CustomEvent).detail;if(detail==="zoomIn")camera.position.multiplyScalar(.82);if(detail==="zoomOut")camera.position.multiplyScalar(1.18);if(detail==="reset"){camera.position.set(98,90,118);controls.target.set(0,8,0)}controls.update()};window.addEventListener("smart-city-camera",command);
-    const clock=new THREE.Clock();let frame=0;const animate=()=>{frame=requestAnimationFrame(animate);const elapsed=clock.getElapsedTime(),count=Math.min(54,trafficRef.current);vehicles.count=count;vehicleRoutes.forEach((route,index)=>{if(index>=count)return;const progress=(route.offset+elapsed*route.speed*28)%210-105,x=route.axis?progress:route.lane,z=route.axis?route.lane:progress,rotation=new THREE.Quaternion().setFromEuler(new THREE.Euler(0,route.axis?Math.PI/2:0,0));vehicleMatrix.compose(new THREE.Vector3(x,2.05,z),rotation,new THREE.Vector3(1,1,1));vehicles.setMatrixAt(index,vehicleMatrix)});vehicles.instanceMatrix.needsUpdate=true;sensorMaterial.opacity=.55+Math.sin(elapsed*2)*.22;if(tourRef.current){camera.position.x=Math.cos(elapsed*.075)*142;camera.position.z=Math.sin(elapsed*.075)*142;camera.position.y=82+Math.sin(elapsed*.11)*12;controls.target.set(0,9,0)}controls.update();renderer.render(scene,camera)};animate();
-    return()=>{cancelAnimationFrame(frame);observer.disconnect();renderer.domElement.removeEventListener("pointerdown",pick);window.removeEventListener("smart-city-camera",command);controls.dispose();renderer.dispose();scene.traverse(object=>{const mesh=object as THREE.Mesh;mesh.geometry?.dispose?.();if(Array.isArray(mesh.material))mesh.material.forEach(material=>material.dispose());else mesh.material?.dispose?.()});element.replaceChildren()};
-  },[onSceneStatus,onSelect]);
-  return <div ref={host} className="smart-city-scene" aria-label="北京城市运行监管三维场景"/>;
+    const roadMaterial = new THREE.MeshStandardMaterial({
+      color: 0x06131e,
+      roughness: 0.65,
+      metalness: 0.35,
+      emissive: 0x05141d,
+    });
+    const laneMaterial = new THREE.MeshBasicMaterial({
+      color: 0x44edff,
+      transparent: true,
+      opacity: 0.52,
+    });
+    [-72, -46, -22, 0, 24, 49, 74].forEach((x, index) =>
+      addRoad(scene, roadMaterial, laneMaterial, index === 3 ? 7.4 : 4.4, 224, x, 0, index % 2 ? 0.025 : -0.02),
+    );
+    [-69, -43, -18, 6, 31, 56, 78].forEach((z, index) =>
+      addRoad(scene, roadMaterial, laneMaterial, index === 3 ? 7.4 : 4.4, 224, 0, z, Math.PI / 2 + (index % 2 ? 0.02 : -0.018)),
+    );
+
+    const ringMaterial = new THREE.MeshBasicMaterial({
+      color: 0x39e5ff,
+      transparent: true,
+      opacity: 0.38,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+    const dataRings: THREE.Mesh[] = [];
+    [37, 70, 105, 118].forEach((radius, index) => {
+      const ring = new THREE.Mesh(new THREE.RingGeometry(radius - 0.18, radius + 0.18, 192), ringMaterial.clone());
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.y = 1.58 + index * 0.01;
+      scene.add(ring);
+      dataRings.push(ring);
+    });
+
+    const riverMaterial = new THREE.MeshStandardMaterial({
+      color: 0x075376,
+      emissive: 0x087a9c,
+      emissiveIntensity: 0.55,
+      roughness: 0.18,
+      metalness: 0.38,
+      transparent: true,
+      opacity: 0.92,
+    });
+    const river = new THREE.Mesh(new THREE.PlaneGeometry(246, 9), riverMaterial);
+    river.rotation.x = -Math.PI / 2;
+    river.rotation.z = -0.12;
+    river.position.set(0, 1.64, -83);
+    scene.add(river);
+
+    const skylineGeometry = new THREE.CylinderGeometry(0.62, 1.25, 1, 10);
+    const skylineMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0x163a50,
+      emissive: 0x1cc7e0,
+      emissiveIntensity: 0.75,
+      metalness: 0.8,
+      roughness: 0.2,
+      clearcoat: 0.9,
+    });
+    const skyline = new THREE.InstancedMesh(skylineGeometry, skylineMaterial, 9);
+    const skylineMatrix = new THREE.Matrix4();
+    [
+      [-8, -2, 46], [-3, 2, 66], [3, 1, 54], [9, 4, 39], [15, -3, 31],
+      [-16, 5, 29], [20, 9, 23], [-22, -7, 35], [5, -11, 28],
+    ].forEach(([x, z, height], index) => {
+      skylineMatrix.compose(
+        new THREE.Vector3(x, 1.7 + height / 2, z),
+        new THREE.Quaternion(),
+        new THREE.Vector3(index % 3 === 1 ? 1.6 : 1, height, index % 3 === 1 ? 1.6 : 1),
+      );
+      skyline.setMatrixAt(index, skylineMatrix);
+    });
+    skyline.castShadow = true;
+    scene.add(skyline);
+
+    const interactive: THREE.Object3D[] = [];
+    const districtHalos: THREE.Mesh[] = [];
+    districts.forEach((item) => {
+      const group = new THREE.Group();
+      group.position.set(item.x, 1.65, item.z);
+      const beam = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.11, 0.32, 15, 14),
+        new THREE.MeshBasicMaterial({ color: item.color, transparent: true, opacity: 0.42 }),
+      );
+      beam.position.y = 7.5;
+      const head = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(0.82, 1),
+        new THREE.MeshStandardMaterial({
+          color: item.color,
+          emissive: item.color,
+          emissiveIntensity: 1.8,
+          metalness: 0.6,
+          roughness: 0.2,
+        }),
+      );
+      head.position.y = 15.7;
+      head.userData.asset = {
+        id: item.id,
+        label: item.label,
+        category: "北京城市监管分区",
+        details: item.text,
+        meta: "CITY AI · 实时推演 · 点击已定位",
+      } satisfies SmartAsset;
+      const halo = new THREE.Mesh(
+        new THREE.RingGeometry(1.25, 1.62, 48),
+        new THREE.MeshBasicMaterial({
+          color: item.color,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.78,
+        }),
+      );
+      halo.rotation.x = -Math.PI / 2;
+      halo.position.y = 0.22;
+      const label = makeLabel(item.label, `#${item.color.toString(16).padStart(6, "0")}`);
+      label.position.y = 18.1;
+      group.add(beam, head, halo, label);
+      scene.add(group);
+      interactive.push(head);
+      districtHalos.push(halo);
+    });
+
+    const networkMaterial = new THREE.LineDashedMaterial({
+      color: 0x57ecff,
+      transparent: true,
+      opacity: 0.48,
+      dashSize: 1.4,
+      gapSize: 0.9,
+    });
+    const networkLines: THREE.Line[] = [];
+    districts.forEach((item, index) => {
+      const curve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(0, 4, 0),
+        new THREE.Vector3(item.x * 0.45, 13 + index * 1.5, item.z * 0.45),
+        new THREE.Vector3(item.x, 3.5, item.z),
+      ]);
+      const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(curve.getPoints(60)), networkMaterial.clone());
+      line.computeLineDistances();
+      line.userData.curve = curve;
+      scene.add(line);
+      networkLines.push(line);
+    });
+
+    const pulseMaterial = new THREE.MeshBasicMaterial({ color: 0xc7fbff });
+    const pulses = districts.map((_, index) => {
+      const pulse = new THREE.Mesh(new THREE.SphereGeometry(0.36, 12, 8), pulseMaterial);
+      scene.add(pulse);
+      pulse.userData.routeIndex = index;
+      return pulse;
+    });
+
+    const sensorPositions = new Float32Array(720 * 3);
+    for (let index = 0; index < 720; index++) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = 8 + Math.sqrt(Math.random()) * 110;
+      sensorPositions[index * 3] = Math.cos(angle) * radius;
+      sensorPositions[index * 3 + 1] = 2.5 + Math.random() * 17;
+      sensorPositions[index * 3 + 2] = Math.sin(angle) * radius;
+    }
+    const sensorGeometry = new THREE.BufferGeometry();
+    sensorGeometry.setAttribute("position", new THREE.BufferAttribute(sensorPositions, 3));
+    const sensorMaterial = new THREE.PointsMaterial({
+      color: 0x55ecff,
+      size: 0.34,
+      transparent: true,
+      opacity: 0.72,
+      depthWrite: false,
+    });
+    const sensors = new THREE.Points(sensorGeometry, sensorMaterial);
+    scene.add(sensors);
+
+    const scanMaterial = new THREE.MeshBasicMaterial({
+      color: 0x39eaff,
+      transparent: true,
+      opacity: 0.2,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+    const scan = new THREE.Mesh(new THREE.RingGeometry(2, 2.6, 96), scanMaterial);
+    scan.rotation.x = -Math.PI / 2;
+    scan.position.y = 1.88;
+    scene.add(scan);
+
+    const buildingMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0x17364d,
+      roughness: 0.3,
+      metalness: 0.68,
+      clearcoat: 0.72,
+      clearcoatRoughness: 0.28,
+      emissive: 0x0a526b,
+      emissiveIntensity: 0.48,
+      vertexColors: true,
+    });
+    const buildingGeometry = new THREE.BoxGeometry(1, 1, 1);
+    const roofGeometry = new THREE.BoxGeometry(1, 0.12, 1);
+    const roofMaterial = new THREE.MeshBasicMaterial({
+      color: 0x7cf5ff,
+      transparent: true,
+      opacity: 0.72,
+    });
+
+    const loadBuildings = async () => {
+      try {
+        const response = await fetch("./beijing-buildings.json");
+        if (!response.ok) throw new Error("building dataset unavailable");
+        const payload = (await response.json()) as { buildings: Building[] };
+        if (disposed) return;
+        const records = payload.buildings.filter((item) => item.points.length >= 3).slice(0, 5200);
+        const mesh = new THREE.InstancedMesh(buildingGeometry, buildingMaterial, records.length);
+        const roofRecords = records.filter((item) => (item.heightMeters || 16) > 40).slice(0, 700);
+        const roofs = new THREE.InstancedMesh(roofGeometry, roofMaterial, roofRecords.length);
+        const matrix = new THREE.Matrix4();
+        const color = new THREE.Color();
+
+        const footprint = (item: Building) => {
+          const xs = item.points.map((point) => point[0]);
+          const zs = item.points.map((point) => point[1]);
+          const x = (Math.min(...xs) + Math.max(...xs)) / 3.35;
+          const z = (Math.min(...zs) + Math.max(...zs)) / 3.35;
+          const width = Math.max(0.45, Math.min(6, (Math.max(...xs) - Math.min(...xs)) / 3.35));
+          const depth = Math.max(0.45, Math.min(6, (Math.max(...zs) - Math.min(...zs)) / 3.35));
+          const height = Math.max(1.2, Math.min(58, (item.heightMeters || 16) / 5.2));
+          return { x, z, width, depth, height };
+        };
+
+        records.forEach((item, index) => {
+          const { x, z, width, depth, height } = footprint(item);
+          matrix.compose(
+            new THREE.Vector3(x, 1.72 + height / 2, z),
+            new THREE.Quaternion(),
+            new THREE.Vector3(width, height, depth),
+          );
+          mesh.setMatrixAt(index, matrix);
+          const distance = Math.min(1, Math.sqrt(x * x + z * z) / 110);
+          color.setHSL(0.51 + distance * 0.055 + Math.random() * 0.018, 0.52, 0.31 + (1 - distance) * 0.18 + Math.random() * 0.08);
+          mesh.setColorAt(index, color);
+        });
+
+        roofRecords.forEach((item, index) => {
+          const { x, z, width, depth, height } = footprint(item);
+          matrix.compose(
+            new THREE.Vector3(x, 1.76 + height, z),
+            new THREE.Quaternion(),
+            new THREE.Vector3(width * 0.82, 1, depth * 0.82),
+          );
+          roofs.setMatrixAt(index, matrix);
+        });
+
+        mesh.instanceMatrix.needsUpdate = true;
+        mesh.instanceColor!.needsUpdate = true;
+        roofs.instanceMatrix.needsUpdate = true;
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        mesh.userData.asset = {
+          id: "beijing-building-network",
+          label: "北京城市建筑群",
+          category: "三维城市底座",
+          details: `${records.length.toLocaleString()} 栋建筑已接入城市数字孪生，支持空间定位、态势叠加与运行监测。`,
+          meta: "建筑高度 · 区位编码 · 能耗状态 · 实时同步",
+        } satisfies SmartAsset;
+        scene.add(mesh, roofs);
+        interactive.push(mesh);
+        onSceneStatus("ready");
+      } catch {
+        if (!disposed) onSceneStatus("degraded");
+      }
+    };
+    void loadBuildings();
+
+    const vehicleGeometry = new THREE.BoxGeometry(1.15, 0.48, 0.62);
+    const vehicleMaterial = new THREE.MeshStandardMaterial({
+      color: 0xd8faff,
+      emissive: 0x36ddef,
+      emissiveIntensity: 1.05,
+      metalness: 0.55,
+      roughness: 0.26,
+    });
+    const vehicles = new THREE.InstancedMesh(vehicleGeometry, vehicleMaterial, 54);
+    vehicles.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    scene.add(vehicles);
+    const vehicleMatrix = new THREE.Matrix4();
+    const vehicleRoutes = Array.from({ length: 54 }, (_, index) => ({
+      axis: index % 2,
+      lane: [-72, -46, -22, 0, 24, 49, 74][index % 7] + (index % 3 - 1) * 1.15,
+      offset: (index * 17) % 224,
+      speed: 0.15 + (index % 7) * 0.017,
+    }));
+
+    applyModeRef.current = (night, lights) => {
+      scene.background = new THREE.Color(night ? 0x01040a : 0x071f35);
+      scene.fog = new THREE.FogExp2(night ? 0x020812 : 0x0a2a3e, night ? 0.0075 : 0.0056);
+      ambient.intensity = night ? 0.42 : 1.15;
+      sun.intensity = night ? 0.16 : 2.4;
+      coreLight.intensity = night ? 34 : 22;
+      groundMaterial.color.setHex(night ? 0x020b12 : 0x071d2b);
+      cityBaseMaterial.emissiveIntensity = night ? 1.1 : 0.65;
+      roadMaterial.emissive.setHex(night ? 0x083040 : 0x05141d);
+      buildingMaterial.emissive.setHex(lights ? (night ? 0x087b9c : 0x0a526b) : 0x04121c);
+      buildingMaterial.emissiveIntensity = lights ? (night ? 0.95 : 0.48) : 0.1;
+      roofMaterial.opacity = lights ? (night ? 0.92 : 0.72) : 0.16;
+      laneMaterial.opacity = night ? 0.82 : 0.52;
+      riverMaterial.emissiveIntensity = night ? 0.9 : 0.55;
+    };
+    applyModeRef.current(nightRef.current, lightsRef.current);
+
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+    const pick = (event: PointerEvent) => {
+      const rect = renderer.domElement.getBoundingClientRect();
+      pointer.set(
+        ((event.clientX - rect.left) / rect.width) * 2 - 1,
+        -((event.clientY - rect.top) / rect.height) * 2 + 1,
+      );
+      raycaster.setFromCamera(pointer, camera);
+      const asset = raycaster.intersectObjects(interactive, false)[0]?.object.userData.asset as SmartAsset | undefined;
+      onSelect(asset || null);
+    };
+    renderer.domElement.addEventListener("pointerdown", pick);
+
+    const resize = () => {
+      const width = Math.max(1, element.clientWidth);
+      const height = Math.max(1, element.clientHeight);
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height, false);
+    };
+    const observer = new ResizeObserver(resize);
+    observer.observe(element);
+    resize();
+
+    const command = (event: Event) => {
+      const detail = (event as CustomEvent).detail;
+      if (detail === "zoomIn") camera.position.multiplyScalar(0.82);
+      if (detail === "zoomOut") camera.position.multiplyScalar(1.18);
+      if (detail === "reset") {
+        camera.position.set(118, 88, 128);
+        controls.target.set(0, 13, 0);
+      }
+      controls.update();
+    };
+    window.addEventListener("smart-city-camera", command);
+
+    const startTime = performance.now();
+    let frame = 0;
+    const animate = (time: number) => {
+      frame = requestAnimationFrame(animate);
+      const elapsed = (time - startTime) / 1000;
+      const count = Math.min(54, trafficRef.current);
+      vehicles.count = count;
+      vehicleRoutes.forEach((route, index) => {
+        if (index >= count) return;
+        const progress = (route.offset + elapsed * route.speed * 30) % 224 - 112;
+        const x = route.axis ? progress : route.lane;
+        const z = route.axis ? route.lane : progress;
+        const rotation = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, route.axis ? Math.PI / 2 : 0, 0));
+        vehicleMatrix.compose(new THREE.Vector3(x, 2.12, z), rotation, new THREE.Vector3(1, 1, 1));
+        vehicles.setMatrixAt(index, vehicleMatrix);
+      });
+      vehicles.instanceMatrix.needsUpdate = true;
+
+      scan.scale.setScalar(1 + ((elapsed * 0.2) % 1) * 43);
+      scanMaterial.opacity = 0.24 * (1 - ((elapsed * 0.2) % 1));
+      sensorMaterial.opacity = 0.5 + Math.sin(elapsed * 2.2) * 0.22;
+      dataRings.forEach((ring, index) => {
+        ring.rotation.z = elapsed * (index % 2 ? -0.025 : 0.02);
+        (ring.material as THREE.MeshBasicMaterial).opacity = 0.23 + Math.sin(elapsed * 1.4 + index) * 0.12;
+      });
+      districtHalos.forEach((halo, index) => {
+        const scale = 1 + Math.sin(elapsed * 2 + index) * 0.12;
+        halo.scale.setScalar(scale);
+      });
+      networkLines.forEach((line, index) => {
+        (line.material as THREE.LineDashedMaterial).dashOffset = -elapsed * (0.8 + index * 0.14);
+      });
+      pulses.forEach((pulse, index) => {
+        const curve = networkLines[index].userData.curve as THREE.CatmullRomCurve3;
+        pulse.position.copy(curve.getPoint((elapsed * 0.13 + index * 0.22) % 1));
+      });
+
+      if (tourRef.current) {
+        camera.position.x = Math.cos(elapsed * 0.075) * 150;
+        camera.position.z = Math.sin(elapsed * 0.075) * 150;
+        camera.position.y = 79 + Math.sin(elapsed * 0.11) * 14;
+        controls.target.set(0, 12, 0);
+      }
+      controls.update();
+      renderer.render(scene, camera);
+    };
+    frame = requestAnimationFrame(animate);
+
+    return () => {
+      disposed = true;
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      renderer.domElement.removeEventListener("pointerdown", pick);
+      window.removeEventListener("smart-city-camera", command);
+      controls.dispose();
+      renderer.dispose();
+      scene.traverse((object) => {
+        const mesh = object as THREE.Mesh;
+        mesh.geometry?.dispose?.();
+        if (Array.isArray(mesh.material)) mesh.material.forEach((material) => material.dispose());
+        else mesh.material?.dispose?.();
+      });
+      renderer.domElement.remove();
+    };
+  }, [onSceneStatus, onSelect]);
+
+  return <div ref={host} className="smart-city-scene" aria-label="北京科幻智慧城市三维数字孪生场景" />;
 }

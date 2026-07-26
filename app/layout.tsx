@@ -7,18 +7,18 @@ import "./demo-entry.css";
 import "./smart-city.css";
 
 export const metadata: Metadata = {
-  title: "京域智城｜智慧城市 3D 大屏与灵境哨兵演示项目",
-  description: "融合北京真实三维城市、实时数据大屏与灵境哨兵应急智能决策演示的一体化智慧城市平台。",
+  title: "京域智城｜北京市智慧城市运行指挥中心",
+  description: "科幻风北京智慧城市 3D 数字孪生大屏，融合城市建筑、交通、环境、感知网络与 AI 运行指标。",
   openGraph: {
-    title: "京域智城｜北京智慧城市 3D 大屏",
-    description: "登录城市运行中心，在真实北京三维大屏中进入灵境哨兵应急处置演示。",
-    images: ["https://fgonbhik.github.io/lingjing-sentinel/og.png"],
+    title: "京域智城｜北京市智慧城市运行指挥中心",
+    description: "在未来北京三维数字孪生中感知城市运行，并进入灵境哨兵 AI 应急处置演示。",
+    images: ["https://fgonbhik.github.io/lingjing-sentinel/og-future-city.png"],
   },
   twitter: {
     card: "summary_large_image",
-    title: "京域智城｜北京智慧城市 3D 大屏",
-    description: "北京真实三维城市与灵境哨兵 AI 应急演示项目。",
-    images: ["https://fgonbhik.github.io/lingjing-sentinel/og.png"],
+    title: "京域智城｜北京市智慧城市运行指挥中心",
+    description: "北京智慧城市 3D 数字孪生与灵境哨兵 AI 应急演示项目。",
+    images: ["https://fgonbhik.github.io/lingjing-sentinel/og-future-city.png"],
   },
 };
 

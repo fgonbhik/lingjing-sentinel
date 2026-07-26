@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import SmartCityScene, { type SmartAsset } from "./SmartCityScene";
 
 type Props = {
@@ -9,114 +9,266 @@ type Props = {
   onLogout: () => void;
 };
 
-const districts = [
-  ["朝阳区", "96.8", "+2.4%"],
-  ["海淀区", "94.2", "+1.8%"],
-  ["东城区", "92.7", "+1.2%"],
-  ["西城区", "91.9", "+0.9%"],
-  ["丰台区", "89.6", "+1.6%"],
+const navItems = ["全域态势", "城市治理", "交通脉搏", "生态能源", "公共安全"];
+
+const districtData = [
+  { name: "朝阳", score: 97.2, tone: "cyan", value: "商务活跃" },
+  { name: "海淀", score: 95.8, tone: "blue", value: "科技创新" },
+  { name: "东城", score: 94.6, tone: "green", value: "治理高效" },
+  { name: "丰台", score: 91.9, tone: "orange", value: "枢纽畅通" },
+];
+
+const eventFeed = [
+  { time: "21:26:48", level: "AI", text: "朝阳区交通流量预测完成", state: "已闭环" },
+  { time: "21:25:32", level: "感", text: "海淀区感知节点状态巡检", state: "正常" },
+  { time: "21:24:16", level: "能", text: "全市电网负荷进入平稳区间", state: "稳定" },
+  { time: "21:22:09", level: "环", text: "城市空气质量模型已更新", state: "优良" },
 ];
 
 const ticker = [
-  "全市重点道路平均车速 41.8 km/h",
-  "北京核心区空气质量优良率 94.6%",
-  "城市感知设备在线率 99.97%",
-  "新能源公交运行 12,486 辆",
-  "今日城市事件智能闭环率 96.8%",
+  "全市感知设备在线率 99.97%",
+  "重点道路平均车速 41.8 km/h",
+  "轨道交通在途列车 1,284 列",
+  "空气质量优良率 94.6%",
+  "城市事件智能闭环率 96.8%",
+  "新能源消纳比例 38.7%",
 ];
 
 export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }: Props) {
-  const [section, setSection] = useState("城市总览");
-  const [nightMode, setNightMode] = useState(false);
+  const [activeNav, setActiveNav] = useState("全域态势");
+  const [nightMode, setNightMode] = useState(true);
   const [buildingLights, setBuildingLights] = useState(true);
-  const [autoTour, setAutoTour] = useState(false);
+  const [autoTour, setAutoTour] = useState(true);
   const [topView, setTopView] = useState(false);
-  const [trafficDensity, setTrafficDensity] = useState(36);
+  const [trafficDensity, setTrafficDensity] = useState(54);
   const [selectedAsset, setSelectedAsset] = useState<SmartAsset | null>(null);
   const [sceneStatus, setSceneStatus] = useState<"loading" | "ready" | "degraded">("loading");
+  const [now, setNow] = useState(() => new Date());
+  const [pulse, setPulse] = useState(0);
 
-  const switchSection = (next: string) => {
-    if (next === "演示项目") {
-      onOpenDemo();
-      return;
-    }
-    setSection(next);
+  useEffect(() => {
+    const clock = window.setInterval(() => setNow(new Date()), 1000);
+    const heartbeat = window.setInterval(() => setPulse((value) => (value + 1) % 8), 2400);
+    return () => {
+      window.clearInterval(clock);
+      window.clearInterval(heartbeat);
+    };
+  }, []);
+
+  const time = now.toLocaleTimeString("zh-CN", { hour12: false });
+  const date = now.toLocaleDateString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit" });
+  const week = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"][now.getDay()];
+  const sceneLabel = useMemo(() => {
+    if (sceneStatus === "loading") return "正在构建北京三维建筑群";
+    if (sceneStatus === "degraded") return "城市基础模型已启用";
+    return "5,200 栋建筑在线 · 城市光网运行中";
+  }, [sceneStatus]);
+
+  const focusDistrict = (district: typeof districtData[number], index: number) => {
+    setSelectedAsset({
+      id: `district-${district.name}`,
+      label: `${district.name}区`,
+      category: "城区运行态势",
+      details: `${district.value}，当前城区综合运行指数 ${district.score}，城市感知、交通与公共服务状态正常。`,
+      meta: `AI 评分 ${district.score} · 数据刷新 128ms`,
+    });
+    window.dispatchEvent(new CustomEvent("smart-city-camera", { detail: index % 2 ? "zoomIn" : "reset" }));
   };
 
   return (
-    <main className={`smart-shell ${nightMode ? "is-night" : "is-day"}`}>
-      <header className="smart-topbar">
-        <div className="smart-brand-mark"><i /><i /><i /></div>
-        <div className="smart-brand"><b>京域智城</b><span>BEIJING SMART CITY DIGITAL TWIN</span></div>
-        <nav>{["城市总览", "交通运行", "能源环保", "公共安全", "演示项目"].map((item) =>
-          <button key={item} className={`${section === item ? "active" : ""} ${item === "演示项目" ? "demo" : ""}`} onClick={() => switchSection(item)}>{item}</button>
-        )}</nav>
-        <div className="smart-user"><i />系统在线 <span>{displayName}</span><button onClick={onLogout}>退出</button></div>
+    <main className={`future-city ${nightMode ? "night" : "day"}`}>
+      <div className="future-grid" aria-hidden="true" />
+      <div className="future-aurora future-aurora-a" aria-hidden="true" />
+      <div className="future-aurora future-aurora-b" aria-hidden="true" />
+
+      <header className="future-header">
+        <div className="future-brand">
+          <div className="future-brand-symbol"><i /><i /><i /><b /></div>
+          <div><strong>京域智城</strong><span>BEIJING URBAN INTELLIGENCE CENTER</span></div>
+        </div>
+
+        <div className="future-heading">
+          <span><i /> BEIJING DIGITAL TWIN · 2026</span>
+          <h1>北京市智慧城市运行指挥中心</h1>
+          <div><i /><i /><b>全域感知</b><i /><i /></div>
+        </div>
+
+        <div className="future-account">
+          <div className="future-time"><strong>{time}</strong><span>{date} · {week}</span></div>
+          <div className="future-user"><i />{displayName}<button onClick={onLogout}>退出</button></div>
+        </div>
       </header>
 
-      <section className="smart-titlebar">
-        <div><span>城市数字孪生运行中心</span><h1>北京智慧城市综合态势大屏</h1></div>
-        <div className="smart-clock"><strong>2026-07-25</strong><span>星期六　21:26:48</span></div>
-        <button className="smart-demo-cta" onClick={onOpenDemo}><i>▶</i><span><b>灵境哨兵</b>进入应急处置演示项目</span><em>DEMO 01</em></button>
-      </section>
+      <nav className="future-nav" aria-label="智慧城市功能导航">
+        {navItems.map((item, index) => (
+          <button key={item} className={activeNav === item ? "active" : ""} onClick={() => setActiveNav(item)}>
+            <i>0{index + 1}</i><span>{item}</span>
+          </button>
+        ))}
+        <button className="future-demo-nav" onClick={onOpenDemo}><i>AI</i><span>演示项目</span><em>ENTER</em></button>
+      </nav>
 
-      <section className="smart-kpis">
-        <article><i>城</i><div><span>常住人口</span><strong>2,183.2<small> 万人</small></strong><em>实时人口热力稳定</em></div></article>
-        <article><i>产</i><div><span>城市生产总值</span><strong>4.98<small> 万亿元</small></strong><em>数字经济占比 44.3%</em></div></article>
-        <article><i>路</i><div><span>实时交通指数</span><strong>1.42<small> 畅通</small></strong><em>平均车速 41.8 km/h</em></div></article>
-        <article><i>感</i><div><span>城市感知节点</span><strong>86.4<small> 万个</small></strong><em>设备在线率 99.97%</em></div></article>
-      </section>
-
-      <section className="smart-workspace">
-        <aside className="smart-side left">
-          <div className="smart-panel">
-            <header><span>01</span><b>城市运行概览</b><em>CITY OVERVIEW</em></header>
-            <div className="smart-gauge-row">
-              <div className="smart-gauge"><i style={{ "--value": "94%" } as React.CSSProperties}><b>94.6</b></i><span>城市健康度</span></div>
-              <div className="smart-gauge green"><i style={{ "--value": "88%" } as React.CSSProperties}><b>88.2</b></i><span>绿色发展</span></div>
+      <section className="future-stage">
+        <aside className="future-column left">
+          <section className="future-panel city-vitals">
+            <header><span>01</span><div><b>城市生命体征</b><em>URBAN VITAL SIGNS</em></div><i>LIVE</i></header>
+            <div className="vital-primary">
+              <div><span>常住人口</span><strong>2,183.2</strong><em>万人</em></div>
+              <div className="vital-wave" aria-hidden="true">{[34, 52, 41, 68, 48, 76, 57, 82, 61, 72, 55, 88].map((height, index) => <i key={index} style={{ height: `${height}%` }} />)}</div>
             </div>
-            <div className="smart-mini-grid"><div><span>城市面积</span><b>16,410 km²</b></div><div><span>建成区面积</span><b>1,469 km²</b></div><div><span>轨道交通</span><b>879 km</b></div><div><span>公园绿地</span><b>1,064 处</b></div></div>
-          </div>
-          <div className="smart-panel traffic">
-            <header><span>02</span><b>交通与环境</b><em>TRAFFIC & ENV</em></header>
-            <div className="smart-bars">{[["道路畅通率", 86], ["公共交通准点率", 94], ["充电设施可用率", 91], ["空气质量优良率", 95]].map(([name, value]) => <div key={name as string}><span>{name}</span><b>{value}%</b><i><em style={{ width: `${value}%` }} /></i></div>)}</div>
-            <div className="smart-weather"><strong>26°</strong><div><b>晴 · 东南风 3级</b><span>PM2.5　28 μg/m³</span><span>湿度 54%　能见度 18 km</span></div></div>
-          </div>
+            <div className="vital-grid">
+              <div><span>城市面积</span><b>16,410<small> km²</small></b><em>全域覆盖</em></div>
+              <div><span>地区生产总值</span><b>4.98<small> 万亿元</small></b><em>同比 +5.2%</em></div>
+              <div><span>轨道交通</span><b>879<small> km</small></b><em>在途 1,284 列</em></div>
+              <div><span>公园绿地</span><b>1,064<small> 处</small></b><em>绿色空间 49.8%</em></div>
+            </div>
+          </section>
+
+          <section className="future-panel event-center">
+            <header><span>02</span><div><b>城市事件中枢</b><em>AI EVENT STREAM</em></div><i>04</i></header>
+            <div className="event-list">
+              {eventFeed.map((event, index) => (
+                <article key={event.time} className={pulse === index ? "pulse" : ""}>
+                  <time>{event.time}</time><i>{event.level}</i><p>{event.text}<span>{event.state}</span></p>
+                </article>
+              ))}
+            </div>
+            <button className="event-action" onClick={onOpenDemo}><span>突发事件智能处置演示</span><b>启动灵境哨兵</b><i>→</i></button>
+          </section>
+
+          <section className="future-panel eco-panel">
+            <header><span>03</span><div><b>生态环境监测</b><em>ECOLOGICAL MONITORING</em></div><i>优</i></header>
+            <div className="eco-content">
+              <div className="air-orbit"><i /><b>28</b><span>PM2.5</span></div>
+              <div className="eco-stats">
+                <p><span>空气优良率</span><b>94.6%</b></p>
+                <p><span>平均温度</span><b>26.3°C</b></p>
+                <p><span>碳排强度</span><b>-4.8%</b></p>
+              </div>
+            </div>
+          </section>
         </aside>
 
-        <section className="smart-map-panel">
-          <header><div><i />{section} · 北京核心区三维数字孪生</div><span>{sceneStatus === "loading" ? "正在加载城市模型" : sceneStatus === "degraded" ? "降级数据模式" : "6,016 栋建筑 · 674 段道路 · LIVE"}</span></header>
-          <div className="smart-map">
-            <SmartCityScene topView={topView} nightMode={nightMode} buildingLights={buildingLights} autoTour={autoTour} trafficDensity={trafficDensity} onSelect={setSelectedAsset} onSceneStatus={setSceneStatus} />
-            <div className="smart-map-tools">
-              <button onClick={() => setTopView((value) => !value)}>◈ {topView ? "自由三维" : "垂直俯视"}</button>
-              <button onClick={() => setNightMode((value) => !value)}>{nightMode ? "☀ 白天" : "☾ 夜间"}</button>
-              <button className={buildingLights ? "on" : ""} onClick={() => setBuildingLights((value) => !value)}>✦ 楼宇灯光</button>
-              <button className={autoTour ? "on" : ""} onClick={() => setAutoTour((value) => !value)}>{autoTour ? "■ 停止巡航" : "▶ 自动巡航"}</button>
-              <button onClick={() => setTrafficDensity((value) => value === 18 ? 36 : value === 36 ? 54 : 18)}>车流 {trafficDensity}</button>
+        <section className="future-center">
+          <div className="scene-head">
+            <div><i /><span>{activeNav}</span><b>北京核心区三维数字孪生</b></div>
+            <em className={sceneStatus}>{sceneLabel}</em>
+          </div>
+          <div className="future-scene">
+            <SmartCityScene
+              topView={topView}
+              nightMode={nightMode}
+              buildingLights={buildingLights}
+              autoTour={autoTour}
+              trafficDensity={trafficDensity}
+              onSelect={setSelectedAsset}
+              onSceneStatus={setSceneStatus}
+            />
+
+            <div className="scene-scanline" aria-hidden="true" />
+            <div className="scene-corners" aria-hidden="true"><i /><i /><i /><i /></div>
+            <div className="scene-coordinate">
+              <span>39°54′27″N</span><i /><span>116°27′07″E</span><b>BEIJING</b>
             </div>
-            <div className="smart-map-zoom"><button onClick={() => window.dispatchEvent(new CustomEvent("smart-city-camera", { detail: "zoomIn" }))}>＋</button><button onClick={() => window.dispatchEvent(new CustomEvent("smart-city-camera", { detail: "zoomOut" }))}>−</button></div>
-            <div className="smart-compass">N<i /></div>
-            <div className="smart-map-caption"><span>39°54′27″N　116°27′07″E</span><b>BEIJING · REAL-WORLD DIGITAL TWIN</b></div>
-            {selectedAsset && <article className="smart-asset"><button onClick={() => setSelectedAsset(null)}>×</button><span>{selectedAsset.category}</span><strong>{selectedAsset.label}</strong><p>{selectedAsset.details}</p><em>{selectedAsset.meta}</em></article>}
+            <div className="scene-layer">
+              <span>DATA LAYERS</span>
+              <i className="cyan" /><em>建筑</em><i className="blue" /><em>交通</em><i className="green" /><em>感知</em>
+            </div>
+            <div className="scene-orientation"><b>N</b><i /><span>024°</span></div>
+
+            <div className="scene-districts">
+              {districtData.map((district, index) => (
+                <button key={district.name} onClick={() => focusDistrict(district, index)}>
+                  <i className={district.tone} /><span>{district.name}</span><b>{district.score}</b>
+                </button>
+              ))}
+            </div>
+
+            <div className="scene-controls">
+              <button className={topView ? "on" : ""} onClick={() => setTopView((value) => !value)}><i>◇</i>{topView ? "自由视角" : "垂直俯视"}</button>
+              <button className={autoTour ? "on" : ""} onClick={() => setAutoTour((value) => !value)}><i>{autoTour ? "■" : "▶"}</i>{autoTour ? "停止巡航" : "自动巡航"}</button>
+              <button className={buildingLights ? "on" : ""} onClick={() => setBuildingLights((value) => !value)}><i>✦</i>建筑光网</button>
+              <button onClick={() => setNightMode((value) => !value)}><i>{nightMode ? "☀" : "☾"}</i>{nightMode ? "日间模式" : "夜间模式"}</button>
+              <button onClick={() => setTrafficDensity((value) => value === 18 ? 36 : value === 36 ? 54 : 18)}><i>⇄</i>车流 {trafficDensity}</button>
+              <button aria-label="复位三维视角" onClick={() => window.dispatchEvent(new CustomEvent("smart-city-camera", { detail: "reset" }))}><i>⌖</i>视角复位</button>
+            </div>
+
+            <div className="scene-zoom">
+              <button aria-label="放大城市模型" onClick={() => window.dispatchEvent(new CustomEvent("smart-city-camera", { detail: "zoomIn" }))}>＋</button>
+              <i />
+              <button aria-label="缩小城市模型" onClick={() => window.dispatchEvent(new CustomEvent("smart-city-camera", { detail: "zoomOut" }))}>−</button>
+            </div>
+
+            {selectedAsset && (
+              <article className="future-asset-card">
+                <button aria-label="关闭详情" onClick={() => setSelectedAsset(null)}>×</button>
+                <span>{selectedAsset.category}</span>
+                <strong>{selectedAsset.label}</strong>
+                <p>{selectedAsset.details}</p>
+                <em>{selectedAsset.meta}</em>
+              </article>
+            )}
           </div>
         </section>
 
-        <aside className="smart-side right">
-          <div className="smart-panel">
-            <header><span>03</span><b>智慧城市指标</b><em>SMART METRICS</em></header>
-            <div className="smart-score"><div><span>城市智慧指数</span><strong>96.4</strong><em>全国领先</em></div><i><b>AI</b><span>实时计算</span></i></div>
-            <div className="smart-metric-list">{[["政务服务在线办结率", "98.7%", "green"], ["城市事件自动发现率", "96.8%", "cyan"], ["能源综合利用效率", "89.5%", "blue"], ["公共安全响应速度", "2.8 min", "orange"]].map(([name, value, tone]) => <div key={name}><i className={tone} /><span>{name}</span><b>{value}</b></div>)}</div>
-          </div>
-          <div className="smart-panel district">
-            <header><span>04</span><b>城区发展指数</b><em>DISTRICT DATA</em></header>
-            {districts.map(([name, score,delta], index) => <button key={name} onClick={() => { setSection(name); window.dispatchEvent(new CustomEvent("smart-city-camera", { detail: index % 2 ? "zoomIn" : "reset" })); }}><i>{String(index + 1).padStart(2, "0")}</i><span>{name}<em><b style={{ width: `${Number(score)}%` }} /></em></span><strong>{score}</strong><small>{delta}</small></button>)}
-          </div>
-          <button className="smart-demo-card" onClick={onOpenDemo}><span>FEATURED AI DEMO</span><strong>危化品运输事故<br />全链路智能处置</strong><p>图片识别 · 风险扩散 · 路径重规划 · 多智能体协同</p><em>进入演示项目 →</em></button>
+        <aside className="future-column right">
+          <section className="future-panel ai-index">
+            <header><span>04</span><div><b>城市智能指数</b><em>CITY AI INDEX</em></div><i>TOP 1</i></header>
+            <div className="ai-score">
+              <div className="score-rings"><i /><i /><i /><strong>96.4</strong><span>综合评分</span></div>
+              <div className="score-copy"><span>AI 城市大脑</span><b>运行卓越</b><em>较昨日 +1.8%</em><p>城市治理模型实时计算中</p></div>
+            </div>
+            <div className="ai-dimensions">
+              {[
+                ["感知覆盖", 98],
+                ["协同效率", 94],
+                ["预测准确", 96],
+                ["处置闭环", 97],
+              ].map(([name, value]) => (
+                <div key={name as string}><span>{name}</span><i><b style={{ width: `${value}%` }} /></i><em>{value}%</em></div>
+              ))}
+            </div>
+          </section>
+
+          <section className="future-panel traffic-panel">
+            <header><span>05</span><div><b>交通运行脉搏</b><em>TRAFFIC MOBILITY</em></div><i>畅通</i></header>
+            <div className="traffic-number"><span>全路网交通指数</span><strong>1.42</strong><em>畅通</em></div>
+            <div className="traffic-flow" aria-label="近八小时交通流量趋势">
+              {[31, 43, 52, 47, 68, 76, 64, 83, 71, 62, 54, 59, 46, 39].map((height, index) => <i key={index} style={{ height: `${height}%` }} />)}
+            </div>
+            <div className="traffic-meta"><span>平均车速<b>41.8 km/h</b></span><span>拥堵里程<b>28.6 km</b></span><span>信号协调率<b>92.7%</b></span></div>
+          </section>
+
+          <section className="future-panel district-rank">
+            <header><span>06</span><div><b>城区运行排行</b><em>DISTRICT RANKING</em></div><i>16 区</i></header>
+            <div>
+              {districtData.map((district, index) => (
+                <button key={district.name} onClick={() => focusDistrict(district, index)}>
+                  <i>{String(index + 1).padStart(2, "0")}</i>
+                  <span>{district.name}区<em><b style={{ width: `${district.score}%` }} /></em></span>
+                  <strong>{district.score}</strong>
+                  <small>{district.value}</small>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <button className="future-demo-card" onClick={onOpenDemo}>
+            <div><span>FEATURED AI DEMO</span><em>01</em></div>
+            <strong>灵境哨兵</strong>
+            <p>危化品运输事故全链路智能处置</p>
+            <b>事故识别 · 扩散计算 · 路径重规划</b>
+            <i>立即进入演示项目 <span>→</span></i>
+          </button>
         </aside>
       </section>
 
-      <footer className="smart-ticker"><b>城市实时数据</b><div><span>{ticker.join("　　◆　　")}</span></div><em>数据更新 128 ms</em></footer>
+      <footer className="future-footer">
+        <div><i />CITY DATA STREAM</div>
+        <section><span>{ticker.join("　　◇　　")}</span></section>
+        <em>DATA LATENCY <b>128 ms</b></em>
+        <strong><i />AI ENGINE ONLINE</strong>
+      </footer>
     </main>
   );
 }
