@@ -32,7 +32,7 @@ export default function DataDetailDialog({ data, onClose, tone = "cyan" }: Props
           </div>
         </div>
         <footer>
-          <span>城市感知网络 · AI 决策引擎</span>
+          <span>城市感知网络 · 模型与算法引擎</span>
           <button onClick={onClose}>关闭详情</button>
         </footer>
       </section>

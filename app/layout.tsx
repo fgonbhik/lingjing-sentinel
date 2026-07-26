@@ -6,6 +6,7 @@ import "./modules.css";
 import "./demo-entry.css";
 import "./smart-city.css";
 import "./panel-polish.css";
+import "./ai-evidence.css";
 
 export const metadata: Metadata = {
   title: "京域智城｜北京市智慧城市运行指挥中心",

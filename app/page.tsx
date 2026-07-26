@@ -7,6 +7,8 @@ import DemoProjectEntry from "./DemoProjectEntry";
 import SmartCityDashboard from "./SmartCityDashboard";
 import AniNum from "./AniNum";
 import DataDetailDialog from "./DataDetailDialog";
+import AiEvidenceCenter from "./AiEvidenceCenter";
+import AgentAuditDialog from "./AgentAuditDialog";
 import { analyzeAccidentImage, computeAStarRoute, computeGaussianPlume, type VisionResult } from "./decision-engine";
 
 const departments = [
@@ -150,7 +152,23 @@ export default function Home() {
   const [reportGeneratedAt, setReportGeneratedAt] = useState("2026-07-20 14:32:26");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
-  const [vision, setVision] = useState<VisionResult>({type:"氯气泄漏",confidence:.968,smokeRatio:.214,flameRatio:.008,edgeDensity:.182,persons:23,summary:"检测到淡黄色烟羽和危化品运输车辆，建议启动危化品二级响应。"});
+  const [vision, setVision] = useState<VisionResult>({
+    type:"演示预置：氯气泄漏",
+    confidence:.968,
+    smokeRatio:.214,
+    flameRatio:.008,
+    edgeDensity:.182,
+    persons:23,
+    summary:"固定演示事件包用于保证 72 秒流程稳定；上传图片后将切换为真实本地 ONNX 推理。",
+    modelMode:"demo",
+    modelName:"演示预置事件包",
+    modelVersion:"SCENARIO FIXTURE v1.0",
+    inferenceMs:0,
+    detections:[],
+    explanation:["预置结果仅用于固定比赛演示","上传任意图片可触发真实本地 ONNX 模型"],
+  });
+  const [aiEvidenceOpen,setAiEvidenceOpen]=useState(false);
+  const [agentAuditOpen,setAgentAuditOpen]=useState(false);
   const [scenarioStatus,setScenarioStatus]=useState<ScenarioStatus>("idle");
   const [scenarioTime,setScenarioTime]=useState(0);
   const [scenarioSpeed,setScenarioSpeed]=useState(1);
@@ -165,7 +183,7 @@ export default function Home() {
   const route = useMemo(()=>computeAStarRoute(blocked),[blocked]);
   const reportText = useMemo(()=>{
     const routeDistance=realRoute?.distance??route.distance,routeEta=realRoute?.eta??route.eta,routeRoads=realRoute?.roads.join(" → ")||"OSM 真实道路网络加载中";
-    return `灵境哨兵｜危化品泄漏应急处置报告\n报告编号：LJ-BJ-20260720-001\n生成时间：${reportGeneratedAt}\n响应等级：Ⅰ级应急响应\n\n一、事件概况\n事件地点：北京市朝阳区建国门外大街国贸桥西侧（演示坐标 39°54′27″N，116°27′07″E）\n事件类型：${vision.type}\nAI 识别置信度：${(vision.confidence*100).toFixed(1)}%\n现场人员估计：约 ${vision.persons} 人\n研判摘要：${vision.summary}\n\n二、风险扩散计算\n气象条件：东南风 3.4 m/s，污染羽流吹向西北，Pasquill-D 稳定度\n致命区纵深：${plume.lethal} m\n高风险区纵深：${plume.high} m\n警戒区纵深：${plume.warning} m\n预计风险暴露人口：${plume.affectedPeople} 人\n模型：${plume.model}\n\n三、消防救援路线\n算法：OSM 真实路网 A*（欧氏距离启发）\n道路序列：${routeRoads}\n路线距离：${routeDistance} m\n预计到达：${routeEta} min\n搜索道路节点：${realRoute?.visited??route.visited} 个\n封路状态：${blocked?`已封锁 OSM 道路 ${realRoute?.blockedRoadId??blockedRoadId??"自动选择路段"}，完成动态重规划`:"当前道路正常通行"}\n\n四、联合处置指令\n1. 交通智能体：立即封锁泄漏点周边 500 m 道路，建立 3.2 km 应急绿波带。\n2. 教育智能体：城北实验学校师生经东南侧上风向安全通道分批疏散，8 分钟内完成重点人员转移。\n3. 消防智能体：2 辆泡沫消防车沿 OSM 规划路线抵达，在上风向布置水幕并实施堵漏。\n4. 医疗智能体：市第三人民医院开放绿色通道，在体育中心设置临时分诊点。\n5. 环境监测组：在下风向 200 m、500 m、1000 m 设置连续监测点，每 2 分钟回传浓度。\n\n五、处置结论\n建议立即启动危化品泄漏Ⅰ级联合响应，优先完成学校疏散、道路管制和泄漏源控制。AI 决策结果仅用于竞赛演示，正式行动应由现场指挥员复核确认。\n\n生成系统：灵境哨兵城市应急智能决策平台`;
+    return `灵境哨兵｜危化品泄漏应急处置报告\n报告编号：LJ-BJ-20260720-001\n生成时间：${reportGeneratedAt}\n响应等级：Ⅰ级应急响应\n\n一、事件概况\n事件地点：北京市朝阳区建国门外大街国贸桥西侧（演示坐标 39°54′27″N，116°27′07″E）\n事件类型：${vision.type}\n视觉研判方式：${vision.modelName}（${vision.modelMode === "onnx" ? "本地 ONNX 推理" : vision.modelMode === "demo" ? "演示预置事件包" : "端侧可解释特征研判"}）\n视觉置信度：${(vision.confidence*100).toFixed(1)}%\n现场人员估计：约 ${vision.persons} 人\n研判摘要：${vision.summary}\n\n二、物理风险扩散计算\n气象条件：东南风 3.4 m/s，污染羽流吹向西北，Pasquill-D 稳定度\n致命区纵深：${plume.lethal} m\n高风险区纵深：${plume.high} m\n警戒区纵深：${plume.warning} m\n预计风险暴露人口：${plume.affectedPeople} 人\n物理模型：${plume.model}\n\n三、消防救援路径规划\n算法：OSM 真实路网 A*（欧氏距离启发，不属于 AI 识别）\n道路序列：${routeRoads}\n路线距离：${routeDistance} m\n预计到达：${routeEta} min\n搜索道路节点：${realRoute?.visited??route.visited} 个\n封路状态：${blocked?`已封锁 OSM 道路 ${realRoute?.blockedRoadId??blockedRoadId??"自动选择路段"}，完成动态重规划`:"当前道路正常通行"}\n\n四、联合处置指令\n1. 交通智能体：立即封锁泄漏点周边 500 m 道路，建立 3.2 km 应急绿波带。\n2. 教育智能体：城北实验学校师生经东南侧上风向安全通道分批疏散，8 分钟内完成重点人员转移。\n3. 消防智能体：2 辆泡沫消防车沿 OSM 规划路线抵达，在上风向布置水幕并实施堵漏。\n4. 医疗智能体：市第三人民医院开放绿色通道，在体育中心设置临时分诊点。\n5. 环境监测组：在下风向 200 m、500 m、1000 m 设置连续监测点，每 2 分钟回传浓度。\n\n五、处置结论\n建议立即启动危化品泄漏Ⅰ级联合响应，优先完成学校疏散、道路管制和泄漏源控制。本结论由视觉模型、物理扩散计算、A* 路径规划与规则化协同流程联合生成，仅用于竞赛演示；正式行动应由现场指挥员复核确认。\n\n生成系统：灵境哨兵城市应急联合决策平台`;
   },[blocked,blockedRoadId,plume,realRoute,reportGeneratedAt,route,vision]);
 
   useEffect(() => {
@@ -203,8 +221,8 @@ export default function Home() {
   },[directorMode,directorTarget,scenarioPhase]);
 
   useEffect(()=>{
-    const keyboard=(event:KeyboardEvent)=>{const target=event.target as HTMLElement;if(["INPUT","TEXTAREA","SELECT"].includes(target.tagName))return;if(event.code==="Escape"){if(demoEntryOpen){setDemoEntryOpen(false);return}if(reportOpen){setReportOpen(false);return}if(accountMenuOpen){setAccountMenuOpen(false);return}if(activeModule!=="overview"){setActiveModule("overview");return}if(selectedAsset){setSelectedAsset(null);return}setDirectorMode(false);setFollowingId(null);window.dispatchEvent(new CustomEvent("city-camera",{detail:{action:"follow",assetId:null}}));return}const moduleIndex:{[key:string]:ModuleId}={Digit1:"overview",Digit2:"events",Digit3:"resources",Digit4:"archives"};if(moduleIndex[event.code]){event.preventDefault();setActiveModule(moduleIndex[event.code]);setAccountMenuOpen(false);return}if(scenarioPhase===0||activeModule!=="overview"||reportOpen)return;if(event.code==="Space"){event.preventDefault();setScenarioStatus(status=>status==="playing"?"paused":status==="paused"?"playing":status)}if(event.code==="ArrowRight"){event.preventDefault();const next=scenarioStages[Math.min(9,scenarioPhase+1)];setScenarioTime(next.start+.01);setScenarioStatus(next.id===9?"paused":"playing")}};window.addEventListener("keydown",keyboard);return()=>window.removeEventListener("keydown",keyboard)
-  },[accountMenuOpen,activeModule,demoEntryOpen,reportOpen,scenarioPhase,selectedAsset]);
+    const keyboard=(event:KeyboardEvent)=>{const target=event.target as HTMLElement;if(["INPUT","TEXTAREA","SELECT"].includes(target.tagName))return;if(event.code==="Escape"){if(aiEvidenceOpen){setAiEvidenceOpen(false);return}if(agentAuditOpen){setAgentAuditOpen(false);return}if(demoEntryOpen){setDemoEntryOpen(false);return}if(reportOpen){setReportOpen(false);return}if(accountMenuOpen){setAccountMenuOpen(false);return}if(activeModule!=="overview"){setActiveModule("overview");return}if(selectedAsset){setSelectedAsset(null);return}setDirectorMode(false);setFollowingId(null);window.dispatchEvent(new CustomEvent("city-camera",{detail:{action:"follow",assetId:null}}));return}const moduleIndex:{[key:string]:ModuleId}={Digit1:"overview",Digit2:"events",Digit3:"resources",Digit4:"archives"};if(moduleIndex[event.code]){event.preventDefault();setActiveModule(moduleIndex[event.code]);setAccountMenuOpen(false);return}if(scenarioPhase===0||activeModule!=="overview"||reportOpen||aiEvidenceOpen||agentAuditOpen)return;if(event.code==="Space"){event.preventDefault();setScenarioStatus(status=>status==="playing"?"paused":status==="paused"?"playing":status)}if(event.code==="ArrowRight"){event.preventDefault();const next=scenarioStages[Math.min(9,scenarioPhase+1)];setScenarioTime(next.start+.01);setScenarioStatus(next.id===9?"paused":"playing")}};window.addEventListener("keydown",keyboard);return()=>window.removeEventListener("keydown",keyboard)
+  },[accountMenuOpen,activeModule,agentAuditOpen,aiEvidenceOpen,demoEntryOpen,reportOpen,scenarioPhase,selectedAsset]);
 
   useEffect(()=>{if(!accountMenuOpen)return;const dismiss=(event:PointerEvent)=>{const target=event.target as Element;if(!target.closest(".status"))setAccountMenuOpen(false)};window.addEventListener("pointerdown",dismiss,true);return()=>window.removeEventListener("pointerdown",dismiss,true)},[accountMenuOpen]);
 
@@ -264,9 +282,18 @@ export default function Home() {
   };
 
   const analyzeUpload = async (file?: File) => {
-    if(!file)return; setAnalyzing(true);
+    if(!file)return;
+    if(!file.type.startsWith("image/")){setSystemNotice("请选择 JPG、PNG 或 WebP 图片");return}
+    if(file.size>15*1024*1024){setSystemNotice("图片超过 15MB，请压缩后重试");return}
+    setAnalyzing(true);
     const preview=URL.createObjectURL(file); setImagePreview(old=>{if(old)URL.revokeObjectURL(old);return preview});
-    try{setVision(await analyzeAccidentImage(file))}finally{setAnalyzing(false)}
+    try{
+      const result=await analyzeAccidentImage(file);
+      setVision(result);
+      setSystemNotice(result.modelMode==="onnx"?`本地 ONNX 推理完成：${result.type} · ${(result.confidence*100).toFixed(1)}%`:"ONNX 不可用，已明确切换为可解释视觉降级模式");
+    }catch(error){
+      setSystemNotice(`图片分析失败：${error instanceof Error?error.message:"未知错误"}`);
+    }finally{setAnalyzing(false)}
   };
 
   const handleAuthenticated=(session:AuthSession,remember:boolean)=>{
@@ -305,30 +332,32 @@ export default function Home() {
           <div className="panel-title"><span>01</span>事件智能识别 <b>AI VISION</b></div>
           <div className="scene">
             {imagePreview && <img className="scene-upload-preview" src={imagePreview} alt="上传的事故现场" />}
+            {imagePreview&&vision.detections.map((detection,index)=><div className={`vision-detection ${detection.label}`} key={`${detection.label}-${index}`} style={{left:`${detection.box.x}%`,top:`${detection.box.y}%`,width:`${detection.box.width}%`,height:`${detection.box.height}%`}}><span>{detection.labelZh} {(detection.confidence*100).toFixed(1)}%</span></div>)}
             <div className="sky" />
             <div className="road-lines" />
             <div className={`truck ${scenarioPhase>=2?"failed":""}`}><span>化学废料</span></div>
             {scenarioPhase>=2&&<><div className="smoke s1" /><div className="smoke s2" /><div className="smoke s3" /></>}
-            {scenarioPhase>=3&&<><div className="detect-box"><label>化学废料运输车 98.2%</label></div><div className="detect-smoke"><label>含氯挥发气体 96.8%</label></div></>}
+            {!imagePreview&&scenarioPhase>=3&&<><div className="detect-box"><label>演示预置 · 危化车辆</label></div><div className="detect-smoke"><label>演示预置 · 氯气泄漏</label></div></>}
             <div className="camera">CAM-07 · LIVE</div>
-            <label className="upload-image">{analyzing?"分析中…":"上传事故图"}<input type="file" accept="image/*" onChange={e=>analyzeUpload(e.target.files?.[0])} /></label>
-            <div className="local-cv">LOCAL CV · PIXEL FEATURE MODEL</div>
+            <label className="upload-image">{analyzing?"ONNX 推理中…":"上传图片 · 本地识别"}<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>{void analyzeUpload(e.target.files?.[0]);e.currentTarget.value=""}} /></label>
+            <div className={`model-status-chip ${vision.modelMode==="explainable-fallback"?"fallback":""}`}>{vision.modelMode==="onnx"?`ONNX LOCAL · ${vision.inferenceMs}ms`:vision.modelMode==="demo"?"SCENARIO FIXTURE · 可上传实测":"EXPLAINABLE FALLBACK"}</div>
           </div>
           <div className="recognition">
             <button type="button" className={activeSideControl==="vehicle"?"active":""} onClick={()=>{focusIncident();openSideInsight("vehicle","危化品车辆状态","事件智能识别",scenarioPhase===0?"演示车辆已加载并等待启动。":currentScenario.detail,`京A·WH2576 · 阶段 ${String(scenarioPhase).padStart(2,"0")}`)}}><span>车辆状态</span><strong>{scenarioPhase===0?"等待演示":scenarioPhase===1?"正常运输":scenarioPhase===2?"动力故障":"已停车处置"}</strong></button>
-            <button type="button" className={activeSideControl==="confidence"?"active":""} onClick={()=>{focusIncident();openSideInsight("confidence","AI 识别置信度","本地视觉模型",vision.summary,`置信度 ${(vision.confidence*100).toFixed(1)}% · PIXEL FEATURE MODEL`)}}><span>AI 识别置信度</span><strong>{scenarioPhase>=3?<AniNum to={vision.confidence*100} decimals={1} suffix="%" />:"—"}</strong></button>
-            <button type="button" className={activeSideControl==="plume"?"active":""} onClick={()=>{setShowRisk(true);focusIncident();openSideInsight("plume","烟羽像素与风险扩散","风险扩散计算",`烟羽像素占比 ${(vision.smokeRatio*100).toFixed(1)}%，当前警戒纵深 ${plume.warning} 米。`,`高斯烟羽 · ${plume.model}`)}}><span>烟羽像素占比</span><strong><AniNum to={scenarioPhase>=3?vision.smokeRatio*100:0} decimals={1} suffix="%" /></strong></button>
+            <button type="button" className={activeSideControl==="confidence"?"active":""} onClick={()=>{focusIncident();openSideInsight("confidence","视觉模型置信度",vision.modelMode==="onnx"?"AI 视觉目标检测":"演示/降级结果",vision.summary,`${vision.modelName} · ${vision.modelVersion}`)}}><span>视觉模型置信度</span><strong>{imagePreview||scenarioPhase>=3?<AniNum to={vision.confidence*100} decimals={1} suffix="%" />:"—"}</strong></button>
+            <button type="button" className={activeSideControl==="plume"?"active":""} onClick={()=>{setShowRisk(true);focusIncident();openSideInsight("plume","像素辅助特征与物理扩散","物理模型输入",`像素辅助烟羽占比 ${(vision.smokeRatio*100).toFixed(1)}%，物理模型计算警戒纵深 ${plume.warning} 米。`,`非 AI · ${plume.model}`)}}><span>像素辅助占比</span><strong><AniNum to={imagePreview||scenarioPhase>=3?vision.smokeRatio*100:0} decimals={1} suffix="%" /></strong></button>
             <button type="button" className={activeSideControl==="evacuated"?"active":""} onClick={()=>openSideInsight("evacuated","人员疏散进度","联合处置态势",scenarioPhase>=6?"重点区域 186 人已完成向侧上风向疏散。":"人员疏散队伍已待命，将在交通封控完成后执行。",scenarioPhase>=6?"186 人 · 已完成":"0 人 · 等待执行")}><span>已疏散人员</span><strong><AniNum to={scenarioPhase>=6?186:0} suffix=" 人" /></strong></button>
           </div>
-          <button type="button" className={`ai-note side-wide-action ${activeSideControl==="ai-note"?"active":""}`} onClick={()=>{setShowRisk(true);focusIncident();openSideInsight("ai-note",scenarioPhase>=3?"本地视觉研判":"运输遥测状态","AI 研判摘要",scenarioPhase===0?"等待启动完整演示，车辆与应急力量已加载。":currentScenario.detail,scenarioPhase>=3?"东南风 3.4m/s · 风险模型已联动":"车辆遥测 · 正常待命")}}><b>{scenarioPhase>=3?"本地视觉研判":"运输遥测状态"}</b><p>{scenarioPhase===0?"等待启动完整演示，车辆与应急力量已加载。":currentScenario.detail} {scenarioPhase>=3&&<>东南风 3.4 m/s（吹向西北），预计 <em>{Math.max(3,Math.round(480/3.4/60))} 分钟</em>进入重点警戒区域。</>}</p></button>
+          <button type="button" className={`ai-note side-wide-action ${activeSideControl==="ai-note"?"active":""}`} onClick={()=>{setShowRisk(true);focusIncident();openSideInsight("ai-note",imagePreview?"本地 ONNX 视觉研判":scenarioPhase>=3?"演示预置研判":"运输遥测状态",imagePreview&&vision.modelMode==="onnx"?"AI 视觉模型输出":scenarioPhase>=3?"演示预置事件":"车辆遥测",imagePreview?vision.summary:scenarioPhase===0?"等待启动完整演示，车辆与应急力量已加载。":currentScenario.detail,imagePreview?`${vision.modelName} · 图片未上传服务器`:scenarioPhase>=3?"固定比赛流程 · 非实时模型输出":"车辆遥测 · 正常待命")}}><b>{imagePreview?"本地 ONNX 视觉研判":scenarioPhase>=3?"演示预置研判":"运输遥测状态"}</b><p>{imagePreview?vision.summary:scenarioPhase===0?"等待启动完整演示，车辆与应急力量已加载。":currentScenario.detail} {!imagePreview&&scenarioPhase>=3&&<>东南风 3.4 m/s（吹向西北），预计 <em>{Math.max(3,Math.round(480/3.4/60))} 分钟</em>进入重点警戒区域。</>}</p></button>
           <div className="panel-title compact"><span>02</span>智能体协同 <b>MULTI-AGENT</b></div>
           <div className="agents">{departments.map((d, i) => {const activation=[4,4,4,3][i],completion=[7,8,6,9][i],active=scenarioPhase>=activation,done=scenarioPhase>=completion,resource=["FIRE-01","MED-03","POLICE-07","COMMAND"][i];return <button type="button" className={`agent ${d.tone} ${active?"scenario-active":""} ${done?"scenario-done":""} ${activeSideControl===`agent-${i}`?"side-selected":""}`} key={d.name} onClick={()=>{setActiveSideControl(`agent-${i}`);if(resource==="COMMAND"){focusIncident();openSideInsight(`agent-${i}`,d.name,"多智能体协同",d.text,"指挥中枢 · 联合处置")}else{trackResource(resource)}}}><i>{done?"✓":d.icon}</i><p><b>{d.name}</b><span>{!active?"系统待命 · 点击可提前追踪":done?"阶段任务完成 · 点击查看位置":running&&pulse===i?"正在执行当前处置任务…":d.text}</span></p><em>●</em></button>})}</div>
+          <div className="evidence-launches"><button type="button" onClick={()=>setAiEvidenceOpen(true)}><span>MODEL · DATA · METRICS</span><b>查看 AI 证据链</b></button><button type="button" onClick={()=>setAgentAuditOpen(true)}><span>TASK · MESSAGE · BASIS</span><b>查看协同审计</b></button></div>
         </aside>
 
         <section className="map-panel panel">
           <div className="panel-title"><span>03</span>真实城市三维推演 <b>REAL-WORLD DIGITAL TWIN</b><div className="map-tools"><button aria-label="缩小" onClick={()=>window.dispatchEvent(new CustomEvent("city-camera",{detail:"zoomOut"}))}>−</button><button aria-label="放大" onClick={()=>window.dispatchEvent(new CustomEvent("city-camera",{detail:"zoomIn"}))}>＋</button></div></div>
           <div className="map" onClick={()=>setSelectedAsset(null)}>
-            <CityScene running={running} blocked={blocked} blockedRoadId={blockedRoadId} showRisk={showRisk} topView={!tilt} nightMode={nightMode} buildingLights={buildingLights} autoTour={autoTour} suspended={activeModule!=="overview"||reportOpen} scenarioPhase={scenarioPhase} scenarioTime={scenarioTime} trafficDensity={trafficDensity} onSelect={setSelectedAsset} onRealRoute={setRealRoute} onSceneStatus={status=>{setSceneStatus(status);if(status==="degraded")setSystemNotice("真实路网数据异常，已自动启用内置完整路线")}} plume={plume} />
+            <CityScene running={running} blocked={blocked} blockedRoadId={blockedRoadId} showRisk={showRisk} topView={!tilt} nightMode={nightMode} buildingLights={buildingLights} autoTour={autoTour} suspended={activeModule!=="overview"||reportOpen||aiEvidenceOpen||agentAuditOpen} scenarioPhase={scenarioPhase} scenarioTime={scenarioTime} trafficDensity={trafficDensity} onSelect={setSelectedAsset} onRealRoute={setRealRoute} onSceneStatus={status=>{setSceneStatus(status);if(status==="degraded")setSystemNotice("真实路网数据异常，已自动启用内置完整路线")}} plume={plume} />
             <div className={`scenario-console phase-${scenarioPhase} ${scenarioStatus}`} onClick={event=>event.stopPropagation()}>
               <div className="scenario-now"><i>{currentScenario.icon}</i><div><span>SCENARIO DIRECTOR · {scenarioPhase===0?"READY":`${String(scenarioPhase).padStart(2,"0")}/09`}</span><strong>{currentScenario.title}</strong><p>{currentScenario.subtitle}</p></div><em>{scenarioPhase===0?"01:12":`${Math.floor(scenarioTime/60).toString().padStart(2,"0")}:${Math.floor(scenarioTime%60).toString().padStart(2,"0")}`}</em></div>
               <div className="scenario-progress"><span style={{width:`${scenarioProgress}%`}}/><i style={{left:`${scenarioProgress}%`}}/></div>
@@ -365,10 +394,12 @@ export default function Home() {
       </section>
 
       {sideInsight&&<DataDetailDialog data={sideInsight} tone="blue" onClose={()=>setSideInsight(null)}/>}
+      {aiEvidenceOpen&&<AiEvidenceCenter vision={vision} onClose={()=>setAiEvidenceOpen(false)}/>}
+      {agentAuditOpen&&<AgentAuditDialog scenarioPhase={scenarioPhase} scenarioTime={scenarioTime} vision={vision} plume={plume} route={realRoute??{distance:route.distance,eta:route.eta,visited:route.visited,roads:[]}} blocked={blocked} onClose={()=>setAgentAuditOpen(false)}/>}
 
-      {reportOpen&&<div className="report-overlay" onClick={()=>setReportOpen(false)}><section className="report-dialog" role="dialog" aria-modal="true" aria-label="应急处置报告" onClick={e=>e.stopPropagation()}><button className="report-close" aria-label="关闭报告" onClick={()=>setReportOpen(false)}>×</button>{reportGenerating?<div className="report-generating"><i/><strong>AI 正在生成应急处置报告</strong><p>汇总视觉识别、风险扩散、OSM 路网与多智能体决策结果…</p><div><span/><span/><span/><span/></div></div>:<><header className="report-head"><div><span>LINGJING SENTINEL · AUTO REPORT</span><h2>危化品泄漏应急处置报告</h2><p>报告编号：LJ-BJ-20260720-001　生成时间：{reportGeneratedAt}</p></div><b>Ⅰ级响应</b></header><div className="report-paper"><div className="report-summary"><div><span>AI 事故判定</span><strong>{vision.type}</strong><em>置信度 {(vision.confidence*100).toFixed(1)}%</em></div><div><span>警戒纵深</span><strong>{plume.warning} m</strong><em>高斯烟羽 · Pasquill-D</em></div><div><span>风险暴露</span><strong>{plume.affectedPeople} 人</strong><em>现场估计 {vision.persons} 人</em></div><div><span>消防 ETA</span><strong>{realRoute?.eta??route.eta} min</strong><em>{realRoute?.distance??route.distance} m</em></div></div><article><h3>01　事件概况与智能研判</h3><p>北京市朝阳区建国门外大街国贸桥西侧发生危化品运输车泄漏。视觉模型识别为<strong>{vision.type}</strong>，烟羽像素占比 {(vision.smokeRatio*100).toFixed(1)}%，现场人员约 {vision.persons} 人。{vision.summary}</p><div className="report-callout danger"><b>核心风险</b><span>东南风 3.4 m/s，污染羽流向西北扩散；学校位于事故点 500 米重点保护范围内，应启动预防性疏散。</span></div></article><article><h3>02　风险扩散计算</h3><table><tbody><tr><th>风险等级</th><th>纵深</th><th>处置要求</th></tr><tr><td>致命区</td><td>{plume.lethal} m</td><td>仅允许专业防化力量进入</td></tr><tr><td>高风险区</td><td>{plume.high} m</td><td>立即疏散并设置硬隔离</td></tr><tr><td>警戒区</td><td>{plume.warning} m</td><td>持续监测并准备扩大疏散</td></tr></tbody></table></article><article><h3>03　消防救援真实道路路线</h3><p>系统使用 674 段北京 OSM 道路构图，并通过 A* 搜索 {realRoute?.visited??route.visited} 个道路节点。当前路线：</p><div className="report-route">{realRoute?.roads.join("　→　")||"正在载入真实道路名称"}</div><p>{blocked?`已封锁 OSM 道路 ${realRoute?.blockedRoadId??blockedRoadId??"自动选择路段"}，消防车已避开该路段并完成动态重规划。`:"当前道路正常通行，消防车沿最短真实路网路线行驶。"}</p></article><article><h3>04　联合处置指令</h3><ol><li><b>交通：</b>2 分钟内封锁事故点周边 500 m 道路，建立 3.2 km 应急绿波带。</li><li><b>教育：</b>城北实验学校师生经东南侧上风向安全通道分批疏散，8 分钟完成重点人员转移。</li><li><b>消防：</b>2 辆泡沫消防车沿 OSM 路线抵达，在上风向布置水幕并实施堵漏。</li><li><b>医疗：</b>开放三级医院绿色通道，在体育中心设置临时分诊点。</li><li><b>监测：</b>下风向 200 m、500 m、1000 m 设置监测点，每 2 分钟回传浓度。</li></ol></article><div className="report-conclusion"><b>AI 处置结论</b><p>立即启动危化品泄漏Ⅰ级联合响应，处置优先级为：学校疏散 → 道路封控 → 泄漏源控制 → 医疗救治 → 环境复测。</p><small>本报告由灵境哨兵自动生成，用于竞赛演示；正式行动须由现场指挥员复核。</small></div></div><footer className="report-actions"><button onClick={downloadReport}>↓ 下载完整报告</button><button onClick={()=>setReportOpen(false)}>关闭报告</button></footer></>}</section></div>}
+      {reportOpen&&<div className="report-overlay" onClick={()=>setReportOpen(false)}><section className="report-dialog" role="dialog" aria-modal="true" aria-label="应急处置报告" onClick={e=>e.stopPropagation()}><button className="report-close" aria-label="关闭报告" onClick={()=>setReportOpen(false)}>×</button>{reportGenerating?<div className="report-generating"><i/><strong>系统正在生成应急处置报告</strong><p>汇总视觉识别、物理扩散、A* 路径规划与协同决策结果…</p><div><span/><span/><span/><span/></div></div>:<><header className="report-head"><div><span>LINGJING SENTINEL · AUTO REPORT</span><h2>危化品泄漏应急处置报告</h2><p>报告编号：LJ-BJ-20260720-001　生成时间：{reportGeneratedAt}</p></div><b>Ⅰ级响应</b></header><div className="report-paper"><div className="report-summary"><div><span>视觉模型判定</span><strong>{vision.type}</strong><em>置信度 {(vision.confidence*100).toFixed(1)}%</em></div><div><span>警戒纵深</span><strong>{plume.warning} m</strong><em>物理模型 · Pasquill-D</em></div><div><span>风险暴露</span><strong>{plume.affectedPeople} 人</strong><em>现场估计 {vision.persons} 人</em></div><div><span>消防 ETA</span><strong>{realRoute?.eta??route.eta} min</strong><em>A* · {realRoute?.distance??route.distance} m</em></div></div><article><h3>01　事件概况与视觉研判</h3><p>北京市朝阳区建国门外大街国贸桥西侧发生危化品运输车泄漏。视觉模型识别为<strong>{vision.type}</strong>，烟羽像素占比 {(vision.smokeRatio*100).toFixed(1)}%，现场人员约 {vision.persons} 人。{vision.summary}</p><div className="report-callout danger"><b>核心风险</b><span>东南风 3.4 m/s，污染羽流向西北扩散；学校位于事故点 500 米重点保护范围内，应启动预防性疏散。</span></div></article><article><h3>02　物理风险扩散计算</h3><table><tbody><tr><th>风险等级</th><th>纵深</th><th>处置要求</th></tr><tr><td>致命区</td><td>{plume.lethal} m</td><td>仅允许专业防化力量进入</td></tr><tr><td>高风险区</td><td>{plume.high} m</td><td>立即疏散并设置硬隔离</td></tr><tr><td>警戒区</td><td>{plume.warning} m</td><td>持续监测并准备扩大疏散</td></tr></tbody></table></article><article><h3>03　A* 消防救援路径规划</h3><p>系统使用 674 段北京 OSM 道路构图，并通过 A* 搜索 {realRoute?.visited??route.visited} 个道路节点。当前路线：</p><div className="report-route">{realRoute?.roads.join("　→　")||"正在载入真实道路名称"}</div><p>{blocked?`已封锁 OSM 道路 ${realRoute?.blockedRoadId??blockedRoadId??"自动选择路段"}，消防车已避开该路段并完成动态重规划。`:"当前道路正常通行，消防车沿最短真实路网路线行驶。"}</p></article><article><h3>04　规则化协同处置指令</h3><ol><li><b>交通：</b>2 分钟内封锁事故点周边 500 m 道路，建立 3.2 km 应急绿波带。</li><li><b>教育：</b>城北实验学校师生经东南侧上风向安全通道分批疏散，8 分钟完成重点人员转移。</li><li><b>消防：</b>2 辆泡沫消防车沿 OSM 路线抵达，在上风向布置水幕并实施堵漏。</li><li><b>医疗：</b>开放三级医院绿色通道，在体育中心设置临时分诊点。</li><li><b>监测：</b>下风向 200 m、500 m、1000 m 设置监测点，每 2 分钟回传浓度。</li></ol></article><div className="report-conclusion"><b>联合处置结论</b><p>立即启动危化品泄漏Ⅰ级联合响应，处置优先级为：学校疏散 → 道路封控 → 泄漏源控制 → 医疗救治 → 环境复测。</p><small>本报告由视觉模型、物理模型、路径算法与规则引擎联合生成，仅用于竞赛演示；正式行动须由现场指挥员复核。</small></div></div><footer className="report-actions"><button onClick={downloadReport}>↓ 下载完整报告</button><button onClick={()=>setReportOpen(false)}>关闭报告</button></footer></>}</section></div>}
 
-      <footer><span>数据源：城市感知网络 · 气象局 · 应急资源库</span><strong><i /> AI 决策引擎运行正常 · 处理延迟 128ms</strong><span>灵境哨兵 v3.0 FINAL · 离线演示环境</span></footer>
+      <footer><span>数据源：城市感知网络 · 气象局 · 应急资源库</span><strong><i /> 模型与算法引擎运行正常 · 处理延迟 128ms</strong><span>灵境哨兵 v3.1 EVIDENCE · 离线演示环境</span></footer>
     </main>
   );
 }
