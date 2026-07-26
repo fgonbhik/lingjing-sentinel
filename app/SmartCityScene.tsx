@@ -31,7 +31,9 @@ export default function SmartCityScene({nightMode,buildingLights,autoTour,topVie
   useEffect(()=>{const camera=cameraRef.current,controls=controlsRef.current;if(!camera||!controls)return;if(topView){camera.position.set(0,178,.1);controls.target.set(0,0,0)}else{camera.position.set(98,90,118);controls.target.set(0,8,0)}controls.update()},[topView]);
 
   useEffect(()=>{
-    const element=host.current!;onSceneStatus("loading");
+    const element=host.current;
+    if(!element){onSceneStatus("degraded");return}
+    onSceneStatus("loading");
     const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(44,1,.1,620);camera.position.set(98,90,118);cameraRef.current=camera;
     const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:"high-performance"});renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.4));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;element.appendChild(renderer.domElement);
     const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.06;controls.minDistance=48;controls.maxDistance=245;controls.maxPolarAngle=Math.PI*.47;controls.target.set(0,8,0);controlsRef.current=controls;
@@ -68,5 +70,5 @@ export default function SmartCityScene({nightMode,buildingLights,autoTour,topVie
     const clock=new THREE.Clock();let frame=0;const animate=()=>{frame=requestAnimationFrame(animate);const elapsed=clock.getElapsedTime(),count=Math.min(54,trafficRef.current);vehicles.count=count;vehicleRoutes.forEach((route,index)=>{if(index>=count)return;const progress=(route.offset+elapsed*route.speed*28)%210-105,x=route.axis?progress:route.lane,z=route.axis?route.lane:progress,rotation=new THREE.Quaternion().setFromEuler(new THREE.Euler(0,route.axis?Math.PI/2:0,0));vehicleMatrix.compose(new THREE.Vector3(x,2.05,z),rotation,new THREE.Vector3(1,1,1));vehicles.setMatrixAt(index,vehicleMatrix)});vehicles.instanceMatrix.needsUpdate=true;sensorMaterial.opacity=.55+Math.sin(elapsed*2)*.22;if(tourRef.current){camera.position.x=Math.cos(elapsed*.075)*142;camera.position.z=Math.sin(elapsed*.075)*142;camera.position.y=82+Math.sin(elapsed*.11)*12;controls.target.set(0,9,0)}controls.update();renderer.render(scene,camera)};animate();
     return()=>{cancelAnimationFrame(frame);observer.disconnect();renderer.domElement.removeEventListener("pointerdown",pick);window.removeEventListener("smart-city-camera",command);controls.dispose();renderer.dispose();scene.traverse(object=>{const mesh=object as THREE.Mesh;mesh.geometry?.dispose?.();if(Array.isArray(mesh.material))mesh.material.forEach(material=>material.dispose());else mesh.material?.dispose?.()});element.replaceChildren()};
   },[onSceneStatus,onSelect]);
-  return <div className="smart-city-scene" aria-label="北京城市运行监管三维场景"/>;
+  return <div ref={host} className="smart-city-scene" aria-label="北京城市运行监管三维场景"/>;
 }
