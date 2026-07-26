@@ -154,6 +154,7 @@ export default function Home() {
   const [scenarioSpeed,setScenarioSpeed]=useState(1);
   const [directorMode,setDirectorMode]=useState(true);
   const [trafficDensity,setTrafficDensity]=useState(36);
+  const [activeSideControl,setActiveSideControl]=useState("");
   const scenarioPhase=scenarioStatus==="idle"?0:(scenarioStages.find(stage=>stage.id>0&&scenarioTime>=stage.start&&scenarioTime<stage.end)?.id??9);
   const currentScenario=scenarioStages[scenarioPhase];
   const scenarioProgress=scenarioStatus==="idle"?0:Math.min(100,scenarioTime/SCENARIO_TOTAL*100);
@@ -174,6 +175,7 @@ export default function Home() {
   }, []);
 
   useEffect(()=>{if(!systemNotice)return;const timer=window.setTimeout(()=>setSystemNotice(""),2800);return()=>window.clearTimeout(timer)},[systemNotice]);
+  useEffect(()=>{if(!activeSideControl)return;const timer=window.setTimeout(()=>setActiveSideControl(""),2800);return()=>window.clearTimeout(timer)},[activeSideControl]);
 
   useEffect(()=>{if(!riskPlayback||scenarioStatus==="playing"||scenarioStatus==="paused")return;const timer=window.setInterval(()=>setMinute(value=>value>=30?1:value+1),520);return()=>window.clearInterval(timer)},[riskPlayback,scenarioStatus]);
 
@@ -233,6 +235,12 @@ export default function Home() {
   };
 
   const focusIncident=()=>{stopFollowing();setDirectorMode(false);setAutoTour(false);window.dispatchEvent(new CustomEvent("city-camera",{detail:"incident"}))};
+
+  const openSideInsight=(id:string,label:string,category:string,details:string,meta:string)=>{
+    setActiveSideControl(id);
+    setSelectedAsset({id:`side-${id}`,label,category,details,meta});
+    setSystemNotice(`已打开：${label}`);
+  };
 
   const trackResource=(resourceId:string)=>{if(sceneStatus==="loading"){setSystemNotice("真实地图仍在加载，资源位置暂不可追踪");return}const map:{[key:string]:string}={"FIRE-01":"firetruck","FIRE-02":"firetruck","ROBOT-01":"firetruck","MED-03":"ambulance","MED-06":"ambulance","POLICE-07":"police-car","BIKE-02":"police-car"},assetId=map[resourceId];setSelectedAsset(null);setAutoTour(false);setDirectorMode(false);if(scenarioPhase<4||scenarioStatus==="complete"){setScenarioTime(20.01);setScenarioStatus("playing");setRunning(true);setShowRisk(true)}if(assetId){setFollowingId(assetId);window.dispatchEvent(new CustomEvent("city-camera",{detail:{action:"follow",assetId}}));setSystemNotice("已同步到所属编队的真实道路跟随视角")}else{setFollowingId(null);window.dispatchEvent(new CustomEvent("city-camera",{detail:"incident"}));setSystemNotice("该资源已同步到事故现场任务区域")}};
 
@@ -305,12 +313,14 @@ export default function Home() {
             <div className="local-cv">LOCAL CV · PIXEL FEATURE MODEL</div>
           </div>
           <div className="recognition">
-            <div><span>车辆状态</span><strong>{scenarioPhase===0?"等待演示":scenarioPhase===1?"正常运输":scenarioPhase===2?"动力故障":"已停车处置"}</strong></div><div><span>AI 识别置信度</span><strong>{scenarioPhase>=3?<AniNum to={vision.confidence*100} decimals={1} suffix="%" />:"—"}</strong></div>
-            <div><span>烟羽像素占比</span><strong><AniNum to={scenarioPhase>=3?vision.smokeRatio*100:0} decimals={1} suffix="%" /></strong></div><div><span>已疏散人员</span><strong><AniNum to={scenarioPhase>=6?186:0} suffix=" 人" /></strong></div>
+            <button type="button" className={activeSideControl==="vehicle"?"active":""} onClick={()=>{focusIncident();openSideInsight("vehicle","危化品车辆状态","事件智能识别",scenarioPhase===0?"演示车辆已加载并等待启动。":currentScenario.detail,`京A·WH2576 · 阶段 ${String(scenarioPhase).padStart(2,"0")}`)}}><span>车辆状态</span><strong>{scenarioPhase===0?"等待演示":scenarioPhase===1?"正常运输":scenarioPhase===2?"动力故障":"已停车处置"}</strong></button>
+            <button type="button" className={activeSideControl==="confidence"?"active":""} onClick={()=>{focusIncident();openSideInsight("confidence","AI 识别置信度","本地视觉模型",vision.summary,`置信度 ${(vision.confidence*100).toFixed(1)}% · PIXEL FEATURE MODEL`)}}><span>AI 识别置信度</span><strong>{scenarioPhase>=3?<AniNum to={vision.confidence*100} decimals={1} suffix="%" />:"—"}</strong></button>
+            <button type="button" className={activeSideControl==="plume"?"active":""} onClick={()=>{setShowRisk(true);focusIncident();openSideInsight("plume","烟羽像素与风险扩散","风险扩散计算",`烟羽像素占比 ${(vision.smokeRatio*100).toFixed(1)}%，当前警戒纵深 ${plume.warning} 米。`,`高斯烟羽 · ${plume.model}`)}}><span>烟羽像素占比</span><strong><AniNum to={scenarioPhase>=3?vision.smokeRatio*100:0} decimals={1} suffix="%" /></strong></button>
+            <button type="button" className={activeSideControl==="evacuated"?"active":""} onClick={()=>openSideInsight("evacuated","人员疏散进度","联合处置态势",scenarioPhase>=6?"重点区域 186 人已完成向侧上风向疏散。":"人员疏散队伍已待命，将在交通封控完成后执行。",scenarioPhase>=6?"186 人 · 已完成":"0 人 · 等待执行")}><span>已疏散人员</span><strong><AniNum to={scenarioPhase>=6?186:0} suffix=" 人" /></strong></button>
           </div>
-          <div className="ai-note"><b>{scenarioPhase>=3?"本地视觉研判":"运输遥测状态"}</b><p>{scenarioPhase===0?"等待启动完整演示，车辆与应急力量已加载。":currentScenario.detail} {scenarioPhase>=3&&<>东南风 3.4 m/s（吹向西北），预计 <em>{Math.max(3,Math.round(480/3.4/60))} 分钟</em>进入重点警戒区域。</>}</p></div>
+          <button type="button" className={`ai-note side-wide-action ${activeSideControl==="ai-note"?"active":""}`} onClick={()=>{setShowRisk(true);focusIncident();openSideInsight("ai-note",scenarioPhase>=3?"本地视觉研判":"运输遥测状态","AI 研判摘要",scenarioPhase===0?"等待启动完整演示，车辆与应急力量已加载。":currentScenario.detail,scenarioPhase>=3?"东南风 3.4m/s · 风险模型已联动":"车辆遥测 · 正常待命")}}><b>{scenarioPhase>=3?"本地视觉研判":"运输遥测状态"}</b><p>{scenarioPhase===0?"等待启动完整演示，车辆与应急力量已加载。":currentScenario.detail} {scenarioPhase>=3&&<>东南风 3.4 m/s（吹向西北），预计 <em>{Math.max(3,Math.round(480/3.4/60))} 分钟</em>进入重点警戒区域。</>}</p></button>
           <div className="panel-title compact"><span>02</span>智能体协同 <b>MULTI-AGENT</b></div>
-          <div className="agents">{departments.map((d, i) => {const activation=[4,4,4,3][i],completion=[7,8,6,9][i],active=scenarioPhase>=activation,done=scenarioPhase>=completion;return <div className={`agent ${d.tone} ${active?"scenario-active":""} ${done?"scenario-done":""}`} key={d.name}><i>{done?"✓":d.icon}</i><p><b>{d.name}</b><span>{!active?"系统待命 · 等待联合调度":done?"阶段任务完成 · 状态已回传":running&&pulse===i?"正在执行当前处置任务…":d.text}</span></p><em>●</em></div>})}</div>
+          <div className="agents">{departments.map((d, i) => {const activation=[4,4,4,3][i],completion=[7,8,6,9][i],active=scenarioPhase>=activation,done=scenarioPhase>=completion,resource=["FIRE-01","MED-03","POLICE-07","COMMAND"][i];return <button type="button" className={`agent ${d.tone} ${active?"scenario-active":""} ${done?"scenario-done":""} ${activeSideControl===`agent-${i}`?"side-selected":""}`} key={d.name} onClick={()=>{setActiveSideControl(`agent-${i}`);if(resource==="COMMAND"){focusIncident();openSideInsight(`agent-${i}`,d.name,"多智能体协同",d.text,"指挥中枢 · 联合处置")}else{trackResource(resource)}}}><i>{done?"✓":d.icon}</i><p><b>{d.name}</b><span>{!active?"系统待命 · 点击可提前追踪":done?"阶段任务完成 · 点击查看位置":running&&pulse===i?"正在执行当前处置任务…":d.text}</span></p><em>●</em></button>})}</div>
         </aside>
 
         <section className="map-panel panel">
@@ -335,15 +345,19 @@ export default function Home() {
 
         <aside className="right-panel panel">
           <div className="panel-title"><span>04</span>决策方案 <b>AI COMMAND</b></div>
-          <div className="score-card"><span>当前最优方案 · 实时求解</span><strong>{blocked ? "方案 B · A* 动态重规划" : "方案 A · 最短响应路径"}</strong><div><b><AniNum to={blocked?92.4:95.1} decimals={1} /></b><small>综合评分</small></div></div>
-          <div className="metrics"><div><span>OSM A* 预计响应</span><b className="green"><AniNum to={realRoute?.eta??route.eta} suffix=" min" /></b><small>搜索 {realRoute?.visited??route.visited} 个真实道路节点</small></div><div><span>模型风险暴露</span><b><AniNum to={plume.affectedPeople} suffix=" 人" /></b><small>{plume.model}</small></div><div><span>真实救援路径</span><b><AniNum to={(realRoute?.distance??route.distance)/1000} decimals={2} suffix=" km" /></b><small>{realRoute?.roads.slice(0,3).join(" → ")||"正在加载 OSM 路网"}</small></div></div>
+          <button type="button" className={`score-card ${activeSideControl==="plan-score"?"side-selected":""}`} onClick={()=>openSideInsight("plan-score",blocked?"方案 B · A* 动态重规划":"方案 A · 最短响应路径","AI 决策方案",blocked?"东二环封闭后，系统已使用 OSM 真实路网完成避让重规划。":"当前道路正常通行，系统选择消防最短响应路径。",`综合评分 ${blocked?"92.4":"95.1"} · 实时求解`)}><span>当前最优方案 · 实时求解</span><strong>{blocked ? "方案 B · A* 动态重规划" : "方案 A · 最短响应路径"}</strong><div><b><AniNum to={blocked?92.4:95.1} decimals={1} /></b><small>综合评分</small></div></button>
+          <div className="metrics">
+            <button type="button" className={activeSideControl==="eta"?"active":""} onClick={()=>{setActiveSideControl("eta");trackResource("FIRE-01")}}><span>OSM A* 预计响应</span><b className="green"><AniNum to={realRoute?.eta??route.eta} suffix=" min" /></b><small>点击追踪消防车 · 搜索 {realRoute?.visited??route.visited} 个节点</small></button>
+            <button type="button" className={activeSideControl==="exposure"?"active":""} onClick={()=>{setShowRisk(true);focusIncident();openSideInsight("exposure","模型风险暴露","风险扩散计算",`当前预计风险暴露人口 ${plume.affectedPeople} 人，警戒纵深 ${plume.warning} 米。`,plume.model)}}><span>模型风险暴露</span><b><AniNum to={plume.affectedPeople} suffix=" 人" /></b><small>点击聚焦风险区 · {plume.model}</small></button>
+            <button type="button" className={activeSideControl==="route"?"active":""} onClick={()=>openSideInsight("route","消防真实救援路径","OSM 路径规划",realRoute?.roads.join(" → ")||"正在加载 OSM 真实道路名称。",`${((realRoute?.distance??route.distance)/1000).toFixed(2)} km · ETA ${realRoute?.eta??route.eta} min`)}><span>真实救援路径</span><b><AniNum to={(realRoute?.distance??route.distance)/1000} decimals={2} suffix=" km" /></b><small>点击查看道路序列 · {realRoute?.roads.slice(0,2).join(" → ")||"正在加载"}</small></button>
+          </div>
           <div className="plan-steps">
-            {["封锁泄漏点周边 500m 道路","学校师生向东南侧上风向分批疏散","消防车沿 OSM 真实道路抵达","救护组在体育中心建立分诊点"].map((x,i)=><div key={x}><i>{i+1}</i><p>{x}<span>{["交警 · 2分钟内","教育 · 8分钟完成",`消防 · 预计${realRoute?.eta??7}分钟`,"医疗 · 12分钟启用"][i]}</span></p><em>✓</em></div>)}
+            {["封锁泄漏点周边 500m 道路","学校师生向东南侧上风向分批疏散","消防车沿 OSM 真实道路抵达","救护组在体育中心建立分诊点"].map((x,i)=>{const stageId=[6,6,7,8][i];return <button type="button" className={activeSideControl===`step-${i}`?"active":""} key={x} onClick={()=>{setActiveSideControl(`step-${i}`);setScenarioTime(scenarioStages[stageId].start+.01);setScenarioStatus("paused");setDirectorMode(true);setSystemNotice(`已跳转到处置步骤：${x}`)}}><i>{i+1}</i><p>{x}<span>{["交警 · 2分钟内","教育 · 8分钟完成",`消防 · 预计${realRoute?.eta??7}分钟`,"医疗 · 12分钟启用"][i]} · 点击定位</span></p><em>→</em></button>})}
           </div>
           <button className="block-button" disabled={scenarioPhase>0&&scenarioStatus!=="complete"} onClick={()=>reroute()}>{scenarioPhase>0&&scenarioStatus!=="complete"?"完整演示进行中 · 道路决策已锁定":blocked ? `✓ OSM A* 已重规划：${realRoute?.roads.slice(0,4).join(" → ")||"已避开封闭道路"}` : "模拟突发：封闭东二环路段并按真实道路重规划"}</button>
-          <div className="algorithm-proof"><div><span>扩散模型</span><b>高斯烟羽 / Pasquill-D</b><em>Q=80g/s · U=3.4m/s</em></div><div><span>路径算法</span><b>OSM 真实路网 A* · Euclidean</b><em>距离 {realRoute?.distance??route.distance}m · ETA {realRoute?.eta??route.eta}min</em></div></div>
+          <div className="algorithm-proof"><button type="button" onClick={()=>{setShowRisk(value=>!value);focusIncident();setSystemNotice(showRisk?"风险扩散图层已隐藏":"风险扩散图层已开启")}}><span>扩散模型</span><b>高斯烟羽 / Pasquill-D</b><em>点击切换风险图层 · Q=80g/s</em></button><button type="button" onClick={()=>openSideInsight("algorithm","OSM 真实路网 A*","路径算法",`A* 已搜索 ${realRoute?.visited??route.visited} 个道路节点，使用欧氏距离作为启发函数。`,`距离 ${realRoute?.distance??route.distance}m · ETA ${realRoute?.eta??route.eta}min`)}><span>路径算法</span><b>OSM 真实路网 A* · Euclidean</b><em>点击查看求解结果</em></button></div>
           <div className="panel-title compact"><span>05</span>决策时间线 <b>TRACE</b></div>
-          <div className="timeline scenario-timeline">{scenarioStages.slice(1).map(stage=><div className={scenarioPhase===stage.id?"active":scenarioPhase>stage.id?"done":""} key={stage.id}><time>{stage.clock}</time><i /><p><b>{stage.title}</b><span>{stage.subtitle}</span></p></div>)}</div>
+          <div className="timeline scenario-timeline">{scenarioStages.slice(1).map(stage=><button type="button" className={`${scenarioPhase===stage.id?"active":scenarioPhase>stage.id?"done":""} ${activeSideControl===`timeline-${stage.id}`?"side-selected":""}`} key={stage.id} onClick={()=>{setActiveSideControl(`timeline-${stage.id}`);setScenarioTime(stage.start+.01);setScenarioStatus("paused");setDirectorMode(true);setSystemNotice(`时间线已定位：${stage.title}`)}}><time>{stage.clock}</time><i /><p><b>{stage.title}</b><span>{stage.subtitle}</span></p></button>)}</div>
           <button className="report" onClick={generateReport}>生成应急处置报告 <span>↗</span></button>
         </aside>
       </section>

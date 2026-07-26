@@ -82,6 +82,11 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
     setTipKey((value) => value + 1);
   }, []);
 
+  const openInsight = useCallback((id: string, label: string, category: string, details: string, meta: string) => {
+    setSelectedAsset({ id: `insight-${id}`, label, category, details, meta });
+    showTip(`已打开：${label} · 右侧详情卡片已更新`);
+  }, [showTip]);
+
   const handleSceneSelect = useCallback((asset: SmartAsset | null) => {
     setSelectedAsset(asset);
     if (asset) showTip(`已选中：${asset.label} · 详情卡片已展开`);
@@ -174,10 +179,10 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
               <div className="vital-wave" aria-hidden="true">{[34, 52, 41, 68, 48, 76, 57, 82, 61, 72, 55, 88].map((height, index) => <i key={index} style={{ height: `${height}%` }} />)}</div>
             </div>
             <div className="vital-grid">
-              <div><span>城市面积</span><b><AniNum to={16410} /><small> km²</small></b><em>全域覆盖</em></div>
-              <div><span>地区生产总值</span><b><AniNum to={4.98} decimals={2} /><small> 万亿元</small></b><em>同比 +5.2%</em></div>
-              <div><span>轨道交通</span><b><AniNum to={879} /><small> km</small></b><em>在途 1,284 列</em></div>
-              <div><span>公园绿地</span><b><AniNum to={1064} /><small> 处</small></b><em>绿色空间 49.8%</em></div>
+              <button type="button" onClick={() => openInsight("area", "北京市域面积", "城市生命体征", "全市域面积 16,410 平方公里，数字孪生已覆盖核心城区、重点交通走廊和公共服务节点。", "全域覆盖 · 数据更新 128ms")}><span>城市面积</span><b><AniNum to={16410} /><small> km²</small></b><em>全域覆盖</em></button>
+              <button type="button" onClick={() => openInsight("gdp", "地区生产总值", "城市生命体征", "城市经济运行保持稳健，数字经济、科技服务和现代服务业构成主要增长动能。", "4.98 万亿元 · 同比 +5.2%")}><span>地区生产总值</span><b><AniNum to={4.98} decimals={2} /><small> 万亿元</small></b><em>同比 +5.2%</em></button>
+              <button type="button" onClick={() => openInsight("rail", "轨道交通网络", "城市生命体征", "轨道交通运营里程 879 公里，1,284 列列车在途，关键换乘枢纽运行正常。", "线网联动 · 平均准点率 99.6%")}><span>轨道交通</span><b><AniNum to={879} /><small> km</small></b><em>在途 1,284 列</em></button>
+              <button type="button" onClick={() => openInsight("parks", "公园绿地体系", "城市生命体征", "全市 1,064 处公园绿地接入生态监测，绿色空间覆盖率达到 49.8%。", "生态感知 · 1,064 处在线")}><span>公园绿地</span><b><AniNum to={1064} /><small> 处</small></b><em>绿色空间 49.8%</em></button>
             </div>
           </section>
 
@@ -185,9 +190,14 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
             <header><span>02</span><div><b>城市事件中枢</b><em>AI EVENT STREAM</em></div><i>04</i></header>
             <div className="event-list">
               {eventFeed.map((event, index) => (
-                <article key={event.time} className={pulse === index ? "pulse" : ""}>
+                <button
+                  type="button"
+                  key={event.time}
+                  className={`event-row ${pulse === index ? "pulse" : ""}`}
+                  onClick={() => openInsight(`event-${index}`, event.text, "城市事件中枢", `${event.time} 由${event.level}类城市感知模型完成研判，当前处置状态为“${event.state}”。`, `事件编号 BJ-${event.time.replaceAll(":", "")} · ${event.state}`)}
+                >
                   <time>{event.time}</time><i>{event.level}</i><p>{event.text}<span>{event.state}</span></p>
-                </article>
+                </button>
               ))}
             </div>
             <button className="event-action" onClick={onOpenDemo}><span>突发事件智能处置演示</span><b>启动灵境哨兵</b><i>→</i></button>
@@ -196,11 +206,11 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
           <section className="future-panel eco-panel">
             <header><span>03</span><div><b>生态环境监测</b><em>ECOLOGICAL MONITORING</em></div><i>优</i></header>
             <div className="eco-content">
-              <div className="air-orbit"><i /><b>28</b><span>PM2.5</span></div>
+              <button type="button" className="air-orbit" onClick={() => openInsight("pm25", "PM2.5 实时监测", "生态环境监测", "北京市核心区 PM2.5 当前浓度为 28 μg/m³，空气质量等级为优。", "气象与环境感知网 · 分钟级刷新")}><i /><b>28</b><span>PM2.5</span></button>
               <div className="eco-stats">
-                <p><span>空气优良率</span><b>94.6%</b></p>
-                <p><span>平均温度</span><b>26.3°C</b></p>
-                <p><span>碳排强度</span><b>-4.8%</b></p>
+                <button type="button" onClick={() => openInsight("air", "空气优良率", "生态环境监测", "全市空气质量优良率达到 94.6%，重点站点均处于正常监测状态。", "94.6% · 较昨日 +1.2%")}><span>空气优良率</span><b>94.6%</b></button>
+                <button type="button" onClick={() => openInsight("temperature", "城市平均温度", "生态环境监测", "当前城市平均温度 26.3°C，热岛强度处于可控区间。", "26.3°C · 东南风 3.4m/s")}><span>平均温度</span><b>26.3°C</b></button>
+                <button type="button" onClick={() => openInsight("carbon", "碳排强度", "生态环境监测", "城市单位产出碳排强度同比下降 4.8%，新能源消纳比例持续提升。", "-4.8% · 绿色转型稳定")}><span>碳排强度</span><b>-4.8%</b></button>
               </div>
             </div>
           </section>
@@ -312,10 +322,10 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
         <aside className="future-column right">
           <section className="future-panel ai-index">
             <header><span>04</span><div><b>城市智能指数</b><em>CITY AI INDEX</em></div><i>TOP 1</i></header>
-            <div className="ai-score">
+            <button type="button" className="ai-score" onClick={() => openInsight("ai-score", "城市智能指数 96.4", "城市 AI 大脑", "综合感知覆盖、协同效率、预测准确和处置闭环四项能力，当前城市智能指数为 96.4。", "全国领先 · 较昨日 +1.8%")}>
               <div className="score-rings"><i /><i /><i /><strong><AniNum to={96.4} decimals={1} /></strong><span>综合评分</span></div>
               <div className="score-copy"><span>AI 城市大脑</span><b>运行卓越</b><em>较昨日 +1.8%</em><p>城市治理模型实时计算中</p></div>
-            </div>
+            </button>
             <div className="ai-dimensions">
               {[
                 ["感知覆盖", 98],
@@ -323,20 +333,30 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
                 ["预测准确", 96],
                 ["处置闭环", 97],
               ].map(([name, value], index) => (
-                <div key={name as string}><span>{name}</span><i><b style={{ width: barsReady ? `${value}%` : "0%", transitionDelay: `${index * 120}ms` }} /></i><em>{value}%</em></div>
+                <button type="button" key={name as string} onClick={() => openInsight(`ai-${index}`, `${name} ${value}%`, "城市 AI 能力维度", `${name}能力已接入城市级模型评估，当前得分 ${value}%，运行状态稳定。`, `AI ENGINE · 第 ${index + 1} 维度`)}><span>{name}</span><i><b style={{ width: barsReady ? `${value}%` : "0%", transitionDelay: `${index * 120}ms` }} /></i><em>{value}%</em></button>
               ))}
             </div>
           </section>
 
           <section className="future-panel traffic-panel">
             <header><span>05</span><div><b>交通运行脉搏</b><em>TRAFFIC MOBILITY</em></div><i>畅通</i></header>
-            <div className="traffic-number"><span>全路网交通指数</span><strong><AniNum to={1.42} decimals={2} /></strong><em>畅通</em></div>
-            <div className="traffic-flow" aria-label="近八小时交通流量趋势">
+            <button type="button" className="traffic-number" onClick={() => openInsight("traffic-index", "全路网交通指数", "交通运行脉搏", "全路网交通指数 1.42，整体处于畅通等级，重点道路信号协调运行正常。", "指数 1.42 · 畅通")}>
+              <span>全路网交通指数</span><strong><AniNum to={1.42} decimals={2} /></strong><em>畅通</em>
+            </button>
+            <button type="button" className="traffic-flow" aria-label="调整并查看交通流量趋势" onClick={() => {
+              const next = trafficDensity === 18 ? 36 : trafficDensity === 36 ? 54 : 18;
+              setTrafficDensity(next);
+              openInsight("traffic-flow", "近八小时交通流量", "交通运行脉搏", `已将三维城市动态车流调整为 ${next} 辆，可在中央地图观察道路车流变化。`, `点击循环调节 · 当前密度 ${next}`);
+            }}>
               {[31, 43, 52, 47, 68, 76, 64, 83, 71, 62, 54, 59, 46, 39].map((height, index) => (
                 <i key={index} style={{ height: barsReady ? `${height}%` : "0%", transitionDelay: `${index * 55}ms` }} />
               ))}
+            </button>
+            <div className="traffic-meta">
+              <button type="button" onClick={() => openInsight("speed", "道路平均车速", "交通运行脉搏", "全市重点道路平均车速 41.8 km/h，当前车速变化处于模型预测范围内。", "41.8 km/h · 实时计算")}><span>平均车速</span><b>41.8 km/h</b></button>
+              <button type="button" onClick={() => openInsight("congestion", "拥堵道路里程", "交通运行脉搏", "当前拥堵道路总里程 28.6 km，拥堵主要集中于晚高峰重点走廊。", "28.6 km · 动态监测")}><span>拥堵里程</span><b>28.6 km</b></button>
+              <button type="button" onClick={() => openInsight("signals", "信号协调率", "交通运行脉搏", "城市信号控制协调率达到 92.7%，重点路口绿波方案处于自动优化状态。", "92.7% · AI 信号控制")}><span>信号协调率</span><b>92.7%</b></button>
             </div>
-            <div className="traffic-meta"><span>平均车速<b>41.8 km/h</b></span><span>拥堵里程<b>28.6 km</b></span><span>信号协调率<b>92.7%</b></span></div>
           </section>
 
           <section className="future-panel district-rank">
