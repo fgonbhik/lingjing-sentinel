@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import SmartCityScene, { type SmartAsset } from "./SmartCityScene";
+import AniNum from "./AniNum";
 
 type Props = {
   displayName: string;
@@ -48,32 +49,6 @@ const districtViews: Record<string, { position: [number, number, number]; target
   东城: { position: [-58, 42, -58], target: [-22, 9, -15] },
   丰台: { position: [52, 43, -91], target: [12, 8, -48] },
 };
-
-function AnimatedNumber({ value, decimals = 0 }: { value: number; decimals?: number }) {
-  const [display, setDisplay] = useState(0);
-
-  useEffect(() => {
-    const start = performance.now();
-    let frame = 0;
-    const step = (time: number) => {
-      const progress = Math.min(1, (time - start) / 1450);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplay(value * eased);
-      if (progress < 1) frame = requestAnimationFrame(step);
-    };
-    frame = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(frame);
-  }, [value]);
-
-  return (
-    <>
-      {display.toLocaleString("zh-CN", {
-        minimumFractionDigits: decimals,
-        maximumFractionDigits: decimals,
-      })}
-    </>
-  );
-}
 
 export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }: Props) {
   const [activeNav, setActiveNav] = useState("全域态势");
@@ -195,14 +170,14 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
           <section className="future-panel city-vitals">
             <header><span>01</span><div><b>城市生命体征</b><em>URBAN VITAL SIGNS</em></div><i>LIVE</i></header>
             <div className="vital-primary">
-              <div><span>常住人口</span><strong><AnimatedNumber value={2183.2} decimals={1} /></strong><em>万人</em></div>
+              <div><span>常住人口</span><strong><AniNum to={2183.2} decimals={1} /></strong><em>万人</em></div>
               <div className="vital-wave" aria-hidden="true">{[34, 52, 41, 68, 48, 76, 57, 82, 61, 72, 55, 88].map((height, index) => <i key={index} style={{ height: `${height}%` }} />)}</div>
             </div>
             <div className="vital-grid">
-              <div><span>城市面积</span><b><AnimatedNumber value={16410} /><small> km²</small></b><em>全域覆盖</em></div>
-              <div><span>地区生产总值</span><b><AnimatedNumber value={4.98} decimals={2} /><small> 万亿元</small></b><em>同比 +5.2%</em></div>
-              <div><span>轨道交通</span><b><AnimatedNumber value={879} /><small> km</small></b><em>在途 1,284 列</em></div>
-              <div><span>公园绿地</span><b><AnimatedNumber value={1064} /><small> 处</small></b><em>绿色空间 49.8%</em></div>
+              <div><span>城市面积</span><b><AniNum to={16410} /><small> km²</small></b><em>全域覆盖</em></div>
+              <div><span>地区生产总值</span><b><AniNum to={4.98} decimals={2} /><small> 万亿元</small></b><em>同比 +5.2%</em></div>
+              <div><span>轨道交通</span><b><AniNum to={879} /><small> km</small></b><em>在途 1,284 列</em></div>
+              <div><span>公园绿地</span><b><AniNum to={1064} /><small> 处</small></b><em>绿色空间 49.8%</em></div>
             </div>
           </section>
 
@@ -338,7 +313,7 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
           <section className="future-panel ai-index">
             <header><span>04</span><div><b>城市智能指数</b><em>CITY AI INDEX</em></div><i>TOP 1</i></header>
             <div className="ai-score">
-              <div className="score-rings"><i /><i /><i /><strong><AnimatedNumber value={96.4} decimals={1} /></strong><span>综合评分</span></div>
+              <div className="score-rings"><i /><i /><i /><strong><AniNum to={96.4} decimals={1} /></strong><span>综合评分</span></div>
               <div className="score-copy"><span>AI 城市大脑</span><b>运行卓越</b><em>较昨日 +1.8%</em><p>城市治理模型实时计算中</p></div>
             </div>
             <div className="ai-dimensions">
@@ -355,7 +330,7 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
 
           <section className="future-panel traffic-panel">
             <header><span>05</span><div><b>交通运行脉搏</b><em>TRAFFIC MOBILITY</em></div><i>畅通</i></header>
-            <div className="traffic-number"><span>全路网交通指数</span><strong><AnimatedNumber value={1.42} decimals={2} /></strong><em>畅通</em></div>
+            <div className="traffic-number"><span>全路网交通指数</span><strong><AniNum to={1.42} decimals={2} /></strong><em>畅通</em></div>
             <div className="traffic-flow" aria-label="近八小时交通流量趋势">
               {[31, 43, 52, 47, 68, 76, 64, 83, 71, 62, 54, 59, 46, 39].map((height, index) => (
                 <i key={index} style={{ height: barsReady ? `${height}%` : "0%", transitionDelay: `${index * 55}ms` }} />

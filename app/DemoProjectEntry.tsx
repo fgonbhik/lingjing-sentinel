@@ -1,5 +1,7 @@
 "use client";
 
+import AniNum from "./AniNum";
+
 type Props = {
   ready: boolean;
   onClose: () => void;
@@ -24,14 +26,14 @@ export default function DemoProjectEntry({ ready, onClose, onStart }: Props) {
             <h2>灵境哨兵：危化品运输事故<br />全链路智能处置</h2>
             <p>智慧城市 3D 大屏中的核心演示项目。72 秒完整呈现车辆故障、AI 告警、消防出警、救护车到场、警车疏散与应急报告生成。</p>
           </div>
-          <div className="demo-entry-score"><span>演示完成度</span><strong>96.4</strong><em>READY TO PRESENT</em></div>
+          <div className="demo-entry-score"><span>演示完成度</span><strong><AniNum to={96.4} decimals={1} /></strong><em>READY TO PRESENT</em></div>
         </header>
 
         <div className="demo-entry-kpis">
-          <div><strong>6,016</strong><span>北京真实建筑</span></div>
-          <div><strong>674</strong><span>真实道路路段</span></div>
-          <div><strong>72s</strong><span>全流程导演脚本</span></div>
-          <div><strong>4</strong><span>协同智能体</span></div>
+          <div><strong><AniNum to={6016} /></strong><span>北京真实建筑</span></div>
+          <div><strong><AniNum to={674} /></strong><span>真实道路路段</span></div>
+          <div><strong><AniNum to={72} suffix="s" /></strong><span>全流程导演脚本</span></div>
+          <div><strong><AniNum to={4} /></strong><span>协同智能体</span></div>
         </div>
 
         <div className="demo-entry-body">

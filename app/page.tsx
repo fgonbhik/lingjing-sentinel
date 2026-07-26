@@ -5,6 +5,7 @@ import CityScene, { type SceneAsset } from "./CityScene";
 import InteractiveModules, { type ModuleId } from "./InteractiveModules";
 import DemoProjectEntry from "./DemoProjectEntry";
 import SmartCityDashboard from "./SmartCityDashboard";
+import AniNum from "./AniNum";
 import { analyzeAccidentImage, computeAStarRoute, computeGaussianPlume, type VisionResult } from "./decision-engine";
 
 const departments = [
@@ -90,7 +91,7 @@ function AuthPortal({onAuthenticated}:{onAuthenticated:(session:AuthSession,reme
         <div className="auth-kicker"><i/>北京城市数字孪生统一入口</div>
         <h1>一屏感知北京<br/><span>让城市实时可见</span></h1>
         <p>汇聚城市治理、交通运行、能源环保与公共安全数据，构建可旋转、可交互、可推演的北京智慧城市三维运行中心。</p>
-        <div className="auth-metrics"><div><strong>6,016</strong><span>三维建筑模型</span></div><div><strong>86.4万</strong><span>城市感知节点</span></div><div><strong>99.97%</strong><span>设备在线率</span></div></div>
+        <div className="auth-metrics"><div><strong><AniNum to={6016} /></strong><span>三维建筑模型</span></div><div><strong><AniNum to={86.4} decimals={1} suffix="万" /></strong><span>城市感知节点</span></div><div><strong><AniNum to={99.97} decimals={2} suffix="%" /></strong><span>设备在线率</span></div></div>
         <div className="auth-radar" aria-hidden="true"><i/><i/><i/><span/><b>AI</b><em>REAL-TIME<br/>SITUATION</em></div>
       </div>
       <section className="auth-card" aria-label={mode==="login"?"登录":"注册"}>
@@ -268,7 +269,7 @@ export default function Home() {
 
   if(!authChecked)return <main className="auth-boot"><div className="auth-brand-mark"><i/><i/><i/></div><span>安全环境初始化中</span></main>;
   if(!currentUser)return <AuthPortal onAuthenticated={handleAuthenticated}/>;
-  if(platformView==="city")return <SmartCityDashboard displayName={currentUser.displayName} onLogout={logout} onOpenDemo={()=>{setDemoEntryOpen(true);setPlatformView("emergency")}}/>;
+  if(platformView==="city")return <SmartCityDashboard displayName={currentUser.displayName} onLogout={logout} onOpenDemo={()=>{setDemoEntryOpen(false);setActiveModule("overview");setSceneStatus("loading");setPlatformView("emergency")}}/>;
 
   return (
     <main className="shell">
@@ -304,8 +305,8 @@ export default function Home() {
             <div className="local-cv">LOCAL CV · PIXEL FEATURE MODEL</div>
           </div>
           <div className="recognition">
-            <div><span>车辆状态</span><strong>{scenarioPhase===0?"等待演示":scenarioPhase===1?"正常运输":scenarioPhase===2?"动力故障":"已停车处置"}</strong></div><div><span>AI 识别置信度</span><strong>{scenarioPhase>=3?`${(vision.confidence*100).toFixed(1)}%`:"—"}</strong></div>
-            <div><span>烟羽像素占比</span><strong>{scenarioPhase>=3?`${(vision.smokeRatio*100).toFixed(1)}%`:"0.0%"}</strong></div><div><span>已疏散人员</span><strong>{scenarioPhase>=6?"186 人":"0 人"}</strong></div>
+            <div><span>车辆状态</span><strong>{scenarioPhase===0?"等待演示":scenarioPhase===1?"正常运输":scenarioPhase===2?"动力故障":"已停车处置"}</strong></div><div><span>AI 识别置信度</span><strong>{scenarioPhase>=3?<AniNum to={vision.confidence*100} decimals={1} suffix="%" />:"—"}</strong></div>
+            <div><span>烟羽像素占比</span><strong><AniNum to={scenarioPhase>=3?vision.smokeRatio*100:0} decimals={1} suffix="%" /></strong></div><div><span>已疏散人员</span><strong><AniNum to={scenarioPhase>=6?186:0} suffix=" 人" /></strong></div>
           </div>
           <div className="ai-note"><b>{scenarioPhase>=3?"本地视觉研判":"运输遥测状态"}</b><p>{scenarioPhase===0?"等待启动完整演示，车辆与应急力量已加载。":currentScenario.detail} {scenarioPhase>=3&&<>东南风 3.4 m/s（吹向西北），预计 <em>{Math.max(3,Math.round(480/3.4/60))} 分钟</em>进入重点警戒区域。</>}</p></div>
           <div className="panel-title compact"><span>02</span>智能体协同 <b>MULTI-AGENT</b></div>
@@ -334,8 +335,8 @@ export default function Home() {
 
         <aside className="right-panel panel">
           <div className="panel-title"><span>04</span>决策方案 <b>AI COMMAND</b></div>
-          <div className="score-card"><span>当前最优方案 · 实时求解</span><strong>{blocked ? "方案 B · A* 动态重规划" : "方案 A · 最短响应路径"}</strong><div><b>{blocked ? "92.4" : "95.1"}</b><small>综合评分</small></div></div>
-          <div className="metrics"><div><span>OSM A* 预计响应</span><b className="green">{realRoute?.eta??route.eta} min</b><small>搜索 {realRoute?.visited??route.visited} 个真实道路节点</small></div><div><span>模型风险暴露</span><b>{plume.affectedPeople} 人</b><small>{plume.model}</small></div><div><span>真实救援路径</span><b>{((realRoute?.distance??route.distance)/1000).toFixed(2)} km</b><small>{realRoute?.roads.slice(0,3).join(" → ")||"正在加载 OSM 路网"}</small></div></div>
+          <div className="score-card"><span>当前最优方案 · 实时求解</span><strong>{blocked ? "方案 B · A* 动态重规划" : "方案 A · 最短响应路径"}</strong><div><b><AniNum to={blocked?92.4:95.1} decimals={1} /></b><small>综合评分</small></div></div>
+          <div className="metrics"><div><span>OSM A* 预计响应</span><b className="green"><AniNum to={realRoute?.eta??route.eta} suffix=" min" /></b><small>搜索 {realRoute?.visited??route.visited} 个真实道路节点</small></div><div><span>模型风险暴露</span><b><AniNum to={plume.affectedPeople} suffix=" 人" /></b><small>{plume.model}</small></div><div><span>真实救援路径</span><b><AniNum to={(realRoute?.distance??route.distance)/1000} decimals={2} suffix=" km" /></b><small>{realRoute?.roads.slice(0,3).join(" → ")||"正在加载 OSM 路网"}</small></div></div>
           <div className="plan-steps">
             {["封锁泄漏点周边 500m 道路","学校师生向东南侧上风向分批疏散","消防车沿 OSM 真实道路抵达","救护组在体育中心建立分诊点"].map((x,i)=><div key={x}><i>{i+1}</i><p>{x}<span>{["交警 · 2分钟内","教育 · 8分钟完成",`消防 · 预计${realRoute?.eta??7}分钟`,"医疗 · 12分钟启用"][i]}</span></p><em>✓</em></div>)}
           </div>
