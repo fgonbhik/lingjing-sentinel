@@ -38,6 +38,11 @@ test("比赛入口合同：登录后先进入新北京智慧城市大屏", async
   assert.match(dashboard, /future-demo-card/);
 });
 
+test("三维动画合同：首帧时间不得产生负数曲线采样", async () => {
+  const scene = await read("app/SmartCityScene.tsx");
+  assert.match(scene, /Math\.max\(0,\s*\(time - startTime\) \/ 1000\)/);
+});
+
 test("唯一入口合同：仅保留右下角灵境哨兵入口", async () => {
   const dashboard = await read("app/SmartCityDashboard.tsx");
   assert.equal((dashboard.match(/立即进入演示项目/g) ?? []).length, 1);

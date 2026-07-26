@@ -806,7 +806,10 @@ export default function SmartCityScene({
     let frame = 0;
     const animate = (time: number) => {
       frame = requestAnimationFrame(animate);
-      const elapsed = (time - startTime) / 1000;
+      // A first requestAnimationFrame timestamp can precede performance.now()
+      // by a fraction of a frame. Keep curve sampling inside [0, 1) so
+      // CatmullRomCurve3 never receives a negative parameter.
+      const elapsed = Math.max(0, (time - startTime) / 1000);
       const count = Math.min(54, trafficRef.current);
       vehicles.count = count;
       vehicleRoutes.forEach((route, index) => {
