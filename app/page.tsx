@@ -6,6 +6,7 @@ import InteractiveModules, { type ModuleId } from "./InteractiveModules";
 import DemoProjectEntry from "./DemoProjectEntry";
 import SmartCityDashboard from "./SmartCityDashboard";
 import AniNum from "./AniNum";
+import DataDetailDialog from "./DataDetailDialog";
 import { analyzeAccidentImage, computeAStarRoute, computeGaussianPlume, type VisionResult } from "./decision-engine";
 
 const departments = [
@@ -143,6 +144,7 @@ export default function Home() {
   const [autoTour, setAutoTour] = useState(false);
   const [followingId, setFollowingId] = useState<string | null>(null);
   const [selectedAsset, setSelectedAsset] = useState<SceneAsset | null>(null);
+  const [sideInsight,setSideInsight]=useState<SceneAsset|null>(null);
   const [reportOpen, setReportOpen] = useState(false);
   const [reportGenerating, setReportGenerating] = useState(false);
   const [reportGeneratedAt, setReportGeneratedAt] = useState("2026-07-20 14:32:26");
@@ -238,7 +240,7 @@ export default function Home() {
 
   const openSideInsight=(id:string,label:string,category:string,details:string,meta:string)=>{
     setActiveSideControl(id);
-    setSelectedAsset({id:`side-${id}`,label,category,details,meta});
+    setSideInsight({id:`side-${id}`,label,category,details,meta});
     setSystemNotice(`已打开：${label}`);
   };
 
@@ -361,6 +363,8 @@ export default function Home() {
           <button className="report" onClick={generateReport}>生成应急处置报告 <span>↗</span></button>
         </aside>
       </section>
+
+      {sideInsight&&<DataDetailDialog data={sideInsight} tone="blue" onClose={()=>setSideInsight(null)}/>}
 
       {reportOpen&&<div className="report-overlay" onClick={()=>setReportOpen(false)}><section className="report-dialog" role="dialog" aria-modal="true" aria-label="应急处置报告" onClick={e=>e.stopPropagation()}><button className="report-close" aria-label="关闭报告" onClick={()=>setReportOpen(false)}>×</button>{reportGenerating?<div className="report-generating"><i/><strong>AI 正在生成应急处置报告</strong><p>汇总视觉识别、风险扩散、OSM 路网与多智能体决策结果…</p><div><span/><span/><span/><span/></div></div>:<><header className="report-head"><div><span>LINGJING SENTINEL · AUTO REPORT</span><h2>危化品泄漏应急处置报告</h2><p>报告编号：LJ-BJ-20260720-001　生成时间：{reportGeneratedAt}</p></div><b>Ⅰ级响应</b></header><div className="report-paper"><div className="report-summary"><div><span>AI 事故判定</span><strong>{vision.type}</strong><em>置信度 {(vision.confidence*100).toFixed(1)}%</em></div><div><span>警戒纵深</span><strong>{plume.warning} m</strong><em>高斯烟羽 · Pasquill-D</em></div><div><span>风险暴露</span><strong>{plume.affectedPeople} 人</strong><em>现场估计 {vision.persons} 人</em></div><div><span>消防 ETA</span><strong>{realRoute?.eta??route.eta} min</strong><em>{realRoute?.distance??route.distance} m</em></div></div><article><h3>01　事件概况与智能研判</h3><p>北京市朝阳区建国门外大街国贸桥西侧发生危化品运输车泄漏。视觉模型识别为<strong>{vision.type}</strong>，烟羽像素占比 {(vision.smokeRatio*100).toFixed(1)}%，现场人员约 {vision.persons} 人。{vision.summary}</p><div className="report-callout danger"><b>核心风险</b><span>东南风 3.4 m/s，污染羽流向西北扩散；学校位于事故点 500 米重点保护范围内，应启动预防性疏散。</span></div></article><article><h3>02　风险扩散计算</h3><table><tbody><tr><th>风险等级</th><th>纵深</th><th>处置要求</th></tr><tr><td>致命区</td><td>{plume.lethal} m</td><td>仅允许专业防化力量进入</td></tr><tr><td>高风险区</td><td>{plume.high} m</td><td>立即疏散并设置硬隔离</td></tr><tr><td>警戒区</td><td>{plume.warning} m</td><td>持续监测并准备扩大疏散</td></tr></tbody></table></article><article><h3>03　消防救援真实道路路线</h3><p>系统使用 674 段北京 OSM 道路构图，并通过 A* 搜索 {realRoute?.visited??route.visited} 个道路节点。当前路线：</p><div className="report-route">{realRoute?.roads.join("　→　")||"正在载入真实道路名称"}</div><p>{blocked?`已封锁 OSM 道路 ${realRoute?.blockedRoadId??blockedRoadId??"自动选择路段"}，消防车已避开该路段并完成动态重规划。`:"当前道路正常通行，消防车沿最短真实路网路线行驶。"}</p></article><article><h3>04　联合处置指令</h3><ol><li><b>交通：</b>2 分钟内封锁事故点周边 500 m 道路，建立 3.2 km 应急绿波带。</li><li><b>教育：</b>城北实验学校师生经东南侧上风向安全通道分批疏散，8 分钟完成重点人员转移。</li><li><b>消防：</b>2 辆泡沫消防车沿 OSM 路线抵达，在上风向布置水幕并实施堵漏。</li><li><b>医疗：</b>开放三级医院绿色通道，在体育中心设置临时分诊点。</li><li><b>监测：</b>下风向 200 m、500 m、1000 m 设置监测点，每 2 分钟回传浓度。</li></ol></article><div className="report-conclusion"><b>AI 处置结论</b><p>立即启动危化品泄漏Ⅰ级联合响应，处置优先级为：学校疏散 → 道路封控 → 泄漏源控制 → 医疗救治 → 环境复测。</p><small>本报告由灵境哨兵自动生成，用于竞赛演示；正式行动须由现场指挥员复核。</small></div></div><footer className="report-actions"><button onClick={downloadReport}>↓ 下载完整报告</button><button onClick={()=>setReportOpen(false)}>关闭报告</button></footer></>}</section></div>}
 

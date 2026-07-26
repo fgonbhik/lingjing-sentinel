@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import SmartCityScene, { type SmartAsset } from "./SmartCityScene";
 import AniNum from "./AniNum";
+import DataDetailDialog from "./DataDetailDialog";
 
 type Props = {
   displayName: string;
@@ -167,7 +168,6 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
             <i>0{index + 1}</i><span>{item}</span>
           </button>
         ))}
-        <button className="future-demo-nav" onClick={onOpenDemo}><i>AI</i><span>演示项目</span><em>ENTER</em></button>
       </nav>
 
       <section className="future-stage">
@@ -200,7 +200,6 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
                 </button>
               ))}
             </div>
-            <button className="event-action" onClick={onOpenDemo}><span>突发事件智能处置演示</span><b>启动灵境哨兵</b><i>→</i></button>
           </section>
 
           <section className="future-panel eco-panel">
@@ -307,15 +306,6 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
               <button aria-label="缩小城市模型" onClick={() => window.dispatchEvent(new CustomEvent("smart-city-camera", { detail: "zoomOut" }))}>−</button>
             </div>
 
-            {selectedAsset && (
-              <article className="future-asset-card">
-                <button aria-label="关闭详情" onClick={() => setSelectedAsset(null)}>×</button>
-                <span>{selectedAsset.category}</span>
-                <strong>{selectedAsset.label}</strong>
-                <p>{selectedAsset.details}</p>
-                <em>{selectedAsset.meta}</em>
-              </article>
-            )}
           </div>
         </section>
 
@@ -382,6 +372,8 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
           </button>
         </aside>
       </section>
+
+      {selectedAsset && <DataDetailDialog data={selectedAsset} onClose={() => setSelectedAsset(null)} />}
 
       <footer className="future-footer">
         <div><i />CITY DATA STREAM</div>
