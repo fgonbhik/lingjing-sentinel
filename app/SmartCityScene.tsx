@@ -182,6 +182,22 @@ export default function SmartCityScene({
     const coreLight = new THREE.PointLight(0x29ddff, 22, 130, 1.7);
     coreLight.position.set(0, 45, 0);
     scene.add(coreLight);
+    const foundationLights: THREE.PointLight[] = [];
+    const foundationLightMarkers: THREE.Mesh[] = [];
+    for (let index = 0; index < 8; index++) {
+      const angle = index / 8 * Math.PI * 2;
+      const tone = index % 3 === 0 ? 0x4d8fff : 0x35e8ff;
+      const light = new THREE.PointLight(tone, 9, 58, 1.75);
+      light.position.set(Math.cos(angle) * 76, 5.5, Math.sin(angle) * 76);
+      const marker = new THREE.Mesh(
+        new THREE.SphereGeometry(0.65, 14, 10),
+        new THREE.MeshBasicMaterial({ color: tone, transparent: true, opacity: 0.8 }),
+      );
+      marker.position.copy(light.position);
+      scene.add(light, marker);
+      foundationLights.push(light);
+      foundationLightMarkers.push(marker);
+    }
 
     const groundMaterial = new THREE.MeshStandardMaterial({
       color: 0x071d2b,
@@ -247,6 +263,21 @@ export default function SmartCityScene({
       ring.position.y = 1.58 + index * 0.01;
       scene.add(ring);
       dataRings.push(ring);
+    });
+    const hologramRings = [18, 29].map((radius, index) => {
+      const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(radius, index === 0 ? 0.11 : 0.07, 10, 180),
+        new THREE.MeshBasicMaterial({
+          color: index === 0 ? 0x55f3ff : 0x4d8fff,
+          transparent: true,
+          opacity: index === 0 ? 0.74 : 0.46,
+          depthWrite: false,
+        }),
+      );
+      ring.rotation.x = Math.PI / 2;
+      ring.position.y = 2.05 + index * 0.08;
+      scene.add(ring);
+      return ring;
     });
 
     const riverMaterial = new THREE.MeshStandardMaterial({
@@ -407,7 +438,59 @@ export default function SmartCityScene({
       emissiveIntensity: 0.48,
       vertexColors: true,
     });
+    const buildingWindowStrength = { value: nightRef.current && lightsRef.current ? 2.2 : 1.15 };
+    buildingMaterial.onBeforeCompile = (shader) => {
+      shader.uniforms.windowStrength = buildingWindowStrength;
+      shader.vertexShader = shader.vertexShader
+        .replace(
+          "#include <common>",
+          `#include <common>
+          varying vec3 vBuildingLocal;
+          varying float vBuildingSeed;`,
+        )
+        .replace(
+          "#include <begin_vertex>",
+          `#include <begin_vertex>
+          vBuildingLocal = position;
+          #ifdef USE_INSTANCING
+            vBuildingSeed = instanceMatrix[3].x * 0.071 + instanceMatrix[3].z * 0.113;
+          #else
+            vBuildingSeed = 0.0;
+          #endif`,
+        );
+      shader.fragmentShader = shader.fragmentShader
+        .replace(
+          "#include <common>",
+          `#include <common>
+          varying vec3 vBuildingLocal;
+          varying float vBuildingSeed;
+          uniform float windowStrength;`,
+        )
+        .replace(
+          "#include <emissivemap_fragment>",
+          `#include <emissivemap_fragment>
+          float wallCoordinate = abs(normal.x) > abs(normal.z) ? vBuildingLocal.z : vBuildingLocal.x;
+          vec2 windowUV = vec2((wallCoordinate + 0.5) * 10.0, (vBuildingLocal.y + 0.5) * 22.0);
+          vec2 windowCell = floor(windowUV);
+          vec2 windowGrid = fract(windowUV);
+          float sideSurface = step(abs(normal.y), 0.45);
+          float windowShape = step(0.20, windowGrid.x) * step(windowGrid.x, 0.78)
+            * step(0.22, windowGrid.y) * step(windowGrid.y, 0.72) * sideSurface;
+          float windowNoise = fract(sin(dot(windowCell + vBuildingSeed, vec2(12.9898, 78.233))) * 43758.5453);
+          float windowOn = step(0.34, windowNoise);
+          vec3 windowColor = mix(vec3(0.05, 0.72, 1.0), vec3(1.0, 0.56, 0.16), step(0.86, windowNoise));
+          totalEmissiveRadiance += windowColor * windowShape * windowOn * windowStrength;`,
+        );
+    };
     const buildingGeometry = new THREE.BoxGeometry(1, 1, 1);
+    const buildingEdgeMaterial = new THREE.MeshBasicMaterial({
+      color: 0x38e7ff,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.16,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
     const roofGeometry = new THREE.BoxGeometry(1, 0.12, 1);
     const roofMaterial = new THREE.MeshBasicMaterial({
       color: 0x7cf5ff,
@@ -423,9 +506,11 @@ export default function SmartCityScene({
         if (disposed) return;
         const records = payload.buildings.filter((item) => item.points.length >= 3).slice(0, 5200);
         const mesh = new THREE.InstancedMesh(buildingGeometry, buildingMaterial, records.length);
+        const edges = new THREE.InstancedMesh(buildingGeometry, buildingEdgeMaterial, records.length);
         const roofRecords = records.filter((item) => (item.heightMeters || 16) > 40).slice(0, 700);
         const roofs = new THREE.InstancedMesh(roofGeometry, roofMaterial, roofRecords.length);
         const matrix = new THREE.Matrix4();
+        const edgeMatrix = new THREE.Matrix4();
         const color = new THREE.Color();
 
         const footprint = (item: Building) => {
@@ -447,6 +532,12 @@ export default function SmartCityScene({
             new THREE.Vector3(width, height, depth),
           );
           mesh.setMatrixAt(index, matrix);
+          edgeMatrix.compose(
+            new THREE.Vector3(x, 1.72 + height / 2, z),
+            new THREE.Quaternion(),
+            new THREE.Vector3(width * 1.018, height * 1.006, depth * 1.018),
+          );
+          edges.setMatrixAt(index, edgeMatrix);
           const distance = Math.min(1, Math.sqrt(x * x + z * z) / 110);
           color.setHSL(0.51 + distance * 0.055 + Math.random() * 0.018, 0.52, 0.31 + (1 - distance) * 0.18 + Math.random() * 0.08);
           mesh.setColorAt(index, color);
@@ -464,6 +555,7 @@ export default function SmartCityScene({
 
         mesh.instanceMatrix.needsUpdate = true;
         mesh.instanceColor!.needsUpdate = true;
+        edges.instanceMatrix.needsUpdate = true;
         roofs.instanceMatrix.needsUpdate = true;
         mesh.castShadow = true;
         mesh.receiveShadow = true;
@@ -474,7 +566,7 @@ export default function SmartCityScene({
           details: `${records.length.toLocaleString()} 栋建筑已接入城市数字孪生，支持空间定位、态势叠加与运行监测。`,
           meta: "建筑高度 · 区位编码 · 能耗状态 · 实时同步",
         } satisfies SmartAsset;
-        scene.add(mesh, roofs);
+        scene.add(mesh, edges, roofs);
         interactive.push(mesh);
         onSceneStatus("ready");
       } catch {
@@ -508,11 +600,16 @@ export default function SmartCityScene({
       ambient.intensity = night ? 0.42 : 1.15;
       sun.intensity = night ? 0.16 : 2.4;
       coreLight.intensity = night ? 34 : 22;
+      foundationLights.forEach((light, index) => {
+        light.intensity = night ? 13 + (index % 2) * 2 : 7;
+      });
       groundMaterial.color.setHex(night ? 0x020b12 : 0x071d2b);
       cityBaseMaterial.emissiveIntensity = night ? 1.1 : 0.65;
       roadMaterial.emissive.setHex(night ? 0x083040 : 0x05141d);
       buildingMaterial.emissive.setHex(lights ? (night ? 0x087b9c : 0x0a526b) : 0x04121c);
       buildingMaterial.emissiveIntensity = lights ? (night ? 0.95 : 0.48) : 0.1;
+      buildingWindowStrength.value = lights ? (night ? 2.2 : 1.15) : 0.03;
+      buildingEdgeMaterial.opacity = lights ? (night ? 0.3 : 0.16) : 0.045;
       roofMaterial.opacity = lights ? (night ? 0.92 : 0.72) : 0.16;
       laneMaterial.opacity = night ? 0.82 : 0.52;
       riverMaterial.emissiveIntensity = night ? 0.9 : 0.55;
@@ -580,6 +677,14 @@ export default function SmartCityScene({
       dataRings.forEach((ring, index) => {
         ring.rotation.z = elapsed * (index % 2 ? -0.025 : 0.02);
         (ring.material as THREE.MeshBasicMaterial).opacity = 0.23 + Math.sin(elapsed * 1.4 + index) * 0.12;
+      });
+      hologramRings.forEach((ring, index) => {
+        ring.rotation.z = elapsed * (index === 0 ? 0.08 : -0.055);
+        (ring.material as THREE.MeshBasicMaterial).opacity = (index === 0 ? 0.62 : 0.4) + Math.sin(elapsed * 1.7 + index) * 0.12;
+      });
+      foundationLightMarkers.forEach((marker, index) => {
+        const scale = 0.88 + Math.sin(elapsed * 2.4 + index * 0.7) * 0.22;
+        marker.scale.setScalar(scale);
       });
       districtHalos.forEach((halo, index) => {
         const scale = 1 + Math.sin(elapsed * 2 + index) * 0.12;
