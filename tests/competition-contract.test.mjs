@@ -43,6 +43,21 @@ test("三维动画合同：首帧时间不得产生负数曲线采样", async ()
   assert.match(scene, /Math\.max\(0,\s*\(time - startTime\) \/ 1000\)/);
 });
 
+test("模型真实性合同：建筑和车辆保持比赛级程序化精修", async () => {
+  const [dashboardScene, emergencyScene] = await Promise.all([
+    read("app/SmartCityScene.tsx"),
+    read("app/CityScene.tsx"),
+  ]);
+  assert.match(dashboardScene, /RoundedBoxGeometry/);
+  assert.match(dashboardScene, /mechanicalRooms/);
+  assert.match(dashboardScene, /roofAntennas/);
+  assert.match(dashboardScene, /dashboardVehicles/);
+  assert.match(emergencyScene, /competition-realism-v2/);
+  assert.match(emergencyScene, /消防车伸缩云梯与器材组/);
+  assert.match(emergencyScene, /tankCatwalk/);
+  assert.match(emergencyScene, /policeHood/);
+});
+
 test("唯一入口合同：仅保留右下角灵境哨兵入口", async () => {
   const dashboard = await read("app/SmartCityDashboard.tsx");
   assert.equal((dashboard.match(/立即进入演示项目/g) ?? []).length, 1);

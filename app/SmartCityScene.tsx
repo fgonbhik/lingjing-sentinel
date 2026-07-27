@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 
 export type SmartAsset = {
   id: string;
@@ -510,7 +511,7 @@ export default function SmartCityScene({
           totalEmissiveRadiance += windowColor * windowShape * windowOn * windowStrength;`,
         );
     };
-    const buildingGeometry = new THREE.BoxGeometry(1, 1, 1);
+    const buildingGeometry = new RoundedBoxGeometry(1, 1, 1, 2, 0.035);
     const buildingEdgeMaterial = new THREE.MeshBasicMaterial({
       color: 0x38e7ff,
       wireframe: true,
@@ -519,7 +520,7 @@ export default function SmartCityScene({
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
-    const roofGeometry = new THREE.BoxGeometry(1, 0.12, 1);
+    const roofGeometry = new RoundedBoxGeometry(1, 0.12, 1, 2, 0.035);
     const roofMaterial = new THREE.MeshBasicMaterial({
       color: 0x7cf5ff,
       transparent: true,
@@ -542,6 +543,56 @@ export default function SmartCityScene({
         const edges = new THREE.InstancedMesh(buildingGeometry, buildingEdgeMaterial, records.length);
         const roofRecords = records.filter((item) => (item.heightMeters || 16) > 40).slice(0, 700);
         const roofs = new THREE.InstancedMesh(roofGeometry, roofMaterial, roofRecords.length);
+        const detailRecords = records
+          .filter((item) => item.core && (item.heightMeters || 16) > 32)
+          .slice(0, 320);
+        const podiums = new THREE.InstancedMesh(
+          new RoundedBoxGeometry(1, 1, 1, 2, 0.045),
+          new THREE.MeshPhysicalMaterial({
+            color: 0x183444,
+            metalness: 0.48,
+            roughness: 0.38,
+            clearcoat: 0.42,
+            emissive: 0x062533,
+            emissiveIntensity: 0.38,
+          }),
+          detailRecords.length,
+        );
+        const mechanicalRooms = new THREE.InstancedMesh(
+          new RoundedBoxGeometry(1, 1, 1, 2, 0.06),
+          new THREE.MeshStandardMaterial({
+            color: 0x6a8791,
+            metalness: 0.62,
+            roughness: 0.34,
+            emissive: 0x173d48,
+            emissiveIntensity: 0.28,
+          }),
+          detailRecords.length,
+        );
+        const roofAntennas = new THREE.InstancedMesh(
+          new THREE.CylinderGeometry(0.045, 0.07, 1, 7),
+          new THREE.MeshStandardMaterial({
+            color: 0x8ed8df,
+            metalness: 0.78,
+            roughness: 0.22,
+            emissive: 0x1f8291,
+            emissiveIntensity: 0.34,
+          }),
+          detailRecords.length,
+        );
+        const floorBands = new THREE.InstancedMesh(
+          new RoundedBoxGeometry(1, 0.045, 1, 1, 0.018),
+          new THREE.MeshPhysicalMaterial({
+            color: 0x8fc9d3,
+            metalness: 0.72,
+            roughness: 0.2,
+            transparent: true,
+            opacity: 0.58,
+            emissive: 0x1f8ca2,
+            emissiveIntensity: 0.42,
+          }),
+          detailRecords.length * 3,
+        );
         const matrix = new THREE.Matrix4();
         const edgeMatrix = new THREE.Matrix4();
         const color = new THREE.Color();
@@ -587,12 +638,59 @@ export default function SmartCityScene({
           roofs.setMatrixAt(index, matrix);
         });
 
+        detailRecords.forEach((item, index) => {
+          const { x, z, width, depth, height } = footprint(item);
+          const podiumHeight = Math.max(0.55, Math.min(1.35, height * 0.09));
+          matrix.compose(
+            new THREE.Vector3(x, 1.72 + podiumHeight / 2, z),
+            new THREE.Quaternion(),
+            new THREE.Vector3(width * 1.14, podiumHeight, depth * 1.14),
+          );
+          podiums.setMatrixAt(index, matrix);
+
+          const equipmentHeight = Math.max(0.32, Math.min(0.95, height * 0.045));
+          matrix.compose(
+            new THREE.Vector3(x, 1.78 + height + equipmentHeight / 2, z),
+            new THREE.Quaternion(),
+            new THREE.Vector3(
+              Math.max(0.28, width * 0.34),
+              equipmentHeight,
+              Math.max(0.28, depth * 0.34),
+            ),
+          );
+          mechanicalRooms.setMatrixAt(index, matrix);
+
+          const antennaHeight = Math.max(0.9, Math.min(3.2, height * 0.12));
+          matrix.compose(
+            new THREE.Vector3(x, 1.82 + height + equipmentHeight + antennaHeight / 2, z),
+            new THREE.Quaternion(),
+            new THREE.Vector3(1, antennaHeight, 1),
+          );
+          roofAntennas.setMatrixAt(index, matrix);
+
+          for (let band = 0; band < 3; band += 1) {
+            const bandHeight = 1.72 + height * (0.28 + band * 0.22);
+            matrix.compose(
+              new THREE.Vector3(x, bandHeight, z),
+              new THREE.Quaternion(),
+              new THREE.Vector3(width * 1.018, 1, depth * 1.018),
+            );
+            floorBands.setMatrixAt(index * 3 + band, matrix);
+          }
+        });
+
         mesh.instanceMatrix.needsUpdate = true;
         mesh.instanceColor!.needsUpdate = true;
         edges.instanceMatrix.needsUpdate = true;
         roofs.instanceMatrix.needsUpdate = true;
+        podiums.instanceMatrix.needsUpdate = true;
+        mechanicalRooms.instanceMatrix.needsUpdate = true;
+        roofAntennas.instanceMatrix.needsUpdate = true;
+        floorBands.instanceMatrix.needsUpdate = true;
         mesh.castShadow = true;
         mesh.receiveShadow = true;
+        podiums.receiveShadow = true;
+        mechanicalRooms.castShadow = true;
         mesh.userData.asset = {
           id: "beijing-building-network",
           label: "北京城市建筑群",
@@ -600,7 +698,7 @@ export default function SmartCityScene({
           details: `${records.length.toLocaleString()} 栋建筑已接入城市数字孪生，支持空间定位、态势叠加与运行监测。`,
           meta: "建筑高度 · 区位编码 · 能耗状态 · 实时同步",
         } satisfies SmartAsset;
-        scene.add(mesh, edges, roofs);
+        scene.add(mesh, edges, roofs, podiums, mechanicalRooms, roofAntennas, floorBands);
         interactive.push(mesh);
         onSceneStatus("ready");
       } catch {
@@ -609,18 +707,118 @@ export default function SmartCityScene({
     };
     void loadBuildings();
 
-    const vehicleGeometry = new THREE.BoxGeometry(1.15, 0.48, 0.62);
-    const vehicleMaterial = new THREE.MeshStandardMaterial({
-      color: 0xd8faff,
-      emissive: 0x36ddef,
-      emissiveIntensity: 1.05,
-      metalness: 0.55,
-      roughness: 0.26,
+    const dashboardVehicleLights: THREE.MeshBasicMaterial[] = [];
+    const dashboardVehicles = Array.from({ length: 54 }, (_, index) => {
+      const vehicle = new THREE.Group();
+      vehicle.name = `真实车流模型-${String(index + 1).padStart(2, "0")}`;
+      vehicle.userData.modelQuality = "competition-realism-v2";
+      const model = index % 5;
+      const isTaxi = model === 1;
+      const isSuv = model === 2;
+      const isVan = model === 3;
+      const isBus = model === 4;
+      const width = isBus ? 0.82 : isVan ? 0.75 : isSuv ? 0.72 : 0.66;
+      const length = isBus ? 1.88 : isVan ? 1.58 : isSuv ? 1.5 : 1.42;
+      const bodyHeight = isBus ? 0.46 : isVan ? 0.39 : isSuv ? 0.34 : 0.29;
+      const color = isTaxi
+        ? 0xd5b72f
+        : isBus
+          ? 0x3f8cc5
+          : [0xe5e9e7, 0xd14b42, 0x347dab, 0x252b31, 0x5eb39e][index % 5];
+      const paint = new THREE.MeshPhysicalMaterial({
+        color,
+        metalness: 0.58,
+        roughness: 0.24,
+        clearcoat: 0.82,
+        clearcoatRoughness: 0.18,
+      });
+      const body = new THREE.Mesh(
+        new RoundedBoxGeometry(width, bodyHeight, length, 3, 0.1),
+        paint,
+      );
+      body.position.y = 0.31;
+      body.castShadow = index < 18;
+      const cabin = new THREE.Mesh(
+        new RoundedBoxGeometry(
+          width * 0.84,
+          isBus ? 0.46 : isVan ? 0.38 : 0.31,
+          isBus ? length * 0.76 : isVan ? length * 0.58 : length * 0.5,
+          3,
+          0.08,
+        ),
+        new THREE.MeshPhysicalMaterial({
+          color: 0x78a7b5,
+          metalness: 0.62,
+          roughness: 0.12,
+          clearcoat: 0.9,
+          transparent: true,
+          opacity: 0.9,
+        }),
+      );
+      cabin.position.set(0, isBus ? 0.69 : isVan ? 0.62 : 0.54, isVan ? 0.03 : 0.08);
+      const bumperMaterial = new THREE.MeshStandardMaterial({
+        color: 0x172027,
+        metalness: 0.68,
+        roughness: 0.3,
+      });
+      const frontBumper = new THREE.Mesh(
+        new RoundedBoxGeometry(width * 0.88, 0.08, 0.09, 2, 0.025),
+        bumperMaterial,
+      );
+      frontBumper.position.set(0, 0.22, -length * 0.51);
+      const rearBumper = frontBumper.clone();
+      rearBumper.position.z = length * 0.51;
+      const lightMaterial = new THREE.MeshBasicMaterial({
+        color: 0xfff0bd,
+        transparent: true,
+        opacity: nightRef.current ? 1 : 0.38,
+      });
+      const tailMaterial = new THREE.MeshBasicMaterial({
+        color: 0xff312e,
+        transparent: true,
+        opacity: nightRef.current ? 0.94 : 0.5,
+      });
+      dashboardVehicleLights.push(lightMaterial, tailMaterial);
+      [-0.23, 0.23].forEach((side) => {
+        const headlight = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.07, 0.035), lightMaterial);
+        headlight.position.set(side * width, 0.31, -length * 0.535);
+        const tailLight = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.065, 0.035), tailMaterial);
+        tailLight.position.set(side * width, 0.31, length * 0.535);
+        vehicle.add(headlight, tailLight);
+      });
+      const wheelMaterial = new THREE.MeshStandardMaterial({ color: 0x101418, roughness: 0.88 });
+      const hubMaterial = new THREE.MeshStandardMaterial({ color: 0xa7b0b3, metalness: 0.86, roughness: 0.2 });
+      [-1, 1].forEach((side) => {
+        [-0.31, 0.31].forEach((axle) => {
+          const wheel = new THREE.Mesh(
+            new THREE.CylinderGeometry(isBus ? 0.15 : 0.13, isBus ? 0.15 : 0.13, 0.1, 16),
+            wheelMaterial,
+          );
+          wheel.rotation.z = Math.PI / 2;
+          wheel.position.set(side * width * 0.55, 0.18, axle * length);
+          const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.105, 12), hubMaterial);
+          hub.rotation.z = Math.PI / 2;
+          hub.position.copy(wheel.position);
+          vehicle.add(wheel, hub);
+        });
+      });
+      const plate = new THREE.Mesh(
+        new THREE.BoxGeometry(0.23, 0.07, 0.025),
+        new THREE.MeshBasicMaterial({ color: 0x2368b4 }),
+      );
+      plate.position.set(0, 0.2, -length * 0.56);
+      vehicle.add(body, cabin, frontBumper, rearBumper, plate);
+      if (isTaxi) {
+        const roofSign = new THREE.Mesh(
+          new RoundedBoxGeometry(0.25, 0.1, 0.13, 2, 0.025),
+          new THREE.MeshBasicMaterial({ color: 0xfff2a6 }),
+        );
+        roofSign.position.set(0, 0.74, 0.05);
+        vehicle.add(roofSign);
+      }
+      scene.add(vehicle);
+      return vehicle;
     });
-    const vehicles = new THREE.InstancedMesh(vehicleGeometry, vehicleMaterial, 54);
-    vehicles.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    scene.add(vehicles);
-    const vehicleMatrix = new THREE.Matrix4();
     const vehicleRoutes = Array.from({ length: 54 }, (_, index) => ({
       axis: index % 2,
       lane: [-72, -46, -22, 0, 24, 49, 74][index % 7] + (index % 3 - 1) * 1.15,
@@ -647,6 +845,10 @@ export default function SmartCityScene({
       roofMaterial.opacity = lights ? (night ? 0.92 : 0.72) : 0.16;
       laneMaterial.opacity = night ? 0.82 : 0.52;
       riverMaterial.emissiveIntensity = night ? 0.9 : 0.55;
+      dashboardVehicleLights.forEach((material, index) => {
+        material.opacity = index % 2 === 0 ? (night ? 1 : 0.38) : (night ? 0.94 : 0.5);
+        material.needsUpdate = true;
+      });
     };
     applyModeRef.current(nightRef.current, lightsRef.current);
 
@@ -811,17 +1013,16 @@ export default function SmartCityScene({
       // CatmullRomCurve3 never receives a negative parameter.
       const elapsed = Math.max(0, (time - startTime) / 1000);
       const count = Math.min(54, trafficRef.current);
-      vehicles.count = count;
       vehicleRoutes.forEach((route, index) => {
+        const vehicle = dashboardVehicles[index];
+        vehicle.visible = index < count;
         if (index >= count) return;
         const progress = (route.offset + elapsed * route.speed * 30) % 224 - 112;
         const x = route.axis ? progress : route.lane;
         const z = route.axis ? route.lane : progress;
-        const rotation = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, route.axis ? Math.PI / 2 : 0, 0));
-        vehicleMatrix.compose(new THREE.Vector3(x, 2.12, z), rotation, new THREE.Vector3(1, 1, 1));
-        vehicles.setMatrixAt(index, vehicleMatrix);
+        vehicle.position.set(x, 1.46, z);
+        vehicle.rotation.y = route.axis ? Math.PI / 2 : 0;
       });
-      vehicles.instanceMatrix.needsUpdate = true;
 
       scan.scale.setScalar(1 + ((elapsed * 0.2) % 1) * 43);
       scanMaterial.opacity = 0.24 * (1 - ((elapsed * 0.2) % 1));
