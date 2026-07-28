@@ -58,6 +58,17 @@ test("模型真实性合同：建筑和车辆保持比赛级程序化精修", as
   assert.match(emergencyScene, /policeHood/);
 });
 
+test("低亮写实合同：场景曝光和建筑泛光保持克制", async () => {
+  const [dashboardScene, emergencyScene] = await Promise.all([
+    read("app/SmartCityScene.tsx"),
+    read("app/CityScene.tsx"),
+  ]);
+  assert.match(dashboardScene, /toneMappingExposure = 0\.82/);
+  assert.match(dashboardScene, /buildingEdgeMaterial\.opacity = lights \? \(night \? 0\.11 : 0\.055\)/);
+  assert.match(dashboardScene, /THREE\.NormalBlending/);
+  assert.match(emergencyScene, /renderer\.toneMappingExposure=night\?\.58:\.88/);
+});
+
 test("唯一入口合同：仅保留右下角灵境哨兵入口", async () => {
   const dashboard = await read("app/SmartCityDashboard.tsx");
   assert.equal((dashboard.match(/立即进入演示项目/g) ?? []).length, 1);
