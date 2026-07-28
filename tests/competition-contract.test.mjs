@@ -226,3 +226,20 @@ test("离线交付合同：模型、地图与相对静态资源全部可用", as
     access(new URL("../offline-demo/building-photos/cctv-headquarters.jpg", import.meta.url)),
   ]);
 });
+
+test("demo stability contract: occlusion safety, smooth tracking and stable viewport", async () => {
+  const [scene, page, globals, mapStyles] = await Promise.all([
+    read("app/CityScene.tsx"),
+    read("app/page.tsx"),
+    read("app/globals.css"),
+    read("app/map-enhancements.css"),
+  ]);
+  assert.match(scene, /buildingOccluders/);
+  assert.match(scene, /fadeBuildingForVisibility/);
+  assert.match(scene, /stableFollowPosition/);
+  assert.match(scene, /camera\.position\.set\(38,48,42\)/);
+  assert.match(scene, /resizeFrame=requestAnimationFrame/);
+  assert.match(page, /className="shell emergency-shell"/);
+  assert.match(globals, /calc\(100dvh - 188px\)/);
+  assert.match(mapStyles, /contain:strict/);
+});

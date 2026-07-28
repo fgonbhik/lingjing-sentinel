@@ -27,3 +27,9 @@
 .auth-card button:focus-visible,.auth-card input:focus-visible,.auth-card select:focus-visible{outline:2px solid #69eef4;outline-offset:2px}
 @media(max-width:980px){.auth-shell{padding:0 24px;overflow:auto}.auth-layout{grid-template-columns:1fr;padding-top:28px;padding-bottom:90px}.auth-hero{max-width:none}.auth-hero h1{font-size:43px}.auth-hero>p{width:100%}.auth-radar{display:none}.auth-card{width:min(100%,560px);justify-self:center}.auth-footer{left:24px;right:24px}.auth-metrics{width:100%}}
 @media(max-width:600px){.auth-shell{padding:0 14px}.auth-topbar{height:72px}.auth-topbar>em{display:none}.auth-layout{padding:28px 0 84px}.auth-hero{padding:0}.auth-kicker{font-size:9px}.auth-hero h1{font-size:33px;margin:20px 0 14px;letter-spacing:1px}.auth-hero>p{font-size:12px;line-height:1.8}.auth-metrics{margin-top:25px}.auth-metrics>div{padding:14px 8px}.auth-metrics strong{font-size:21px}.auth-metrics span{font-size:8px}.auth-card{padding:28px 22px 20px;min-height:0}.auth-card-line{left:22px;right:22px}.auth-form-grid{grid-template-columns:1fr;gap:0}.auth-footer{left:14px;right:14px}.auth-footer span:first-child{display:none}}
+
+/* Stable emergency-demo viewport: prevent scrollbar/layout shifts while the 3D scene mounts. */
+html{scrollbar-gutter:stable}
+.emergency-shell{height:100dvh;min-height:0;overflow:hidden;contain:layout paint}
+.emergency-shell .workspace{height:calc(100dvh - 188px);min-height:0}
+@media(max-width:760px){.emergency-shell{height:auto;min-height:100svh;overflow:auto}.emergency-shell .workspace{height:auto}}

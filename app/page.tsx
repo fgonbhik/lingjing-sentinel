@@ -309,7 +309,7 @@ export default function Home() {
   if(platformView==="city")return <SmartCityDashboard displayName={currentUser.displayName} onLogout={logout} onOpenDemo={()=>{setDemoEntryOpen(false);setActiveModule("overview");setSceneStatus("loading");setPlatformView("emergency")}}/>;
 
   return (
-    <main className="shell">
+    <main className="shell emergency-shell">
       <header className="topbar">
         <div className="brand-mark"><i /><i /><i /></div>
         <div className="brand"><b>京域智城</b><span>北京智慧城市 3D 大屏 · SMART CITY DIGITAL TWIN</span></div>
