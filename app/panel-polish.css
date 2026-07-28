@@ -1313,3 +1313,38 @@
 @media(prefers-reduced-motion:reduce){
   .future-city::before,.future-atmosphere b,.future-horizon i,.future-grid{animation:none}
 }
+
+/* 高可见科技蓝：主场景和建筑成为视觉主体，避免日夜模式压黑。 */
+.future-city,
+.future-city.night{
+  background:
+    linear-gradient(180deg,#1c526d 0%,#17425a 30%,#102f43 62%,#0a2131 100%),
+    radial-gradient(ellipse at 50% 32%,#4d89a2 0%,#245970 44%,#12364c 82%);
+}
+.future-city.day{
+  background:
+    linear-gradient(180deg,#6b9cad 0%,#4f8193 30%,#315f73 62%,#1b4257 100%),
+    radial-gradient(ellipse at 50% 30%,#b6d5dd 0%,#6d9eae 44%,#35687d 82%);
+}
+.future-city::after{
+  background:
+    linear-gradient(90deg,#07172538,transparent 15%,transparent 85%,#07172538),
+    radial-gradient(ellipse at 50% 24%,transparent 0 50%,#07172424 90%),
+    linear-gradient(115deg,transparent 34%,#80dfff18 49%,transparent 62%);
+}
+.future-city.day::after{opacity:.62}
+.future-horizon{opacity:.9}.future-city.day .future-horizon{opacity:.78}
+.future-grid{opacity:.3}.future-city.day .future-grid{opacity:.36}
+.future-header{background:linear-gradient(90deg,#173d50e8,#285b6be8 24%,#285b6be8 76%,#173d50e8)}
+.future-panel{background:linear-gradient(145deg,#20434df2,#122d37f4)}
+.city-vitals{background:radial-gradient(circle at 10% 8%,#36d9ff2b,transparent 34%),linear-gradient(145deg,#1c4a58f5,#12313cf5)}
+.event-center{background:radial-gradient(circle at 92% 12%,#ff80572f,transparent 36%),linear-gradient(145deg,#4a342bf5,#2a292cf5)}
+.eco-panel{background:radial-gradient(circle at 14% 78%,#42e69a2b,transparent 38%),linear-gradient(145deg,#1c483df5,#12332df5)}
+.ai-index{background:radial-gradient(circle at 18% 22%,#9d8cff35,transparent 40%),linear-gradient(145deg,#35375df5,#202d49f5)}
+.traffic-panel{background:radial-gradient(circle at 88% 28%,#ffc15c31,transparent 38%),linear-gradient(145deg,#4c3d2af5,#2a3440f5)}
+.district-rank{background:radial-gradient(circle at 16% 90%,#579dff30,transparent 38%),linear-gradient(145deg,#214b70f5,#17354df5)}
+.future-center{border-color:#86bad0;background:#1a4455;box-shadow:0 24px 60px #06111c99,0 0 46px #48bfff35,inset 0 1px #edffff2b}
+.scene-head{border-bottom-color:#82b4c7;background:linear-gradient(90deg,#3f7586,#245466 55%,#376c7d)}
+.future-scene{background:radial-gradient(circle at 50% 38%,#6595a1,#204c5d 70%)}
+.future-city.night .future-scene{background:radial-gradient(circle at 50% 38%,#315f75,#12394e 72%)}
+.future-scene:before{box-shadow:inset 0 0 42px #06131d80,inset 0 1px #d6f5ff2b}
