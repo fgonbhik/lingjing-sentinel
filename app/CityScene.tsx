@@ -318,10 +318,12 @@ export default function CityScene({ running, blocked, blockedRoadId, showRisk, t
       if(frame%4===0&&!splitViewRef.current){if(followTarget&&!tourRef.current){followTarget.getWorldPosition(visibilityFocus);visibilityFocus.y+=.65;updateBuildingOcclusion(visibilityFocus)}else if(scenarioActive&&!tourRef.current){visibilityFocus.set(-3,1.25,-3);updateBuildingOcclusion(visibilityFocus)}else updateBuildingOcclusion(null)}
       controls.update();shadowTick++;if(!splitViewRef.current&&shadowTick%3===0)renderer.shadowMap.needsUpdate=true;
       if(splitViewRef.current&&scenarioActive){
-        updateBuildingOcclusion(null);const width=Math.max(2,el.clientWidth),height=Math.max(2,el.clientHeight),panelWidth=Math.floor(width/2),panelHeight=Math.floor(height/2),viewports=[[0,panelHeight],[panelWidth,panelHeight],[0,0],[panelWidth,0]],renderIndex=splitRenderTick++%4;renderer.setScissorTest(true);
-        tacticalFeeds.forEach((feed,index)=>{updateTacticalCamera(feed);if(index!==renderIndex)return;feed.camera.aspect=panelWidth/Math.max(panelHeight,1);feed.camera.updateProjectionMatrix();const [x,y]=viewports[index];renderer.setViewport(x,y,panelWidth,panelHeight);renderer.setScissor(x,y,panelWidth,panelHeight);renderer.render(scene,feed.camera)});
-        renderer.setScissorTest(false);renderer.setViewport(0,0,width,height)
-      }else renderer.render(scene,camera)
+        updateBuildingOcclusion(null);tacticalFeeds.forEach(updateTacticalCamera);
+        if(splitRenderTick++%2===0){const width=Math.max(2,el.clientWidth),height=Math.max(2,el.clientHeight),panelWidth=Math.floor(width/2),panelHeight=Math.floor(height/2),viewports=[[0,panelHeight],[panelWidth,panelHeight],[0,0],[panelWidth,0]];renderer.setScissorTest(true);
+          tacticalFeeds.forEach((feed,index)=>{feed.camera.aspect=panelWidth/Math.max(panelHeight,1);feed.camera.updateProjectionMatrix();const [x,y]=viewports[index];renderer.setViewport(x,y,panelWidth,panelHeight);renderer.setScissor(x,y,panelWidth,panelHeight);renderer.render(scene,feed.camera)});
+          renderer.setScissorTest(false);renderer.setViewport(0,0,width,height)
+        }
+      }else{splitRenderTick=0;renderer.render(scene,camera)}
     };animate();
     return()=>{
       applyModeRef.current=()=>{};realRoutePlannerRef.current=()=>{};abortBuildings.abort();cancelAnimationFrame(frame);cancelAnimationFrame(resizeFrame);observer.disconnect();[...occludedBuildings.keys()].forEach(restoreBuildingVisibility);window.removeEventListener("city-camera",cameraAction);renderer.domElement.removeEventListener("pointermove",hover);renderer.domElement.removeEventListener("pointerleave",leave);renderer.domElement.removeEventListener("pointerup",pick);renderer.domElement.removeEventListener("dblclick",doublePick);controls.dispose();

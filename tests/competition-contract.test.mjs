@@ -256,7 +256,9 @@ test("四车救援分屏合同：独立三维摄像机、实时速度和路线�
   assert.match(scene, /updateTacticalCamera/);
   assert.match(scene, /visualPlayhead/);
   assert.match(scene, /routeHeadingReady/);
-  assert.match(scene, /renderIndex=splitRenderTick\+\+%4/);
+  assert.match(scene, /splitRenderTick\+\+%2===0/);
+  assert.match(scene, /tacticalFeeds\.forEach\(\(feed,index\)=>\{/);
+  assert.doesNotMatch(scene, /if\(index!==renderIndex\)return/);
   assert.match(scene, /!splitViewRef\.current&&shadowTick%3/);
   assert.doesNotMatch(scene, /renderParity/);
   assert.doesNotMatch(scene, /updateBuildingOcclusion\(visibilityFocus,feed\.camera\)/);
@@ -281,9 +283,14 @@ test("导演控制台布局合同：控制区位于三维画面之外", async ()
 });
 
 test("智慧城市大屏可读性合同：顶部和左右数据字号已增强", async () => {
-  const styles = await read("app/smart-city.css");
+  const [styles, polish] = await Promise.all([
+    read("app/smart-city.css"),
+    read("app/panel-polish.css"),
+  ]);
   assert.match(styles, /Competition-screen readability/);
   assert.match(styles, /\.future-heading h1\{font-size:29px/);
-  assert.match(styles, /\.future-column \.future-panel>header div b\{font-size:13px/);
-  assert.match(styles, /\.future-column \.future-demo-card>strong\{font-size:21px/);
+  assert.match(polish, /Side panels use their full height/);
+  assert.match(polish, /\.event-center \.event-list\{flex:1;display:grid/);
+  assert.match(polish, /\.district-rank>div\{flex:1;display:flex/);
+  assert.match(polish, /\.future-column \.future-demo-card>strong\{font-size:clamp\(22px/);
 });
