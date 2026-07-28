@@ -63,10 +63,10 @@ test("低亮写实合同：场景曝光和建筑泛光保持克制", async () =>
     read("app/SmartCityScene.tsx"),
     read("app/CityScene.tsx"),
   ]);
-  assert.match(dashboardScene, /toneMappingExposure = 0\.82/);
-  assert.match(dashboardScene, /buildingEdgeMaterial\.opacity = lights \? \(night \? 0\.11 : 0\.055\)/);
+  assert.match(dashboardScene, /toneMappingExposure = 0\.96/);
+  assert.match(dashboardScene, /buildingEdgeMaterial\.opacity = lights \? \(night \? 0\.16 : 0\.09\)/);
   assert.match(dashboardScene, /THREE\.NormalBlending/);
-  assert.match(emergencyScene, /renderer\.toneMappingExposure=night\?\.58:\.88/);
+  assert.match(emergencyScene, /renderer\.toneMappingExposure=night\?\.68:\.96/);
 });
 
 test("唯一入口合同：仅保留右下角灵境哨兵入口", async () => {

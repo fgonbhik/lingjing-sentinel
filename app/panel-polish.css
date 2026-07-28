@@ -1034,3 +1034,60 @@
 }
 .auth-card{box-shadow:0 30px 90px #000e,inset 0 1px #a9c4c508;backdrop-filter:blur(24px) saturate(.85)}
 .auth-card-line,.auth-submit{box-shadow:none}
+
+/* 可读性修正：提亮中间调和文字，背景与泛光仍保持低亮。 */
+.future-city{
+  --future-panel:#0d1b20f2;
+  --future-line:#3c5962;
+  --future-cyan:#9fc1c5;
+  --future-blue:#97a8bd;
+  --future-green:#9abda9;
+  --future-text:#e7edef;
+  --future-muted:#9aabb0;
+  background:
+    radial-gradient(circle at 50% 45%,#1c343a 0,#0d1a1f 43%,#04090c 88%);
+}
+.future-city.day{
+  --future-panel:#112228f0;
+  --future-line:#49656d;
+  background:
+    radial-gradient(circle at 50% 42%,#2f464b 0,#14252a 43%,#070d11 88%);
+}
+.future-brand strong,.future-heading h1{color:#edf2f3}
+.future-heading>div b,.future-time strong{color:#bdd0d3}
+.future-panel{
+  border-color:#3c5962;
+  background:linear-gradient(145deg,#101f24f7,#091216f7);
+  box-shadow:0 14px 34px #0008,inset 0 1px #bacbcd12;
+}
+.future-panel>header{border-bottom-color:#3a555d;background:linear-gradient(90deg,#1a3037ed,transparent)}
+.future-panel>header>span{
+  color:#d9e4e6;
+  background:linear-gradient(145deg,#35525a,#20353b);
+}
+.future-panel :where(p,small,li){color:#b7c6c9}
+.future-center{
+  border-color:#405e66;
+  background:#091318;
+  box-shadow:0 18px 44px #0009,inset 0 1px #d0dddf12;
+}
+.scene-head{border-bottom-color:#405d65;background:linear-gradient(90deg,#1d353c,#0f1d22 55%,#1b3037)}
+.future-scene{background:radial-gradient(circle at center,#21383e,#071014 76%)}
+.scene-view-presets,.scene-controls{border-color:#405d65;background:#0d181ced}
+.scene-view-presets button:hover,.scene-view-presets button.active,
+.scene-controls button:hover,.scene-controls button.on{
+  border-color:#78979d;
+  color:#f0f4f5;
+  background:#21373d;
+}
+.scene-view-presets button.active i,.scene-controls button i{color:#afd0d3}
+.scene-zoom button{border-color:#58737a;background:#101c21e8;color:#c8d8da}
+.vital-primary strong,.air-orbit b,.score-rings strong,.traffic-number strong{color:#c2d7d9}
+.future-footer{border-color:#3b565e;background:#0c181ded}
+.future-footer>div{background:#1b3137;color:#aec0c3}
+.auth-shell{
+  background:
+    linear-gradient(90deg,#010407df 0%,#07131abe 46%,#020507d9 100%),
+    linear-gradient(180deg,#010305cf 0%,transparent 28%,#010305d4 100%),
+    url("../og-future-city.png") center/cover no-repeat fixed;
+}
