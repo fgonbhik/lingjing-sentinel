@@ -251,8 +251,13 @@ test("四车救援分屏合同：独立三维摄像机、实时速度和路线�
     read("app/map-enhancements.css"),
   ]);
   assert.match(scene, /tacticalFeeds/);
+  assert.match(scene, /tacticalOffsets/);
   assert.match(scene, /renderer\.setScissorTest\(true\)/);
   assert.match(scene, /updateTacticalCamera/);
+  assert.match(scene, /visualPlayhead/);
+  assert.match(scene, /splitViewRef\.current\?8:3/);
+  assert.doesNotMatch(scene, /updateBuildingOcclusion\(visibilityFocus,feed\.camera\)/);
+  assert.doesNotMatch(scene, /chemicalTruck\.position\.x\+=/);
   assert.match(scene, /四车实时战术分屏/);
   assert.match(scene, /当前时速/);
   assert.match(scene, /执行路线/);
