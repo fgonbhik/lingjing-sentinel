@@ -58,15 +58,27 @@ test("模型真实性合同：建筑和车辆保持比赛级程序化精修", as
   assert.match(emergencyScene, /policeHood/);
 });
 
-test("低亮写实合同：场景曝光和建筑泛光保持克制", async () => {
+test("清晰写实合同：日夜场景兼顾可读性和克制泛光", async () => {
   const [dashboardScene, emergencyScene] = await Promise.all([
     read("app/SmartCityScene.tsx"),
     read("app/CityScene.tsx"),
   ]);
-  assert.match(dashboardScene, /toneMappingExposure = 0\.96/);
-  assert.match(dashboardScene, /buildingEdgeMaterial\.opacity = lights \? \(night \? 0\.16 : 0\.09\)/);
+  assert.match(dashboardScene, /toneMappingExposure = 1\.1/);
+  assert.match(dashboardScene, /buildingEdgeMaterial\.opacity = lights \? \(night \? 0\.22 : 0\.13\)/);
   assert.match(dashboardScene, /THREE\.NormalBlending/);
-  assert.match(emergencyScene, /renderer\.toneMappingExposure=night\?\.68:\.96/);
+  assert.match(emergencyScene, /renderer\.toneMappingExposure=night\?\.82:1\.08/);
+  assert.match(dashboardScene, /contactShadows/);
+});
+
+test("顶部交互合同：品牌、标题、状态、时间、用户、全屏和导航均可操作", async () => {
+  const dashboard = await read("app/SmartCityDashboard.tsx");
+  assert.match(dashboard, /className="future-brand future-header-action"/);
+  assert.match(dashboard, /className="future-heading future-header-action"/);
+  assert.match(dashboard, /className="future-system future-header-action"/);
+  assert.match(dashboard, /className="future-time future-header-action"/);
+  assert.match(dashboard, /className="future-user future-user-profile future-header-action"/);
+  assert.match(dashboard, /onClick=\{toggleFullscreen\}/);
+  assert.match(dashboard, /selectNavigation\(item, index\)/);
 });
 
 test("唯一入口合同：仅保留右下角灵境哨兵入口", async () => {

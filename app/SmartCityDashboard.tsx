@@ -63,6 +63,7 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
   const [now, setNow] = useState(() => new Date());
   const [pulse, setPulse] = useState(0);
   const [barsReady, setBarsReady] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeView, setActiveView] = useState<(typeof viewOptions)[number]["id"]>("panorama");
   const [interactionTip, setInteractionTip] = useState("左键拖拽旋转 · 滚轮缩放 · 右键平移 · 点击建筑查看详情");
   const [tipKey, setTipKey] = useState(0);
@@ -71,10 +72,13 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
     const clock = window.setInterval(() => setNow(new Date()), 1000);
     const heartbeat = window.setInterval(() => setPulse((value) => (value + 1) % 8), 2400);
     const barFrame = window.requestAnimationFrame(() => setBarsReady(true));
+    const syncFullscreen = () => setIsFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener("fullscreenchange", syncFullscreen);
     return () => {
       window.clearInterval(clock);
       window.clearInterval(heartbeat);
       window.cancelAnimationFrame(barFrame);
+      document.removeEventListener("fullscreenchange", syncFullscreen);
     };
   }, []);
 
@@ -138,33 +142,80 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
     showTip("三维视角已复位至北京城市全景");
   };
 
+  const selectNavigation = (item: string, index: number) => {
+    const navigationInsights = [
+      ["全域态势总览", "汇总人口、交通、生态、公共安全和城市智能指数，中央三维场景已恢复北京城市全景。", "5,200 栋建筑 · 86.4 万感知节点"],
+      ["城市治理专题", "展示城市事件发现、派单、处置与闭环情况，当前重点事件闭环率为 96.8%。", "事件闭环率 96.8% · 平均响应 4.2 分钟"],
+      ["交通脉搏专题", "联动道路车流、平均速度、拥堵里程和信号协调率，三维车流已调整至高密度观察状态。", "平均车速 41.8 km/h · 信号协调率 92.7%"],
+      ["生态能源专题", "汇总空气质量、碳排强度、新能源消纳和重点生态空间监测结果。", "空气优良率 94.6% · 碳排强度 -4.8%"],
+      ["公共安全专题", "聚合城市告警、应急资源和重点区域风险研判，可从右下角进入灵境哨兵完整演示。", "在线资源 99.3% · 重点区域实时感知"],
+    ];
+    setActiveNav(item);
+    setAutoTour(false);
+    if (index === 0) resetView();
+    if (index === 2) setTrafficDensity(54);
+    if (index === 3) {
+      setTopView(true);
+      setActiveView("top");
+      window.dispatchEvent(new CustomEvent("smart-city-camera", { detail: { action: "view", view: "top" } }));
+    }
+    const [label, details, meta] = navigationInsights[index];
+    openInsight(`navigation-${index}`, label, item, details, meta);
+    showTip(`已进入${item}专题 · 三维场景与右侧详情同步更新`);
+  };
+
+  const toggleFullscreen = async () => {
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+        showTip("已退出全屏演示");
+      } else {
+        await document.documentElement.requestFullscreen();
+        showTip("已进入全屏演示 · 按 Esc 可退出");
+      }
+    } catch {
+      showTip("当前浏览器未开放全屏权限");
+    }
+  };
+
   return (
     <main className={`future-city ${nightMode ? "night" : "day"}`}>
       <div className="future-grid" aria-hidden="true" />
       <div className="future-aurora future-aurora-a" aria-hidden="true" />
       <div className="future-aurora future-aurora-b" aria-hidden="true" />
+      <div className="future-horizon" aria-hidden="true"><i /><i /><i /></div>
 
       <header className="future-header">
-        <div className="future-brand">
-          <div className="future-brand-symbol"><i /><i /><i /><b /></div>
-          <div><strong>京域智城</strong><span>BEIJING URBAN INTELLIGENCE CENTER</span></div>
-        </div>
+        <button type="button" className="future-brand future-header-action" onClick={() => {
+          resetView();
+          openInsight("brand-overview", "京域智城数字孪生底座", "平台总览", "平台融合城市建筑、道路交通、生态感知、公共安全和应急推演能力，所有核心数据卡片均支持点击查看。", "北京城市数字孪生 · 在线运行");
+        }}>
+          <span className="future-brand-symbol"><i /><i /><i /><b /></span>
+          <span className="future-brand-copy"><strong>京域智城</strong><span>BEIJING URBAN INTELLIGENCE CENTER</span></span>
+        </button>
 
-        <div className="future-heading">
+        <button type="button" className="future-heading future-header-action" onClick={() => {
+          setAutoTour((value) => !value);
+          openInsight("command-center", "北京市智慧城市运行指挥中心", "全域感知指挥中枢", "点击标题可启动或暂停三维城市自动巡航；当前场景支持建筑选择、区域聚焦、视角切换与车流调节。", `自动巡航：${autoTour ? "即将暂停" : "即将启动"} · 场景状态：${sceneStatus}`);
+          showTip(autoTour ? "标题交互：自动巡航已暂停" : "标题交互：自动巡航已启动");
+        }}>
           <span><i /> BEIJING DIGITAL TWIN · 2026</span>
-          <h1>北京市智慧城市运行指挥中心</h1>
+          <strong className="future-title">北京市智慧城市运行指挥中心</strong>
           <div><i /><i /><b>全域感知</b><i /><i /></div>
-        </div>
+        </button>
 
         <div className="future-account">
-          <div className="future-time"><strong>{time}</strong><span>{date} · {week}</span></div>
-          <div className="future-user"><i />{displayName}<button onClick={onLogout}>退出</button></div>
+          <button type="button" className="future-system future-header-action" onClick={() => openInsight("system-health", "城市系统健康度 99.97%", "实时运行状态", "建筑、道路、感知设备和城市指标数据链路运行正常，三维渲染与交互引擎已就绪。", "数据延迟 128ms · 设备在线率 99.97%")}><i />系统正常</button>
+          <button type="button" className="future-time future-header-action" onClick={() => openInsight("city-clock", "城市运行时钟", "实时数据基准", `当前城市数字孪生时间为 ${date} ${time}，所有动态指标以本地演示时钟同步刷新。`, `${week} · 每秒同步`)}><strong>{time}</strong><span>{date} · {week}</span></button>
+          <button type="button" className="future-user future-user-profile future-header-action" onClick={() => openInsight("operator", displayName, "当前值班用户", "当前账户具有城市态势浏览、三维交互、数据详情查看和应急演示入口权限。", "本地演示会话 · 权限正常")}><i />{displayName}</button>
+          <button type="button" className="future-fullscreen future-header-action" aria-label={isFullscreen ? "退出全屏" : "进入全屏"} onClick={toggleFullscreen}>{isFullscreen ? "收" : "全"}</button>
+          <button type="button" className="future-logout" onClick={onLogout}>退出</button>
         </div>
       </header>
 
       <nav className="future-nav" aria-label="智慧城市功能导航">
         {navItems.map((item, index) => (
-          <button key={item} className={activeNav === item ? "active" : ""} onClick={() => setActiveNav(item)}>
+          <button key={item} className={activeNav === item ? "active" : ""} onClick={() => selectNavigation(item, index)}>
             <i>0{index + 1}</i><span>{item}</span>
           </button>
         ))}

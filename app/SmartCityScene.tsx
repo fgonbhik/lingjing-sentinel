@@ -174,9 +174,9 @@ export default function SmartCityScene({
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.35));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 0.96;
+    renderer.toneMappingExposure = 1.1;
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFShadowMap;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     element.appendChild(renderer.domElement);
 
     const controls = new OrbitControls(camera, renderer.domElement);
@@ -197,9 +197,9 @@ export default function SmartCityScene({
     controls.touches.TWO = THREE.TOUCH.DOLLY_PAN;
     controlsRef.current = controls;
 
-    const ambient = new THREE.HemisphereLight(0xb8ced0, 0x091319, 1.05);
+    const ambient = new THREE.HemisphereLight(0xc9dadd, 0x101b22, 1.35);
     scene.add(ambient);
-    const sun = new THREE.DirectionalLight(0xd9ddd5, 1.9);
+    const sun = new THREE.DirectionalLight(0xe4e1d5, 2.25);
     sun.position.set(-70, 128, 68);
     sun.castShadow = true;
     sun.shadow.mapSize.set(1024, 1024);
@@ -207,8 +207,13 @@ export default function SmartCityScene({
     sun.shadow.camera.right = 130;
     sun.shadow.camera.top = 130;
     sun.shadow.camera.bottom = -130;
+    sun.shadow.bias = -0.00028;
+    sun.shadow.normalBias = 0.035;
     scene.add(sun);
-    const coreLight = new THREE.PointLight(0x4d929a, 11, 130, 1.7);
+    const rimLight = new THREE.DirectionalLight(0x79a9bd, 0.9);
+    rimLight.position.set(92, 52, -78);
+    scene.add(rimLight);
+    const coreLight = new THREE.PointLight(0x5ba4ad, 12.5, 130, 1.7);
     coreLight.position.set(0, 45, 0);
     scene.add(coreLight);
     const foundationLights: THREE.PointLight[] = [];
@@ -216,7 +221,7 @@ export default function SmartCityScene({
     for (let index = 0; index < 8; index++) {
       const angle = index / 8 * Math.PI * 2;
       const tone = index % 3 === 0 ? 0x536f96 : 0x4d8f96;
-      const light = new THREE.PointLight(tone, 4.2, 58, 1.75);
+      const light = new THREE.PointLight(tone, 5.2, 58, 1.75);
       light.position.set(Math.cos(angle) * 76, 5.5, Math.sin(angle) * 76);
       const marker = new THREE.Mesh(
         new THREE.SphereGeometry(0.65, 14, 10),
@@ -229,7 +234,7 @@ export default function SmartCityScene({
     }
 
     const groundMaterial = new THREE.MeshStandardMaterial({
-      color: 0x0a2532,
+      color: 0x103142,
       roughness: 0.78,
       metalness: 0.28,
     });
@@ -244,7 +249,7 @@ export default function SmartCityScene({
       metalness: 0.64,
       roughness: 0.32,
       emissive: 0x03141d,
-      emissiveIntensity: 0.3,
+      emissiveIntensity: 0.38,
     });
     const cityBase = new THREE.Mesh(new THREE.CylinderGeometry(120, 124, 2.4, 128), cityBaseMaterial);
     cityBase.position.y = -0.5;
@@ -255,7 +260,7 @@ export default function SmartCityScene({
     const gridMaterials = Array.isArray(grid.material) ? grid.material : [grid.material];
     gridMaterials.forEach((material) => {
       material.transparent = true;
-      material.opacity = 0.12;
+      material.opacity = 0.17;
       material.depthWrite = false;
     });
     scene.add(grid);
@@ -458,16 +463,16 @@ export default function SmartCityScene({
     scene.add(scan);
 
     const buildingMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0x24475c,
+      color: 0x31556a,
       roughness: 0.46,
       metalness: 0.42,
       clearcoat: 0.38,
       clearcoatRoughness: 0.42,
       emissive: 0x061a22,
-      emissiveIntensity: 0.22,
+      emissiveIntensity: 0.28,
       vertexColors: true,
     });
-    const buildingWindowStrength = { value: nightRef.current && lightsRef.current ? 1.35 : 0.46 };
+    const buildingWindowStrength = { value: nightRef.current && lightsRef.current ? 1.55 : 0.6 };
     buildingMaterial.onBeforeCompile = (shader) => {
       shader.uniforms.windowStrength = buildingWindowStrength;
       shader.vertexShader = shader.vertexShader
@@ -516,7 +521,7 @@ export default function SmartCityScene({
       color: 0x64868a,
       wireframe: true,
       transparent: true,
-      opacity: 0.09,
+      opacity: 0.13,
       blending: THREE.NormalBlending,
       depthWrite: false,
     });
@@ -526,7 +531,7 @@ export default function SmartCityScene({
       metalness: 0.48,
       roughness: 0.44,
       transparent: true,
-      opacity: 0.42,
+      opacity: 0.5,
     });
     let buildingMesh: THREE.InstancedMesh | null = null;
     let buildingRecords: Building[] = [];
@@ -595,9 +600,21 @@ export default function SmartCityScene({
           }),
           detailRecords.length * 3,
         );
+        const contactShadows = new THREE.InstancedMesh(
+          new THREE.CircleGeometry(0.72, 24),
+          new THREE.MeshBasicMaterial({
+            color: 0x01060a,
+            transparent: true,
+            opacity: 0.24,
+            depthWrite: false,
+          }),
+          detailRecords.length,
+        );
+        contactShadows.renderOrder = 1;
         const matrix = new THREE.Matrix4();
         const edgeMatrix = new THREE.Matrix4();
         const color = new THREE.Color();
+        const groundQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
 
         const footprint = (item: Building) => {
           const xs = item.points.map((point) => point[0]);
@@ -642,6 +659,13 @@ export default function SmartCityScene({
 
         detailRecords.forEach((item, index) => {
           const { x, z, width, depth, height } = footprint(item);
+          matrix.compose(
+            new THREE.Vector3(x + 0.24, 1.705, z + 0.28),
+            groundQuaternion,
+            new THREE.Vector3(width * 1.2, depth * 1.2, 1),
+          );
+          contactShadows.setMatrixAt(index, matrix);
+
           const podiumHeight = Math.max(0.55, Math.min(1.35, height * 0.09));
           matrix.compose(
             new THREE.Vector3(x, 1.72 + podiumHeight / 2, z),
@@ -689,7 +713,13 @@ export default function SmartCityScene({
         mechanicalRooms.instanceMatrix.needsUpdate = true;
         roofAntennas.instanceMatrix.needsUpdate = true;
         floorBands.instanceMatrix.needsUpdate = true;
+        contactShadows.instanceMatrix.needsUpdate = true;
         mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        podiums.castShadow = true;
+        podiums.receiveShadow = true;
+        mechanicalRooms.castShadow = true;
+        roofs.castShadow = true;
         mesh.receiveShadow = true;
         podiums.receiveShadow = true;
         mechanicalRooms.castShadow = true;
@@ -700,7 +730,7 @@ export default function SmartCityScene({
           details: `${records.length.toLocaleString()} 栋建筑已接入城市数字孪生，支持空间定位、态势叠加与运行监测。`,
           meta: "建筑高度 · 区位编码 · 能耗状态 · 实时同步",
         } satisfies SmartAsset;
-        scene.add(mesh, edges, roofs, podiums, mechanicalRooms, roofAntennas, floorBands);
+        scene.add(contactShadows, mesh, edges, roofs, podiums, mechanicalRooms, roofAntennas, floorBands);
         interactive.push(mesh);
         onSceneStatus("ready");
       } catch {
@@ -829,25 +859,26 @@ export default function SmartCityScene({
     }));
 
     applyModeRef.current = (night, lights) => {
-      scene.background = new THREE.Color(night ? 0x010306 : 0x0a171d);
-      scene.fog = new THREE.FogExp2(night ? 0x03070a : 0x15272b, night ? 0.0078 : 0.0058);
-      renderer.toneMappingExposure = night ? 0.68 : 0.96;
-      ambient.intensity = night ? 0.42 : 1.05;
-      sun.intensity = night ? 0.16 : 1.9;
-      coreLight.intensity = night ? 16 : 11;
+      scene.background = new THREE.Color(night ? 0x07131c : 0x183541);
+      scene.fog = new THREE.FogExp2(night ? 0x0a1720 : 0x27434a, night ? 0.0064 : 0.0048);
+      renderer.toneMappingExposure = night ? 0.82 : 1.1;
+      ambient.intensity = night ? 0.62 : 1.35;
+      sun.intensity = night ? 0.32 : 2.25;
+      rimLight.intensity = night ? 1.25 : 0.9;
+      coreLight.intensity = night ? 19 : 12.5;
       foundationLights.forEach((light, index) => {
-        light.intensity = night ? 6 + (index % 2) : 4.2;
+        light.intensity = night ? 7.5 + (index % 2) : 5.2;
       });
-      groundMaterial.color.setHex(night ? 0x041018 : 0x0a2532);
-      cityBaseMaterial.emissiveIntensity = night ? 0.44 : 0.3;
+      groundMaterial.color.setHex(night ? 0x071722 : 0x103142);
+      cityBaseMaterial.emissiveIntensity = night ? 0.56 : 0.38;
       roadMaterial.emissive.setHex(night ? 0x07171c : 0x03090c);
       buildingMaterial.emissive.setHex(lights ? (night ? 0x12343b : 0x0b242a) : 0x03090c);
-      buildingMaterial.emissiveIntensity = lights ? (night ? 0.4 : 0.22) : 0.05;
-      buildingWindowStrength.value = lights ? (night ? 1.35 : 0.46) : 0.025;
-      buildingEdgeMaterial.opacity = lights ? (night ? 0.16 : 0.09) : 0.026;
-      roofMaterial.opacity = lights ? (night ? 0.55 : 0.42) : 0.14;
-      laneMaterial.opacity = night ? 0.46 : 0.4;
-      riverMaterial.emissiveIntensity = night ? 0.48 : 0.24;
+      buildingMaterial.emissiveIntensity = lights ? (night ? 0.48 : 0.28) : 0.08;
+      buildingWindowStrength.value = lights ? (night ? 1.55 : 0.6) : 0.04;
+      buildingEdgeMaterial.opacity = lights ? (night ? 0.22 : 0.13) : 0.04;
+      roofMaterial.opacity = lights ? (night ? 0.65 : 0.5) : 0.2;
+      laneMaterial.opacity = night ? 0.58 : 0.52;
+      riverMaterial.emissiveIntensity = night ? 0.62 : 0.3;
       dashboardVehicleLights.forEach((material, index) => {
         material.opacity = index % 2 === 0 ? (night ? 1 : 0.38) : (night ? 0.94 : 0.5);
         material.needsUpdate = true;
