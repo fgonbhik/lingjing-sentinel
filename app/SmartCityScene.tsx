@@ -343,7 +343,7 @@ export default function SmartCityScene({
     river.position.set(0, 1.64, -154);
     scene.add(river);
 
-    const skylineGeometry = new THREE.CylinderGeometry(0.62, 1.25, 1, 10);
+    const skylineGeometry = new THREE.CylinderGeometry(1.05, 2.1, 1, 10);
     const skylineMaterial = new THREE.MeshPhysicalMaterial({
       color: UNIFIED_BUILDING_COLOR,
       emissive: 0x1d6fa6,
@@ -356,13 +356,13 @@ export default function SmartCityScene({
     const skyline = new THREE.InstancedMesh(skylineGeometry, skylineMaterial, 9);
     const skylineMatrix = new THREE.Matrix4();
     [
-      [-8, -2, 46], [-3, 2, 66], [3, 1, 54], [9, 4, 39], [15, -3, 31],
-      [-16, 5, 29], [20, 9, 23], [-22, -7, 35], [5, -11, 28],
+      [-8, -2, 36], [-3, 2, 48], [3, 1, 42], [9, 4, 34], [15, -3, 28],
+      [-16, 5, 26], [20, 9, 21], [-22, -7, 30], [5, -11, 25],
     ].forEach(([x, z, height], index) => {
       skylineMatrix.compose(
         new THREE.Vector3(x, 1.7 + height / 2, z),
         new THREE.Quaternion(),
-        new THREE.Vector3(index % 3 === 1 ? 1.6 : 1, height, index % 3 === 1 ? 1.6 : 1),
+        new THREE.Vector3(index % 3 === 1 ? 1.35 : 1, height, index % 3 === 1 ? 1.35 : 1),
       );
       skyline.setMatrixAt(index, skylineMatrix);
     });
@@ -487,59 +487,6 @@ export default function SmartCityScene({
       emissiveIntensity: 0.5,
       vertexColors: true,
     });
-    const buildingWindowStrength = { value: nightRef.current && lightsRef.current ? 0.88 : 0.3 };
-    buildingMaterial.onBeforeCompile = (shader) => {
-      shader.uniforms.windowStrength = buildingWindowStrength;
-      shader.vertexShader = shader.vertexShader
-        .replace(
-          "#include <common>",
-          `#include <common>
-          varying vec3 vBuildingLocal;
-          varying float vBuildingSeed;`,
-        )
-        .replace(
-          "#include <begin_vertex>",
-          `#include <begin_vertex>
-          vBuildingLocal = position;
-          #ifdef USE_INSTANCING
-            vec3 instanceDimensions = vec3(
-              length(instanceMatrix[0].xyz),
-              length(instanceMatrix[1].xyz),
-              length(instanceMatrix[2].xyz)
-            );
-            vBuildingLocal = position * instanceDimensions;
-            vBuildingSeed = instanceMatrix[3].x * 0.071 + instanceMatrix[3].z * 0.113;
-          #else
-            vBuildingSeed = 0.0;
-          #endif`,
-        );
-      shader.fragmentShader = shader.fragmentShader
-        .replace(
-          "#include <common>",
-          `#include <common>
-          varying vec3 vBuildingLocal;
-          varying float vBuildingSeed;
-          uniform float windowStrength;`,
-        )
-        .replace(
-          "#include <emissivemap_fragment>",
-          `#include <emissivemap_fragment>
-          float wallCoordinate = abs(normal.x) > abs(normal.z) ? vBuildingLocal.z : vBuildingLocal.x;
-          vec2 windowUV = vec2(wallCoordinate * 1.8, vBuildingLocal.y * 1.45);
-          vec2 windowCell = floor(windowUV);
-          vec2 windowGrid = fract(windowUV);
-          float sideSurface = step(abs(normal.y), 0.45);
-          float windowX = smoothstep(0.16, 0.24, windowGrid.x)
-            * (1.0 - smoothstep(0.72, 0.8, windowGrid.x));
-          float windowY = smoothstep(0.18, 0.27, windowGrid.y)
-            * (1.0 - smoothstep(0.66, 0.75, windowGrid.y));
-          float windowShape = windowX * windowY * sideSurface;
-          float windowNoise = fract(sin(dot(windowCell + vBuildingSeed, vec2(12.9898, 78.233))) * 43758.5453);
-          float windowOn = smoothstep(0.5, 0.78, windowNoise);
-          vec3 windowColor = mix(vec3(0.04, 0.3, 0.64), vec3(0.28, 0.7, 0.98), smoothstep(0.72, 0.94, windowNoise));
-          totalEmissiveRadiance += windowColor * windowShape * windowOn * windowStrength;`,
-        );
-    };
     const buildingGeometry = new RoundedBoxGeometry(1, 1, 1, 2, 0.035);
     const buildingEdgeMaterial = new THREE.MeshBasicMaterial({
       color: 0x68d3ff,
@@ -647,10 +594,10 @@ export default function SmartCityScene({
           const zs = item.points.map((point) => point[1]);
           const x = (Math.min(...xs) + Math.max(...xs)) / 1.95;
           const z = (Math.min(...zs) + Math.max(...zs)) / 1.95;
-          const width = Math.max(0.55, Math.min(6.6, (Math.max(...xs) - Math.min(...xs)) / 2.75));
-          const depth = Math.max(0.55, Math.min(6.6, (Math.max(...zs) - Math.min(...zs)) / 2.75));
-          const rawHeight = Math.max(1.2, Math.min(46, (item.heightMeters || 16) / 5.2));
-          const footprintSpan = Math.max(width, depth);
+          const width = Math.max(0.7, Math.min(6.6, (Math.max(...xs) - Math.min(...xs)) / 2.75));
+          const depth = Math.max(0.7, Math.min(6.6, (Math.max(...zs) - Math.min(...zs)) / 2.75));
+          const rawHeight = Math.max(1.2, Math.min(42, (item.heightMeters || 16) / 5.2));
+          const footprintSpan = Math.sqrt(width * depth);
           const proportionalHeight = 7 + footprintSpan * (item.core ? 8.8 : 7);
           const height = Math.min(rawHeight, proportionalHeight);
           return { x, z, width, depth, height };
@@ -905,8 +852,7 @@ export default function SmartCityScene({
       skylineMaterial.emissiveIntensity = night ? 0.78 : 0.52;
       buildingMaterial.color.setHex(UNIFIED_BUILDING_COLOR);
       buildingMaterial.emissive.setHex(lights ? (night ? 0x176dab : 0x145f9e) : 0x0d4878);
-      buildingMaterial.emissiveIntensity = lights ? (night ? 0.78 : 0.56) : 0.28;
-      buildingWindowStrength.value = lights ? (night ? 0.88 : 0.3) : 0.035;
+      buildingMaterial.emissiveIntensity = lights ? (night ? 0.66 : 0.48) : 0.26;
       buildingEdgeMaterial.opacity = lights ? (night ? 0.045 : 0.025) : 0.012;
       roofMaterial.color.setHex(UNIFIED_BUILDING_COLOR);
       roofMaterial.opacity = night ? 1 : 0.96;

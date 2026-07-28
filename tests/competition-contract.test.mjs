@@ -71,13 +71,13 @@ test("清晰写实合同：日夜场景兼顾可读性和克制泛光", async ()
   assert.match(dashboardScene, /const UNIFIED_BUILDING_COLOR = 0x4baee7/);
   assert.match(dashboardScene, /color\.setHex\(0xffffff\)/);
   assert.doesNotMatch(dashboardScene, /color\.setHSL\(/);
-  assert.match(dashboardScene, /emissiveIntensity = lights \? \(night \? 0\.78 : 0\.56\)/);
+  assert.match(dashboardScene, /emissiveIntensity = lights \? \(night \? 0\.66 : 0\.48\)/);
   assert.match(dashboardScene, /skylineMaterial\.color\.setHex\(UNIFIED_BUILDING_COLOR\)/);
   assert.match(dashboardScene, /buildingMaterial\.color\.setHex\(UNIFIED_BUILDING_COLOR\)/);
-  assert.match(dashboardScene, /vBuildingLocal = position \* instanceDimensions/);
-  assert.match(dashboardScene, /vec2 windowUV = vec2\(wallCoordinate \* 1\.8, vBuildingLocal\.y \* 1\.45\)/);
+  assert.doesNotMatch(dashboardScene, /buildingMaterial\.onBeforeCompile/);
+  assert.doesNotMatch(dashboardScene, /windowUV|windowNoise|windowStrength/);
   assert.match(dashboardScene, /const proportionalHeight = 7 \+ footprintSpan \* \(item\.core \? 8\.8 : 7\)/);
-  assert.match(dashboardScene, /buildingWindowStrength\.value = lights \? \(night \? 0\.88 : 0\.3\) : 0\.035/);
+  assert.match(dashboardScene, /const footprintSpan = Math\.sqrt\(width \* depth\)/);
   assert.match(dashboardScene, /color: 0x0b466b/);
   assert.doesNotMatch(dashboardScene, /color: 0x01060a/);
   assert.match(dashboardScene, /id: "yanqing", label: "延庆区"/);
