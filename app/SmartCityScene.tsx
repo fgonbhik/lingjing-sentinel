@@ -487,7 +487,7 @@ export default function SmartCityScene({
       emissiveIntensity: 0.5,
       vertexColors: true,
     });
-    const buildingWindowStrength = { value: nightRef.current && lightsRef.current ? 1.8 : 0.78 };
+    const buildingWindowStrength = { value: nightRef.current && lightsRef.current ? 0.88 : 0.3 };
     buildingMaterial.onBeforeCompile = (shader) => {
       shader.uniforms.windowStrength = buildingWindowStrength;
       shader.vertexShader = shader.vertexShader
@@ -502,6 +502,12 @@ export default function SmartCityScene({
           `#include <begin_vertex>
           vBuildingLocal = position;
           #ifdef USE_INSTANCING
+            vec3 instanceDimensions = vec3(
+              length(instanceMatrix[0].xyz),
+              length(instanceMatrix[1].xyz),
+              length(instanceMatrix[2].xyz)
+            );
+            vBuildingLocal = position * instanceDimensions;
             vBuildingSeed = instanceMatrix[3].x * 0.071 + instanceMatrix[3].z * 0.113;
           #else
             vBuildingSeed = 0.0;
@@ -519,15 +525,18 @@ export default function SmartCityScene({
           "#include <emissivemap_fragment>",
           `#include <emissivemap_fragment>
           float wallCoordinate = abs(normal.x) > abs(normal.z) ? vBuildingLocal.z : vBuildingLocal.x;
-          vec2 windowUV = vec2((wallCoordinate + 0.5) * 10.0, (vBuildingLocal.y + 0.5) * 22.0);
+          vec2 windowUV = vec2(wallCoordinate * 1.8, vBuildingLocal.y * 1.45);
           vec2 windowCell = floor(windowUV);
           vec2 windowGrid = fract(windowUV);
           float sideSurface = step(abs(normal.y), 0.45);
-          float windowShape = step(0.20, windowGrid.x) * step(windowGrid.x, 0.78)
-            * step(0.22, windowGrid.y) * step(windowGrid.y, 0.72) * sideSurface;
+          float windowX = smoothstep(0.16, 0.24, windowGrid.x)
+            * (1.0 - smoothstep(0.72, 0.8, windowGrid.x));
+          float windowY = smoothstep(0.18, 0.27, windowGrid.y)
+            * (1.0 - smoothstep(0.66, 0.75, windowGrid.y));
+          float windowShape = windowX * windowY * sideSurface;
           float windowNoise = fract(sin(dot(windowCell + vBuildingSeed, vec2(12.9898, 78.233))) * 43758.5453);
-          float windowOn = step(0.34, windowNoise);
-          vec3 windowColor = mix(vec3(0.18, 0.62, 1.0), vec3(0.48, 0.86, 1.0), step(0.82, windowNoise));
+          float windowOn = smoothstep(0.5, 0.78, windowNoise);
+          vec3 windowColor = mix(vec3(0.04, 0.3, 0.64), vec3(0.28, 0.7, 0.98), smoothstep(0.72, 0.94, windowNoise));
           totalEmissiveRadiance += windowColor * windowShape * windowOn * windowStrength;`,
         );
     };
@@ -638,9 +647,12 @@ export default function SmartCityScene({
           const zs = item.points.map((point) => point[1]);
           const x = (Math.min(...xs) + Math.max(...xs)) / 1.95;
           const z = (Math.min(...zs) + Math.max(...zs)) / 1.95;
-          const width = Math.max(0.4, Math.min(6.6, (Math.max(...xs) - Math.min(...xs)) / 2.75));
-          const depth = Math.max(0.4, Math.min(6.6, (Math.max(...zs) - Math.min(...zs)) / 2.75));
-          const height = Math.max(1.2, Math.min(58, (item.heightMeters || 16) / 5.2));
+          const width = Math.max(0.55, Math.min(6.6, (Math.max(...xs) - Math.min(...xs)) / 2.75));
+          const depth = Math.max(0.55, Math.min(6.6, (Math.max(...zs) - Math.min(...zs)) / 2.75));
+          const rawHeight = Math.max(1.2, Math.min(46, (item.heightMeters || 16) / 5.2));
+          const footprintSpan = Math.max(width, depth);
+          const proportionalHeight = 7 + footprintSpan * (item.core ? 8.8 : 7);
+          const height = Math.min(rawHeight, proportionalHeight);
           return { x, z, width, depth, height };
         };
 
@@ -894,8 +906,8 @@ export default function SmartCityScene({
       buildingMaterial.color.setHex(UNIFIED_BUILDING_COLOR);
       buildingMaterial.emissive.setHex(lights ? (night ? 0x176dab : 0x145f9e) : 0x0d4878);
       buildingMaterial.emissiveIntensity = lights ? (night ? 0.78 : 0.56) : 0.28;
-      buildingWindowStrength.value = lights ? (night ? 1.8 : 0.78) : 0.08;
-      buildingEdgeMaterial.opacity = lights ? (night ? 0.14 : 0.08) : 0.035;
+      buildingWindowStrength.value = lights ? (night ? 0.88 : 0.3) : 0.035;
+      buildingEdgeMaterial.opacity = lights ? (night ? 0.045 : 0.025) : 0.012;
       roofMaterial.color.setHex(UNIFIED_BUILDING_COLOR);
       roofMaterial.opacity = night ? 1 : 0.96;
       roofMaterial.emissiveIntensity = lights ? (night ? 0.48 : 0.34) : 0.18;
