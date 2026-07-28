@@ -64,12 +64,13 @@ test("清晰写实合同：日夜场景兼顾可读性和克制泛光", async ()
     read("app/CityScene.tsx"),
   ]);
   assert.match(dashboardScene, /toneMappingExposure = 1\.26/);
-  assert.match(dashboardScene, /buildingEdgeMaterial\.opacity = lights \? \(night \? 0\.32 : 0\.22\)/);
+  assert.match(dashboardScene, /buildingEdgeMaterial\.opacity = lights \? \(night \? 0\.14 : 0\.08\)/);
   assert.match(dashboardScene, /THREE\.NormalBlending/);
   assert.match(emergencyScene, /renderer\.toneMappingExposure=night\?\.82:1\.08/);
   assert.match(dashboardScene, /contactShadows/);
   assert.match(dashboardScene, /color\.setHSL\(0\.56/);
-  assert.match(dashboardScene, /color: 0x68b5f2/);
+  assert.match(dashboardScene, /color: 0x7ec8ff/);
+  assert.match(dashboardScene, /emissiveIntensity = lights \? \(night \? 0\.78 : 0\.56\)/);
 });
 
 test("顶部交互合同：品牌、标题、状态、时间、用户、全屏和导航均可操作", async () => {
