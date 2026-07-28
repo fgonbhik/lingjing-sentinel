@@ -62,3 +62,62 @@ button{font-family:inherit}
 @media(max-width:560px){
   .future-brand strong{font-size:17px}.future-brand-symbol{width:34px;height:34px}.future-time strong{font-size:16px}.future-column{grid-template-columns:1fr}.future-center{height:540px}.scene-layer,.scene-coordinate{display:none}.future-nav .future-demo-nav{margin-left:0}.future-footer{grid-template-columns:100px 1fr}
 }
+
+/* Competition-screen readability: larger top navigation and side-panel typography. */
+@media(min-width:1181px){
+  .future-brand strong{font-size:27px;letter-spacing:5.5px}
+  .future-brand span{font-size:9px}
+  .future-heading>span{font-size:10px}
+  .future-heading h1{font-size:29px;letter-spacing:7px}
+  .future-heading>div b{font-size:9px}
+  .future-time strong{font-size:25px}
+  .future-time span{font-size:9px}
+  .future-user{font-size:11px}
+  .future-user button{font-size:10px}
+  .future-nav button{min-width:118px}
+  .future-nav button span{font-size:12px}
+  .future-nav button i,.future-demo-nav em{font-size:9px}
+
+  .future-column .future-panel>header div b{font-size:13px}
+  .future-column .future-panel>header div em{font-size:8px}
+  .future-column .future-panel>header>span{font-size:11px}
+  .future-column .future-panel>header>i{font-size:9px}
+  .future-column .vital-primary span{font-size:10px}
+  .future-column .vital-primary strong{font-size:28px}
+  .future-column .vital-primary em{font-size:9px}
+  .future-column .vital-grid span{font-size:9px}
+  .future-column .vital-grid b{font-size:14px}
+  .future-column .vital-grid b small,.future-column .vital-grid em{font-size:8px}
+  .future-column .event-list time{font-size:9px}
+  .future-column .event-list article>i{font-size:9px}
+  .future-column .event-list p{font-size:9px}
+  .future-column .event-action span{font-size:9px}
+  .future-column .event-action b{font-size:11px}
+  .future-column .air-orbit span{font-size:8px}
+  .future-column .air-orbit b{font-size:23px}
+  .future-column .eco-stats span{font-size:9px}
+  .future-column .eco-stats b{font-size:10px}
+
+  .future-column .score-rings span{font-size:8px}
+  .future-column .score-rings strong{font-size:24px}
+  .future-column .score-copy span{font-size:9px}
+  .future-column .score-copy b{font-size:14px}
+  .future-column .score-copy em{font-size:9px}
+  .future-column .score-copy p{font-size:8px}
+  .future-column .ai-dimensions span,.future-column .ai-dimensions em{font-size:9px}
+  .future-column .traffic-number span{font-size:9px}
+  .future-column .traffic-number strong{font-size:28px}
+  .future-column .traffic-number em{font-size:9px}
+  .future-column .traffic-meta span{font-size:8px}
+  .future-column .traffic-meta b{font-size:9px}
+  .future-column .district-rank button>i{font-size:9px}
+  .future-column .district-rank button>span{font-size:10px}
+  .future-column .district-rank button>strong{font-size:11px}
+  .future-column .district-rank button>small{font-size:8px}
+  .future-column .future-demo-card>div span{font-size:8px}
+  .future-column .future-demo-card>div em{font-size:10px}
+  .future-column .future-demo-card>strong{font-size:21px}
+  .future-column .future-demo-card>p{font-size:10px}
+  .future-column .future-demo-card>b{font-size:8px}
+  .future-column .future-demo-card>i{font-size:9px}
+}

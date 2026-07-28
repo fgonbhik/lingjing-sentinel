@@ -255,7 +255,10 @@ test("四车救援分屏合同：独立三维摄像机、实时速度和路线�
   assert.match(scene, /renderer\.setScissorTest\(true\)/);
   assert.match(scene, /updateTacticalCamera/);
   assert.match(scene, /visualPlayhead/);
-  assert.match(scene, /splitViewRef\.current\?8:3/);
+  assert.match(scene, /routeHeadingReady/);
+  assert.match(scene, /renderIndex=splitRenderTick\+\+%4/);
+  assert.match(scene, /!splitViewRef\.current&&shadowTick%3/);
+  assert.doesNotMatch(scene, /renderParity/);
   assert.doesNotMatch(scene, /updateBuildingOcclusion\(visibilityFocus,feed\.camera\)/);
   assert.doesNotMatch(scene, /chemicalTruck\.position\.x\+=/);
   assert.match(scene, /四车实时战术分屏/);
@@ -265,4 +268,22 @@ test("四车救援分屏合同：独立三维摄像机、实时速度和路线�
   assert.match(page, /splitAutoActivatedRef/);
   assert.match(styles, /\.vehicle-feed-grid/);
   assert.match(styles, /\.feed-route/);
+});
+
+test("导演控制台布局合同：控制区位于三维画面之外", async () => {
+  const [page, styles] = await Promise.all([
+    read("app/page.tsx"),
+    read("app/map-enhancements.css"),
+  ]);
+  assert.match(page, /<\/div>\s*<div className=\{`scenario-console phase-/);
+  assert.match(styles, /\.map-panel>\.scenario-console\{position:relative/);
+  assert.match(styles, /\.emergency-shell \.map\{min-height:0\}/);
+});
+
+test("智慧城市大屏可读性合同：顶部和左右数据字号已增强", async () => {
+  const styles = await read("app/smart-city.css");
+  assert.match(styles, /Competition-screen readability/);
+  assert.match(styles, /\.future-heading h1\{font-size:29px/);
+  assert.match(styles, /\.future-column \.future-panel>header div b\{font-size:13px/);
+  assert.match(styles, /\.future-column \.future-demo-card>strong\{font-size:21px/);
 });
