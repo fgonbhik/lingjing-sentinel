@@ -81,6 +81,22 @@ test("顶部交互合同：品牌、标题、状态、时间、用户、全屏�
   assert.match(dashboard, /selectNavigation\(item, index\)/);
 });
 
+test("视觉层级合同：科幻背景和左右业务分色完整存在", async () => {
+  const [dashboard, polish] = await Promise.all([
+    read("app/SmartCityDashboard.tsx"),
+    read("app/panel-polish.css"),
+  ]);
+  assert.match(dashboard, /future-atmosphere/);
+  assert.match(polish, /future-star-drift/);
+  assert.match(polish, /future-beam-a/);
+  assert.match(polish, /\.city-vitals\{--panel-accent:#36d9ff/);
+  assert.match(polish, /\.event-center\{--panel-accent:#ff8057/);
+  assert.match(polish, /\.eco-panel\{--panel-accent:#42e69a/);
+  assert.match(polish, /\.ai-index\{--panel-accent:#9d8cff/);
+  assert.match(polish, /\.traffic-panel\{--panel-accent:#ffc15c/);
+  assert.match(polish, /\.district-rank\{--panel-accent:#579dff/);
+});
+
 test("唯一入口合同：仅保留右下角灵境哨兵入口", async () => {
   const dashboard = await read("app/SmartCityDashboard.tsx");
   assert.equal((dashboard.match(/立即进入演示项目/g) ?? []).length, 1);

@@ -184,6 +184,12 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
       <div className="future-aurora future-aurora-a" aria-hidden="true" />
       <div className="future-aurora future-aurora-b" aria-hidden="true" />
       <div className="future-horizon" aria-hidden="true"><i /><i /><i /></div>
+      <div className="future-atmosphere" aria-hidden="true">
+        <span className="future-beam future-beam-a" />
+        <span className="future-beam future-beam-b" />
+        <span className="future-beam future-beam-c" />
+        <b /><b /><b /><b /><b /><b /><b /><b />
+      </div>
 
       <header className="future-header">
         <button type="button" className="future-brand future-header-action" onClick={() => {
