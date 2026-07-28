@@ -11,6 +11,14 @@ export type SmartAsset = {
   category: string;
   details: string;
   meta: string;
+  photo?: {
+    src: string;
+    alt: string;
+    caption: string;
+    matchLabel: string;
+    credit: string;
+    sourceUrl: string;
+  };
 };
 
 type Props = {
@@ -30,6 +38,40 @@ type Building = {
   name?: string;
   core?: boolean;
 };
+
+const buildingPhotoCatalog = {
+  cbd: {
+    src: "./building-photos/beijing-cbd-day.jpg",
+    alt: "北京中央商务区白天城市天际线实景",
+    caption: "北京 CBD 建模区域实景参考",
+    matchLabel: "区域实景参考",
+    credit: "摄影：N509FZ · CC BY-SA 4.0 · 已离线缓存",
+    sourceUrl: "https://commons.wikimedia.org/wiki/File:Beijing_CBD_Skyline_(20190104160952).jpg",
+  },
+  chinaWorld: {
+    src: "./building-photos/china-world.jpg",
+    alt: "北京中国国际贸易中心建筑群实景",
+    caption: "中国国际贸易中心建筑群实景",
+    matchLabel: "对应建筑群实景",
+    credit: "摄影：Temlsth · CC BY-SA 3.0 · 已离线缓存",
+    sourceUrl: "https://commons.wikimedia.org/wiki/File:China_World.jpg",
+  },
+  cctv: {
+    src: "./building-photos/cctv-headquarters.jpg",
+    alt: "北京中央广播电视总台总部大楼实景",
+    caption: "央视总部建筑群实景参考",
+    matchLabel: "邻近地标实景",
+    credit: "摄影：Immanuelle · CC BY-SA 4.0 · 已离线缓存",
+    sourceUrl: "https://commons.wikimedia.org/wiki/File:CCTV_headquarters.jpg",
+  },
+} satisfies Record<string, NonNullable<SmartAsset["photo"]>>;
+
+function photoForBuilding(building?: Building): NonNullable<SmartAsset["photo"]> {
+  const name = building?.name?.trim() || "";
+  if (/中国国际贸易中心|中国大饭店|china world/i.test(name)) return buildingPhotoCatalog.chinaWorld;
+  if (/中央电视台|中央广播电视总台|cctv/i.test(name)) return buildingPhotoCatalog.cctv;
+  return buildingPhotoCatalog.cbd;
+}
 
 type CameraCommand =
   | "zoomIn"
@@ -1077,12 +1119,16 @@ export default function SmartCityScene({
         const building = buildingRecords[hit.instanceId];
         const buildingId = building?.id ?? hit.instanceId + 1;
         const height = Math.round(building?.heightMeters || 16);
+        const knownName = building?.name?.trim();
         onSelect({
           id: `building-${buildingId}`,
-          label: building?.name || `北京城市建筑 ${String(buildingId).padStart(5, "0")}`,
-          category: "北京三维建筑资产",
-          details: `建筑高度约 ${height} 米，已接入北京城市数字孪生底座，可叠加能耗、安防、交通及应急态势数据。`,
-          meta: `资产编号 BJ-${String(buildingId).padStart(6, "0")} · 实时在线 · 单击定位`,
+          label: knownName || `北京 CBD 楼宇 BJ-${String(buildingId).padStart(6, "0")}`,
+          category: knownName ? "北京三维建筑资产 · 公开名称" : "北京三维建筑资产 · 编号标识",
+          details: knownName
+            ? `公开地图数据标注名称为“${knownName}”，建筑高度约 ${height} 米。模型已接入北京城市数字孪生底座，可叠加能耗、安防、交通及应急态势数据。`
+            : `公开地图数据暂未标注该楼宇名称，系统以唯一资产编号展示。建筑高度约 ${height} 米，可叠加能耗、安防、交通及应急态势数据。`,
+          meta: `资产编号 BJ-${String(buildingId).padStart(6, "0")} · 高度 ${height} m · 实时在线`,
+          photo: photoForBuilding(building),
         });
         return;
       }

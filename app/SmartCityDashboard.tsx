@@ -65,7 +65,7 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
   const [barsReady, setBarsReady] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeView, setActiveView] = useState<(typeof viewOptions)[number]["id"]>("panorama");
-  const [interactionTip, setInteractionTip] = useState("左键拖拽旋转 · 滚轮缩放 · 右键平移 · 点击建筑查看详情");
+  const [interactionTip, setInteractionTip] = useState("左键拖拽旋转 · 滚轮缩放 · 右键平移 · 点击建筑查看名称与实景照片");
   const [tipKey, setTipKey] = useState(0);
 
   useEffect(() => {

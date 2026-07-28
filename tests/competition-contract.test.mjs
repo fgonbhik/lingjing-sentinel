@@ -178,6 +178,25 @@ test("关键演示能力合同：数据详情、封路重规划和报告仍存�
   assert.match(dataDialog, /role="dialog"/);
 });
 
+test("建筑实景交互合同：点击建筑显示名称、照片、匹配说明与授权来源", async () => {
+  const [scene, dialog] = await Promise.all([
+    read("app/SmartCityScene.tsx"),
+    read("app/DataDetailDialog.tsx"),
+  ]);
+  assert.match(scene, /photoForBuilding\(building\)/);
+  assert.match(scene, /公开地图数据暂未标注该楼宇名称/);
+  assert.match(scene, /对应建筑群实景/);
+  assert.match(scene, /区域实景参考/);
+  assert.match(dialog, /data-detail-photo/);
+  assert.match(dialog, /点击查看大图/);
+  assert.match(dialog, /图片授权与原始来源/);
+  await Promise.all([
+    access(new URL("../public/building-photos/beijing-cbd-day.jpg", import.meta.url)),
+    access(new URL("../public/building-photos/china-world.jpg", import.meta.url)),
+    access(new URL("../public/building-photos/cctv-headquarters.jpg", import.meta.url)),
+  ]);
+});
+
 test("生产构建可以渲染当前产品，不再验证早期模板", async () => {
   const response = await render();
   assert.equal(response.status, 200);
@@ -202,5 +221,8 @@ test("离线交付合同：模型、地图与相对静态资源全部可用", as
     access(new URL("../offline-demo/models/fire-smoke-yolo26n.onnx", import.meta.url)),
     access(new URL("../offline-demo/models/ort-wasm-simd-threaded.wasm", import.meta.url)),
     access(new URL("../offline-demo/ai-benchmark/fire-01-campfire-flames.jpg", import.meta.url)),
+    access(new URL("../offline-demo/building-photos/beijing-cbd-day.jpg", import.meta.url)),
+    access(new URL("../offline-demo/building-photos/china-world.jpg", import.meta.url)),
+    access(new URL("../offline-demo/building-photos/cctv-headquarters.jpg", import.meta.url)),
   ]);
 });
