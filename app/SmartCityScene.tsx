@@ -43,30 +43,32 @@ type CameraCommand =
     };
 
 const viewPresets = {
-  panorama: { position: [158, 112, 172], target: [0, 15, 0] },
-  cbd: { position: [68, 56, 82], target: [9, 16, 4] },
-  axis: { position: [2, 76, 196], target: [0, 12, -4] },
-  top: { position: [0, 252, 0.1], target: [0, 0, 0] },
-  horizon: { position: [214, 48, 2], target: [0, 18, 0] },
+  panorama: { position: [198, 138, 218], target: [0, 16, 0] },
+  cbd: { position: [82, 63, 99], target: [11, 17, 5] },
+  axis: { position: [2, 92, 244], target: [0, 13, -5] },
+  top: { position: [0, 310, 0.1], target: [0, 0, 0] },
+  horizon: { position: [266, 56, 2], target: [0, 19, 0] },
 } satisfies Record<string, { position: [number, number, number]; target: [number, number, number] }>;
 
+const UNIFIED_BUILDING_COLOR = 0x4baee7;
+
 const districts = [
-  { id: "dongcheng", label: "东城区", x: 7, z: -4, color: 0x4fffd0, text: "城市治理 92.7 · 感知设备在线率 99.9%" },
-  { id: "xicheng", label: "西城区", x: -9, z: -5, color: 0x72f5ff, text: "政务协同 95.4 · 城市服务响应率 98.7%" },
-  { id: "chaoyang", label: "朝阳区", x: 37, z: 4, color: 0x35efff, text: "商务活力 96.8 · 城市事件闭环率 98.1%" },
-  { id: "haidian", label: "海淀区", x: -31, z: 19, color: 0x6a96ff, text: "科技创新 94.2 · 智算资源利用率 87.6%" },
-  { id: "fengtai", label: "丰台区", x: -10, z: -31, color: 0xffa95f, text: "交通枢纽 89.6 · 路网运行状态平稳" },
-  { id: "shijingshan", label: "石景山区", x: -43, z: -15, color: 0x8ca9ff, text: "城市更新 91.2 · 重点设施在线率 98.4%" },
-  { id: "mentougou", label: "门头沟区", x: -72, z: -20, color: 0x47d9c5, text: "生态监测 93.1 · 山区感知节点覆盖率 96.5%" },
-  { id: "fangshan", label: "房山区", x: -59, z: -56, color: 0x53e6a9, text: "园区运行 90.8 · 应急资源到位率 97.2%" },
-  { id: "tongzhou", label: "通州区", x: 67, z: -13, color: 0x54c7ff, text: "副中心治理 95.7 · 政务数据协同率 98.9%" },
-  { id: "shunyi", label: "顺义区", x: 58, z: 35, color: 0x4effe4, text: "临空经济 93.5 · 交通感知覆盖率 97.8%" },
-  { id: "changping", label: "昌平区", x: -15, z: 50, color: 0x7d89ff, text: "科教融合 94.6 · 园区设备在线率 98.3%" },
-  { id: "daxing", label: "大兴区", x: 17, z: -66, color: 0x4ed8ff, text: "机场联动 94.1 · 综合交通准点率 96.9%" },
-  { id: "huairou", label: "怀柔区", x: 34, z: 69, color: 0xb18cff, text: "科学城运行 92.9 · 科研设施保障率 98.1%" },
-  { id: "pinggu", label: "平谷区", x: 82, z: 51, color: 0x58f0b1, text: "农业智联 90.6 · 物联感知覆盖率 95.8%" },
-  { id: "miyun", label: "密云区", x: 18, z: 91, color: 0x63b8ff, text: "水源保护 96.2 · 生态告警闭环率 99.1%" },
-  { id: "yanqing", label: "延庆区", x: -51, z: 82, color: 0x8edbff, text: "生态涵养 95.1 · 林火监测覆盖率 98.6%" },
+  { id: "dongcheng", label: "东城区", x: 9, z: -5, color: 0x4fffd0, text: "城市治理 92.7 · 感知设备在线率 99.9%" },
+  { id: "xicheng", label: "西城区", x: -12, z: -6, color: 0x72f5ff, text: "政务协同 95.4 · 城市服务响应率 98.7%" },
+  { id: "chaoyang", label: "朝阳区", x: 47, z: 5, color: 0x35efff, text: "商务活力 96.8 · 城市事件闭环率 98.1%" },
+  { id: "haidian", label: "海淀区", x: -40, z: 24, color: 0x6a96ff, text: "科技创新 94.2 · 智算资源利用率 87.6%" },
+  { id: "fengtai", label: "丰台区", x: -13, z: -40, color: 0xffa95f, text: "交通枢纽 89.6 · 路网运行状态平稳" },
+  { id: "shijingshan", label: "石景山区", x: -55, z: -19, color: 0x8ca9ff, text: "城市更新 91.2 · 重点设施在线率 98.4%" },
+  { id: "mentougou", label: "门头沟区", x: -92, z: -25, color: 0x47d9c5, text: "生态监测 93.1 · 山区感知节点覆盖率 96.5%" },
+  { id: "fangshan", label: "房山区", x: -75, z: -71, color: 0x53e6a9, text: "园区运行 90.8 · 应急资源到位率 97.2%" },
+  { id: "tongzhou", label: "通州区", x: 86, z: -17, color: 0x54c7ff, text: "副中心治理 95.7 · 政务数据协同率 98.9%" },
+  { id: "shunyi", label: "顺义区", x: 74, z: 45, color: 0x4effe4, text: "临空经济 93.5 · 交通感知覆盖率 97.8%" },
+  { id: "changping", label: "昌平区", x: -19, z: 64, color: 0x7d89ff, text: "科教融合 94.6 · 园区设备在线率 98.3%" },
+  { id: "daxing", label: "大兴区", x: 22, z: -85, color: 0x4ed8ff, text: "机场联动 94.1 · 综合交通准点率 96.9%" },
+  { id: "huairou", label: "怀柔区", x: 43, z: 88, color: 0xb18cff, text: "科学城运行 92.9 · 科研设施保障率 98.1%" },
+  { id: "pinggu", label: "平谷区", x: 104, z: 65, color: 0x58f0b1, text: "农业智联 90.6 · 物联感知覆盖率 95.8%" },
+  { id: "miyun", label: "密云区", x: 23, z: 116, color: 0x63b8ff, text: "水源保护 96.2 · 生态告警闭环率 99.1%" },
+  { id: "yanqing", label: "延庆区", x: -65, z: 104, color: 0x8edbff, text: "生态涵养 95.1 · 林火监测覆盖率 98.6%" },
 ];
 
 function makeLabel(text: string, color: string) {
@@ -154,11 +156,11 @@ export default function SmartCityScene({
     const controls = controlsRef.current;
     if (!camera || !controls) return;
     if (topView) {
-      camera.position.set(0, 252, 0.1);
+      camera.position.set(0, 310, 0.1);
       controls.target.set(0, 0, 0);
     } else {
-      camera.position.set(158, 112, 172);
-      controls.target.set(0, 15, 0);
+      camera.position.set(198, 138, 218);
+      controls.target.set(0, 16, 0);
     }
     controls.update();
   }, [topView]);
@@ -174,8 +176,8 @@ export default function SmartCityScene({
     onSceneStatus("loading");
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 920);
-    camera.position.set(158, 112, 172);
+    const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 1120);
+    camera.position.set(198, 138, 218);
     cameraRef.current = camera;
 
     const renderer = new THREE.WebGLRenderer({
@@ -195,9 +197,9 @@ export default function SmartCityScene({
     controls.enableDamping = true;
     controls.dampingFactor = 0.055;
     controls.minDistance = 46;
-    controls.maxDistance = 360;
+    controls.maxDistance = 440;
     controls.maxPolarAngle = Math.PI * 0.48;
-    controls.target.set(0, 15, 0);
+    controls.target.set(0, 16, 0);
     controls.enableRotate = true;
     controls.enableZoom = true;
     controls.enablePan = true;
@@ -215,10 +217,10 @@ export default function SmartCityScene({
     sun.position.set(-70, 128, 68);
     sun.castShadow = true;
     sun.shadow.mapSize.set(1024, 1024);
-    sun.shadow.camera.left = -185;
-    sun.shadow.camera.right = 185;
-    sun.shadow.camera.top = 185;
-    sun.shadow.camera.bottom = -185;
+    sun.shadow.camera.left = -228;
+    sun.shadow.camera.right = 228;
+    sun.shadow.camera.top = 228;
+    sun.shadow.camera.bottom = -228;
     sun.shadow.bias = -0.00028;
     sun.shadow.normalBias = 0.035;
     scene.add(sun);
@@ -234,7 +236,7 @@ export default function SmartCityScene({
       const angle = index / 12 * Math.PI * 2;
       const tone = index % 3 === 0 ? 0x477dff : 0x35c8ff;
       const light = new THREE.PointLight(tone, 6.4, 62, 1.7);
-      light.position.set(Math.cos(angle) * 112, 5.5, Math.sin(angle) * 112);
+      light.position.set(Math.cos(angle) * 142, 5.5, Math.sin(angle) * 142);
       const marker = new THREE.Mesh(
         new THREE.SphereGeometry(0.65, 14, 10),
         new THREE.MeshBasicMaterial({ color: tone, transparent: true, opacity: 0.42 }),
@@ -250,7 +252,7 @@ export default function SmartCityScene({
       roughness: 0.78,
       metalness: 0.28,
     });
-    const ground = new THREE.Mesh(new THREE.CircleGeometry(170, 160), groundMaterial);
+    const ground = new THREE.Mesh(new THREE.CircleGeometry(210, 192), groundMaterial);
     ground.rotation.x = -Math.PI / 2;
     ground.position.y = 0.65;
     ground.receiveShadow = true;
@@ -263,11 +265,11 @@ export default function SmartCityScene({
       emissive: 0x0a3150,
       emissiveIntensity: 0.52,
     });
-    const cityBase = new THREE.Mesh(new THREE.CylinderGeometry(164, 170, 2.4, 160), cityBaseMaterial);
+    const cityBase = new THREE.Mesh(new THREE.CylinderGeometry(204, 210, 2.4, 192), cityBaseMaterial);
     cityBase.position.y = -0.5;
     scene.add(cityBase);
 
-    const grid = new THREE.GridHelper(324, 81, 0x58caff, 0x2e6388);
+    const grid = new THREE.GridHelper(400, 100, 0x58caff, 0x2e6388);
     grid.position.y = 1.02;
     const gridMaterials = Array.isArray(grid.material) ? grid.material : [grid.material];
     gridMaterials.forEach((material) => {
@@ -288,11 +290,11 @@ export default function SmartCityScene({
       transparent: true,
       opacity: 0.28,
     });
-    [-120, -96, -72, -48, -24, 0, 24, 48, 72, 96, 120].forEach((x, index) =>
-      addRoad(scene, roadMaterial, laneMaterial, index === 5 ? 7.4 : 4.4, 312, x, 0, index % 2 ? 0.025 : -0.02),
+    [-156, -130, -104, -78, -52, -26, 0, 26, 52, 78, 104, 130, 156].forEach((x, index) =>
+      addRoad(scene, roadMaterial, laneMaterial, index === 6 ? 7.4 : 4.4, 388, x, 0, index % 2 ? 0.025 : -0.02),
     );
-    [-120, -96, -72, -48, -24, 0, 24, 48, 72, 96, 120].forEach((z, index) =>
-      addRoad(scene, roadMaterial, laneMaterial, index === 5 ? 7.4 : 4.4, 312, 0, z, Math.PI / 2 + (index % 2 ? 0.02 : -0.018)),
+    [-156, -130, -104, -78, -52, -26, 0, 26, 52, 78, 104, 130, 156].forEach((z, index) =>
+      addRoad(scene, roadMaterial, laneMaterial, index === 6 ? 7.4 : 4.4, 388, 0, z, Math.PI / 2 + (index % 2 ? 0.02 : -0.018)),
     );
 
     const ringMaterial = new THREE.MeshBasicMaterial({
@@ -303,7 +305,7 @@ export default function SmartCityScene({
       depthWrite: false,
     });
     const dataRings: THREE.Mesh[] = [];
-    [42, 76, 112, 145, 162].forEach((radius, index) => {
+    [52, 95, 137, 178, 201].forEach((radius, index) => {
       const ring = new THREE.Mesh(new THREE.RingGeometry(radius - 0.18, radius + 0.18, 192), ringMaterial.clone());
       ring.rotation.x = -Math.PI / 2;
       ring.position.y = 1.58 + index * 0.01;
@@ -335,15 +337,15 @@ export default function SmartCityScene({
       transparent: true,
       opacity: 0.82,
     });
-    const river = new THREE.Mesh(new THREE.PlaneGeometry(336, 11), riverMaterial);
+    const river = new THREE.Mesh(new THREE.PlaneGeometry(414, 13), riverMaterial);
     river.rotation.x = -Math.PI / 2;
     river.rotation.z = -0.12;
-    river.position.set(0, 1.64, -121);
+    river.position.set(0, 1.64, -154);
     scene.add(river);
 
     const skylineGeometry = new THREE.CylinderGeometry(0.62, 1.25, 1, 10);
     const skylineMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0x4baee7,
+      color: UNIFIED_BUILDING_COLOR,
       emissive: 0x1d6fa6,
       emissiveIntensity: 0.62,
       metalness: 0.46,
@@ -446,7 +448,7 @@ export default function SmartCityScene({
     const sensorPositions = new Float32Array(1080 * 3);
     for (let index = 0; index < 1080; index++) {
       const angle = Math.random() * Math.PI * 2;
-      const radius = 8 + Math.sqrt(Math.random()) * 154;
+      const radius = 8 + Math.sqrt(Math.random()) * 192;
       sensorPositions[index * 3] = Math.cos(angle) * radius;
       sensorPositions[index * 3 + 1] = 2.5 + Math.random() * 17;
       sensorPositions[index * 3 + 2] = Math.sin(angle) * radius;
@@ -476,7 +478,7 @@ export default function SmartCityScene({
     scene.add(scan);
 
     const buildingMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0x7ec8ff,
+      color: UNIFIED_BUILDING_COLOR,
       roughness: 0.26,
       metalness: 0.38,
       clearcoat: 0.78,
@@ -540,7 +542,7 @@ export default function SmartCityScene({
     });
     const roofGeometry = new RoundedBoxGeometry(1, 0.12, 1, 2, 0.035);
     const roofMaterial = new THREE.MeshStandardMaterial({
-      color: 0x56b5f2,
+      color: UNIFIED_BUILDING_COLOR,
       metalness: 0.5,
       roughness: 0.24,
       emissive: 0x1b6597,
@@ -571,7 +573,7 @@ export default function SmartCityScene({
         const podiums = new THREE.InstancedMesh(
           new RoundedBoxGeometry(1, 1, 1, 2, 0.045),
           new THREE.MeshPhysicalMaterial({
-            color: 0x287fbd,
+            color: UNIFIED_BUILDING_COLOR,
             metalness: 0.38,
             roughness: 0.34,
             clearcoat: 0.52,
@@ -583,7 +585,7 @@ export default function SmartCityScene({
         const mechanicalRooms = new THREE.InstancedMesh(
           new RoundedBoxGeometry(1, 1, 1, 2, 0.06),
           new THREE.MeshStandardMaterial({
-            color: 0x4ca8df,
+            color: UNIFIED_BUILDING_COLOR,
             metalness: 0.48,
             roughness: 0.28,
             emissive: 0x216c9e,
@@ -594,7 +596,7 @@ export default function SmartCityScene({
         const roofAntennas = new THREE.InstancedMesh(
           new THREE.CylinderGeometry(0.045, 0.07, 1, 7),
           new THREE.MeshStandardMaterial({
-            color: 0x94dcff,
+            color: UNIFIED_BUILDING_COLOR,
             metalness: 0.78,
             roughness: 0.22,
             emissive: 0x246991,
@@ -605,7 +607,7 @@ export default function SmartCityScene({
         const floorBands = new THREE.InstancedMesh(
           new RoundedBoxGeometry(1, 0.045, 1, 1, 0.018),
           new THREE.MeshPhysicalMaterial({
-            color: 0x72cfff,
+            color: UNIFIED_BUILDING_COLOR,
             metalness: 0.58,
             roughness: 0.34,
             transparent: true,
@@ -634,10 +636,10 @@ export default function SmartCityScene({
         const footprint = (item: Building) => {
           const xs = item.points.map((point) => point[0]);
           const zs = item.points.map((point) => point[1]);
-          const x = (Math.min(...xs) + Math.max(...xs)) / 2.55;
-          const z = (Math.min(...zs) + Math.max(...zs)) / 2.55;
-          const width = Math.max(0.45, Math.min(7.2, (Math.max(...xs) - Math.min(...xs)) / 2.55));
-          const depth = Math.max(0.45, Math.min(7.2, (Math.max(...zs) - Math.min(...zs)) / 2.55));
+          const x = (Math.min(...xs) + Math.max(...xs)) / 1.95;
+          const z = (Math.min(...zs) + Math.max(...zs)) / 1.95;
+          const width = Math.max(0.4, Math.min(6.6, (Math.max(...xs) - Math.min(...xs)) / 2.75));
+          const depth = Math.max(0.4, Math.min(6.6, (Math.max(...zs) - Math.min(...zs)) / 2.75));
           const height = Math.max(1.2, Math.min(58, (item.heightMeters || 16) / 5.2));
           return { x, z, width, depth, height };
         };
@@ -656,8 +658,7 @@ export default function SmartCityScene({
             new THREE.Vector3(width * 1.018, height * 1.006, depth * 1.018),
           );
           edges.setMatrixAt(index, edgeMatrix);
-          const distance = Math.min(1, Math.sqrt(x * x + z * z) / 110);
-          color.setHSL(0.56 + distance * 0.025 + Math.random() * 0.012, 0.78, 0.54 + (1 - distance) * 0.12 + Math.random() * 0.045);
+          color.setHex(0xffffff);
           mesh.setColorAt(index, color);
           buildingBaseColors.push(color.clone());
         });
@@ -868,8 +869,8 @@ export default function SmartCityScene({
     });
     const vehicleRoutes = Array.from({ length: 54 }, (_, index) => ({
       axis: index % 2,
-      lane: [-120, -96, -72, -48, -24, 0, 24, 48, 72, 96, 120][index % 11] + (index % 3 - 1) * 1.15,
-      offset: (index * 19) % 312,
+      lane: [-156, -130, -104, -78, -52, -26, 0, 26, 52, 78, 104, 130, 156][index % 13] + (index % 3 - 1) * 1.15,
+      offset: (index * 23) % 388,
       speed: 0.15 + (index % 7) * 0.017,
     }));
 
@@ -887,14 +888,16 @@ export default function SmartCityScene({
       groundMaterial.color.setHex(night ? 0x0e3550 : 0x1b4b63);
       cityBaseMaterial.emissiveIntensity = night ? 0.75 : 0.52;
       roadMaterial.emissive.setHex(night ? 0x0f3d57 : 0x0b2d42);
-      skylineMaterial.color.setHex(night ? 0x399bd9 : 0x5abcf0);
+      skylineMaterial.color.setHex(UNIFIED_BUILDING_COLOR);
       skylineMaterial.emissive.setHex(night ? 0x217bb3 : 0x1a689c);
       skylineMaterial.emissiveIntensity = night ? 0.78 : 0.52;
+      buildingMaterial.color.setHex(UNIFIED_BUILDING_COLOR);
       buildingMaterial.emissive.setHex(lights ? (night ? 0x176dab : 0x145f9e) : 0x0d4878);
       buildingMaterial.emissiveIntensity = lights ? (night ? 0.78 : 0.56) : 0.28;
       buildingWindowStrength.value = lights ? (night ? 1.8 : 0.78) : 0.08;
       buildingEdgeMaterial.opacity = lights ? (night ? 0.14 : 0.08) : 0.035;
-      roofMaterial.opacity = lights ? (night ? 1 : 0.95) : 0.62;
+      roofMaterial.color.setHex(UNIFIED_BUILDING_COLOR);
+      roofMaterial.opacity = night ? 1 : 0.96;
       roofMaterial.emissiveIntensity = lights ? (night ? 0.48 : 0.34) : 0.18;
       laneMaterial.opacity = night ? 0.72 : 0.62;
       riverMaterial.emissiveIntensity = night ? 0.78 : 0.42;
@@ -1070,14 +1073,14 @@ export default function SmartCityScene({
         const vehicle = dashboardVehicles[index];
         vehicle.visible = index < count;
         if (index >= count) return;
-        const progress = (route.offset + elapsed * route.speed * 30) % 312 - 156;
+        const progress = (route.offset + elapsed * route.speed * 30) % 388 - 194;
         const x = route.axis ? progress : route.lane;
         const z = route.axis ? route.lane : progress;
         vehicle.position.set(x, 1.46, z);
         vehicle.rotation.y = route.axis ? Math.PI / 2 : 0;
       });
 
-      scan.scale.setScalar(1 + ((elapsed * 0.2) % 1) * 62);
+      scan.scale.setScalar(1 + ((elapsed * 0.2) % 1) * 78);
       scanMaterial.opacity = 0.24 * (1 - ((elapsed * 0.2) % 1));
       sensorMaterial.opacity = 0.5 + Math.sin(elapsed * 2.2) * 0.22;
       dataRings.forEach((ring, index) => {
