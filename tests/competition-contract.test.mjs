@@ -71,6 +71,15 @@ test("清晰写实合同：日夜场景兼顾可读性和克制泛光", async ()
   assert.match(dashboardScene, /color\.setHSL\(0\.56/);
   assert.match(dashboardScene, /color: 0x7ec8ff/);
   assert.match(dashboardScene, /emissiveIntensity = lights \? \(night \? 0\.78 : 0\.56\)/);
+  assert.match(dashboardScene, /skylineMaterial\.color\.setHex\(night \? 0x399bd9 : 0x5abcf0\)/);
+  assert.match(dashboardScene, /color: 0x0b466b/);
+  assert.doesNotMatch(dashboardScene, /color: 0x01060a/);
+  assert.match(dashboardScene, /id: "yanqing", label: "延庆区"/);
+  assert.match(dashboardScene, /id: "miyun", label: "密云区"/);
+  assert.match(dashboardScene, /id: "pinggu", label: "平谷区"/);
+  assert.match(dashboardScene, /new THREE\.CircleGeometry\(170, 160\)/);
+  assert.match(dashboardScene, /slice\(0, 6200\)/);
+  assert.match(dashboardScene, /new Float32Array\(1080 \* 3\)/);
 });
 
 test("顶部交互合同：品牌、标题、状态、时间、用户、全屏和导航均可操作", async () => {
