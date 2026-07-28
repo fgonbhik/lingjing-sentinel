@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import CityScene, { type SceneAsset } from "./CityScene";
 import InteractiveModules, { type ModuleId } from "./InteractiveModules";
 import DemoProjectEntry from "./DemoProjectEntry";
@@ -174,6 +174,8 @@ export default function Home() {
   const [scenarioSpeed,setScenarioSpeed]=useState(1);
   const [directorMode,setDirectorMode]=useState(true);
   const [trafficDensity,setTrafficDensity]=useState(36);
+  const [splitView,setSplitView]=useState(false);
+  const splitAutoActivatedRef=useRef(false);
   const [activeSideControl,setActiveSideControl]=useState("");
   const scenarioPhase=scenarioStatus==="idle"?0:(scenarioStages.find(stage=>stage.id>0&&scenarioTime>=stage.start&&scenarioTime<stage.end)?.id??9);
   const currentScenario=scenarioStages[scenarioPhase];
@@ -214,6 +216,11 @@ export default function Home() {
   },[scenarioPhase]);
 
   useEffect(()=>{
+    if(scenarioPhase<4){splitAutoActivatedRef.current=false;setSplitView(false);return}
+    if(!splitAutoActivatedRef.current){splitAutoActivatedRef.current=true;setSplitView(true)}
+  },[scenarioPhase]);
+
+  useEffect(()=>{
     if(!directorMode||scenarioPhase===0)return;
     setAutoTour(false);
     if(directorTarget){setFollowingId(directorTarget);window.dispatchEvent(new CustomEvent("city-camera",{detail:{action:"follow",assetId:directorTarget}}))}
@@ -234,7 +241,7 @@ export default function Home() {
 
   const start = () => {
     if(sceneStatus==="loading"){setSystemNotice("真实北京路网仍在加载，请稍候一秒再启动");return}if(sceneStatus==="degraded")setSystemNotice("真实路网数据异常，已启用内置完整路线继续演示");
-    setScenarioTime(0);setScenarioStatus("playing");setDirectorMode(true);setRunning(false);setBlocked(false);setBlockedRoadId(null);setMinute(1);setRiskPlayback(false);setShowRisk(false);setAutoTour(false);setFollowingId(null);
+    setScenarioTime(0);setScenarioStatus("playing");setDirectorMode(true);setRunning(false);setBlocked(false);setBlockedRoadId(null);setMinute(1);setRiskPlayback(false);setShowRisk(false);setAutoTour(false);setFollowingId(null);setSplitView(false);splitAutoActivatedRef.current=false;
   };
   const enterDemo=()=>{setDemoEntryOpen(false);setActiveModule("overview");window.setTimeout(start,120)};
 
@@ -357,12 +364,12 @@ export default function Home() {
         <section className="map-panel panel">
           <div className="panel-title"><span>03</span>真实城市三维推演 <b>REAL-WORLD DIGITAL TWIN</b><div className="map-tools"><button aria-label="缩小" onClick={()=>window.dispatchEvent(new CustomEvent("city-camera",{detail:"zoomOut"}))}>−</button><button aria-label="放大" onClick={()=>window.dispatchEvent(new CustomEvent("city-camera",{detail:"zoomIn"}))}>＋</button></div></div>
           <div className="map" onClick={()=>setSelectedAsset(null)}>
-            <CityScene running={running} blocked={blocked} blockedRoadId={blockedRoadId} showRisk={showRisk} topView={!tilt} nightMode={nightMode} buildingLights={buildingLights} autoTour={autoTour} suspended={activeModule!=="overview"||reportOpen||aiEvidenceOpen||agentAuditOpen} scenarioPhase={scenarioPhase} scenarioTime={scenarioTime} trafficDensity={trafficDensity} onSelect={setSelectedAsset} onRealRoute={setRealRoute} onSceneStatus={status=>{setSceneStatus(status);if(status==="degraded")setSystemNotice("真实路网数据异常，已自动启用内置完整路线")}} plume={plume} />
+            <CityScene running={running} blocked={blocked} blockedRoadId={blockedRoadId} showRisk={showRisk} topView={!tilt} nightMode={nightMode} buildingLights={buildingLights} autoTour={autoTour} suspended={activeModule!=="overview"||reportOpen||aiEvidenceOpen||agentAuditOpen} scenarioPhase={scenarioPhase} scenarioTime={scenarioTime} scenarioPlaying={scenarioStatus==="playing"} trafficDensity={trafficDensity} splitView={splitView} fireRoute={realRoute?.roads} onSelect={setSelectedAsset} onRealRoute={setRealRoute} onSceneStatus={status=>{setSceneStatus(status);if(status==="degraded")setSystemNotice("真实路网数据异常，已自动启用内置完整路线")}} plume={plume} />
             <div className={`scenario-console phase-${scenarioPhase} ${scenarioStatus}`} onClick={event=>event.stopPropagation()}>
               <div className="scenario-now"><i>{currentScenario.icon}</i><div><span>SCENARIO DIRECTOR · {scenarioPhase===0?"READY":`${String(scenarioPhase).padStart(2,"0")}/09`}</span><strong>{currentScenario.title}</strong><p>{currentScenario.subtitle}</p></div><em>{scenarioPhase===0?"01:12":`${Math.floor(scenarioTime/60).toString().padStart(2,"0")}:${Math.floor(scenarioTime%60).toString().padStart(2,"0")}`}</em></div>
               <div className="scenario-progress"><span style={{width:`${scenarioProgress}%`}}/><i style={{left:`${scenarioProgress}%`}}/></div>
               <div className="scenario-stage-rail">{scenarioStages.slice(1).map(stage=><button key={stage.id} className={scenarioPhase===stage.id?"active":scenarioPhase>stage.id?"done":""} title={`${stage.clock} ${stage.title}`} onClick={()=>{setScenarioTime(stage.start+.01);setScenarioStatus("paused")}}><i>{stage.id}</i><span>{stage.title}</span></button>)}</div>
-              <div className="scenario-controls"><button className="primary" disabled={sceneStatus==="loading"} onClick={scenarioPhase===0||scenarioStatus==="complete"?start:toggleScenario}>{sceneStatus==="loading"?"路网加载中…":scenarioPhase===0?"▶ 一键完整演示":scenarioStatus==="playing"?"Ⅱ 暂停":scenarioStatus==="complete"?"↻ 再演示":"▶ 继续"}</button><button disabled={scenarioPhase===0||scenarioPhase===9} onClick={nextScenarioStage}>下一阶段 →</button><button onClick={cycleScenarioSpeed}>{scenarioSpeed}× 倍速</button><button onClick={cycleTrafficDensity}>车流：{trafficDensity===18?"畅通":trafficDensity===36?"繁忙":"拥堵"} · {trafficDensity}</button><button className={directorMode?"on":""} aria-pressed={directorMode} onClick={()=>setDirectorMode(value=>!value)}>◉ 导演视角</button></div>
+              <div className="scenario-controls"><button className="primary" disabled={sceneStatus==="loading"} onClick={scenarioPhase===0||scenarioStatus==="complete"?start:toggleScenario}>{sceneStatus==="loading"?"路网加载中…":scenarioPhase===0?"▶ 一键完整演示":scenarioStatus==="playing"?"Ⅱ 暂停":scenarioStatus==="complete"?"↻ 再演示":"▶ 继续"}</button><button disabled={scenarioPhase===0||scenarioPhase===9} onClick={nextScenarioStage}>下一阶段 →</button><button onClick={cycleScenarioSpeed}>{scenarioSpeed}× 倍速</button><button onClick={cycleTrafficDensity}>车流：{trafficDensity===18?"畅通":trafficDensity===36?"繁忙":"拥堵"} · {trafficDensity}</button><button className={directorMode?"on":""} aria-pressed={directorMode} onClick={()=>setDirectorMode(value=>!value)}>◉ 导演视角</button><button className={splitView?"on split-toggle":""} disabled={scenarioPhase<4} aria-pressed={splitView} onClick={()=>setSplitView(value=>!value)}>▦ 四车分屏</button></div>
             </div>
             <div className="map-layer-tools"><button className={tilt?"on":""} onClick={()=>{stopFollowing();setDirectorMode(false);setTilt(v=>!v)}}>◈ {tilt?"自由三维":"垂直俯视"}</button><button className={showRisk?"on":""} onClick={()=>setShowRisk(v=>!v)}>◉ 风险热区</button><button className={nightMode?"on":""} onClick={()=>setNightMode(v=>!v)}>{nightMode?"☀ 白天":"☾ 夜间"}</button><button className={buildingLights?"on":""} onClick={()=>setBuildingLights(v=>!v)}>✦ 楼宇灯光</button><button className={autoTour?"on":""} onClick={()=>{stopFollowing();setDirectorMode(false);setAutoTour(v=>!v)}}>{autoTour?"■ 停止巡航":"▶ 自动巡航"}</button>{followingId&&<button className="on" onClick={stopFollowing}>■ 停止跟随</button>}<button onClick={()=>{stopFollowing();setDirectorMode(false);setAutoTour(false);window.dispatchEvent(new CustomEvent("city-camera",{detail:"incident"}))}}>◎ 聚焦事故</button><button onClick={()=>{stopFollowing();setDirectorMode(false);setAutoTour(false);window.dispatchEvent(new CustomEvent("city-camera",{detail:"reset"}))}}>⌖ 复位</button></div>
             <div className="coordinates">39°54′27″N&nbsp;&nbsp;116°27′07″E　|　北京 CBD</div>
