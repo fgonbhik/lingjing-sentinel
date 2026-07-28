@@ -84,6 +84,12 @@ test("清晰写实合同：日夜场景兼顾可读性和克制泛光", async ()
   assert.match(dashboardScene, /id: "miyun", label: "密云区"/);
   assert.match(dashboardScene, /id: "pinggu", label: "平谷区"/);
   assert.match(dashboardScene, /new THREE\.CircleGeometry\(210, 192\)/);
+  assert.match(dashboardScene, /new THREE\.SphereGeometry\(520, 36, 22\)/);
+  assert.match(dashboardScene, /uniform float uSkyTime/);
+  assert.match(dashboardScene, /uniform float uFloorTime/);
+  assert.match(dashboardScene, /float gridLine\(vec2 position, float size\)/);
+  assert.match(dashboardScene, /const floorOrbitGroup = new THREE\.Group\(\)/);
+  assert.match(dashboardScene, /floorOrbitGroup\.rotation\.y = elapsed \* 0\.012/);
   assert.match(dashboardScene, /const x = \(Math\.min\(\.\.\.xs\) \+ Math\.max\(\.\.\.xs\)\) \/ 1\.95/);
   assert.match(dashboardScene, /Math\.min\(6\.6, \(Math\.max\(\.\.\.xs\) - Math\.min\(\.\.\.xs\)\) \/ 2\.75\)/);
   assert.match(dashboardScene, /slice\(0, 6200\)/);

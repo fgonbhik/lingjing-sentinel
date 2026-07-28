@@ -211,6 +211,51 @@ export default function SmartCityScene({
     controls.touches.TWO = THREE.TOUCH.DOLLY_PAN;
     controlsRef.current = controls;
 
+    const skyUniforms = {
+      uSkyTime: { value: 0 },
+      uSkyTop: { value: new THREE.Color(0x061a38) },
+      uSkyHorizon: { value: new THREE.Color(0x0c5a82) },
+      uSkyGlow: { value: new THREE.Color(0x38c8ff) },
+      uSkyIntensity: { value: 0.72 },
+    };
+    const skyDome = new THREE.Mesh(
+      new THREE.SphereGeometry(520, 36, 22),
+      new THREE.ShaderMaterial({
+        side: THREE.BackSide,
+        depthWrite: false,
+        fog: false,
+        toneMapped: false,
+        uniforms: skyUniforms,
+        vertexShader: `
+          varying vec3 vSkyDirection;
+          void main() {
+            vSkyDirection = normalize(position);
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          varying vec3 vSkyDirection;
+          uniform float uSkyTime;
+          uniform float uSkyIntensity;
+          uniform vec3 uSkyTop;
+          uniform vec3 uSkyHorizon;
+          uniform vec3 uSkyGlow;
+          void main() {
+            float elevation = clamp(vSkyDirection.y * 0.5 + 0.5, 0.0, 1.0);
+            vec3 color = mix(uSkyHorizon, uSkyTop, smoothstep(0.18, 0.94, elevation));
+            float horizonGlow = exp(-pow((vSkyDirection.y - 0.02) * 5.2, 2.0));
+            float longitude = atan(vSkyDirection.z, vSkyDirection.x);
+            float dataBand = smoothstep(0.93, 1.0, sin(longitude * 22.0 + vSkyDirection.y * 15.0 + uSkyTime * 0.07) * 0.5 + 0.5);
+            float upperFade = smoothstep(-0.12, 0.34, vSkyDirection.y) * (1.0 - smoothstep(0.7, 0.96, vSkyDirection.y));
+            color += uSkyGlow * (horizonGlow * 0.18 + dataBand * upperFade * 0.035) * uSkyIntensity;
+            gl_FragColor = vec4(color, 1.0);
+          }
+        `,
+      }),
+    );
+    skyDome.renderOrder = -10;
+    scene.add(skyDome);
+
     const ambient = new THREE.HemisphereLight(0xd8edff, 0x18324a, 1.68);
     scene.add(ambient);
     const sun = new THREE.DirectionalLight(0xe7f1ff, 2.65);
@@ -257,6 +302,84 @@ export default function SmartCityScene({
     ground.position.y = 0.65;
     ground.receiveShadow = true;
     scene.add(ground);
+
+    const floorUniforms = {
+      uFloorTime: { value: 0 },
+      uFloorPrimary: { value: new THREE.Color(0x2bdcff) },
+      uFloorSecondary: { value: new THREE.Color(0x6a7cff) },
+      uFloorOpacity: { value: 0.68 },
+    };
+    const floorOverlay = new THREE.Mesh(
+      new THREE.CircleGeometry(208, 192),
+      new THREE.ShaderMaterial({
+        transparent: true,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending,
+        toneMapped: false,
+        uniforms: floorUniforms,
+        vertexShader: `
+          varying vec2 vFloorPosition;
+          void main() {
+            vFloorPosition = position.xy;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          varying vec2 vFloorPosition;
+          uniform float uFloorTime;
+          uniform float uFloorOpacity;
+          uniform vec3 uFloorPrimary;
+          uniform vec3 uFloorSecondary;
+          float gridLine(vec2 position, float size) {
+            vec2 coordinate = position / size;
+            vec2 derivative = max(fwidth(coordinate), vec2(0.0008));
+            vec2 distanceToLine = abs(fract(coordinate - 0.5) - 0.5) / derivative;
+            return 1.0 - min(min(distanceToLine.x, distanceToLine.y), 1.0);
+          }
+          void main() {
+            float radius = length(vFloorPosition);
+            float edgeFade = 1.0 - smoothstep(176.0, 207.0, radius);
+            float fineGrid = gridLine(vFloorPosition, 12.0);
+            float majorGrid = gridLine(vFloorPosition, 48.0);
+            float ringCoordinate = radius / 24.0;
+            float ringDerivative = max(fwidth(ringCoordinate), 0.0008);
+            float ringDistance = abs(fract(ringCoordinate - 0.5) - 0.5) / ringDerivative;
+            float rings = 1.0 - min(ringDistance, 1.0);
+            float scanRadius = mod(uFloorTime * 22.0, 205.0);
+            float scan = 1.0 - smoothstep(0.0, 2.8, abs(radius - scanRadius));
+            float spoke = smoothstep(0.965, 1.0, cos(atan(vFloorPosition.y, vFloorPosition.x) * 24.0));
+            vec3 traceColor = mix(uFloorPrimary, uFloorSecondary, smoothstep(48.0, 190.0, radius));
+            float alpha = edgeFade * (fineGrid * 0.045 + majorGrid * 0.16 + rings * 0.11 + spoke * 0.045 + scan * 0.34) * uFloorOpacity;
+            gl_FragColor = vec4(traceColor, alpha);
+          }
+        `,
+      }),
+    );
+    floorOverlay.rotation.x = -Math.PI / 2;
+    floorOverlay.position.y = 0.96;
+    floorOverlay.renderOrder = 0;
+    scene.add(floorOverlay);
+
+    const floorOrbitGroup = new THREE.Group();
+    const floorOrbitMaterial = new THREE.MeshBasicMaterial({
+      color: 0x50ddff,
+      transparent: true,
+      opacity: 0.62,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    for (let index = 0; index < 48; index += 1) {
+      const angle = index / 48 * Math.PI * 2;
+      const segment = new THREE.Mesh(
+        new THREE.BoxGeometry(index % 4 === 0 ? 5.4 : 2.8, 0.08, 0.3),
+        floorOrbitMaterial,
+      );
+      segment.position.set(Math.cos(angle) * 203, 1.13, Math.sin(angle) * 203);
+      segment.rotation.y = -angle;
+      floorOrbitGroup.add(segment);
+    }
+    scene.add(floorOrbitGroup);
 
     const cityBaseMaterial = new THREE.MeshStandardMaterial({
       color: 0x123f5f,
@@ -837,6 +960,18 @@ export default function SmartCityScene({
       scene.background = new THREE.Color(night ? 0x0d2f4a : 0x3d7890);
       scene.fog = new THREE.FogExp2(night ? 0x12334b : 0x4d7180, night ? 0.0054 : 0.0038);
       renderer.toneMappingExposure = night ? 1.05 : 1.26;
+      skyUniforms.uSkyTop.value.setHex(night ? 0x041329 : 0x174e78);
+      skyUniforms.uSkyHorizon.value.setHex(night ? 0x0a426d : 0x78c9e7);
+      skyUniforms.uSkyGlow.value.setHex(night ? 0x2baeff : 0x71dcff);
+      skyUniforms.uSkyIntensity.value = night ? 0.88 : 0.58;
+      floorUniforms.uFloorPrimary.value.setHex(night ? 0x25dfff : 0x1aa7d8);
+      floorUniforms.uFloorSecondary.value.setHex(night ? 0x766dff : 0x3c70de);
+      floorUniforms.uFloorOpacity.value = night ? 0.78 : 0.58;
+      floorOrbitMaterial.color.setHex(night ? 0x50ddff : 0x328dcc);
+      floorOrbitMaterial.opacity = night ? 0.72 : 0.48;
+      gridMaterials.forEach((material) => {
+        material.opacity = night ? 0.18 : 0.12;
+      });
       ambient.intensity = night ? 0.92 : 1.68;
       sun.intensity = night ? 0.62 : 2.65;
       rimLight.intensity = night ? 1.75 : 1.2;
@@ -1026,6 +1161,9 @@ export default function SmartCityScene({
       // by a fraction of a frame. Keep curve sampling inside [0, 1) so
       // CatmullRomCurve3 never receives a negative parameter.
       const elapsed = Math.max(0, (time - startTime) / 1000);
+      skyUniforms.uSkyTime.value = elapsed;
+      floorUniforms.uFloorTime.value = elapsed;
+      floorOrbitGroup.rotation.y = elapsed * 0.012;
       const count = Math.min(54, trafficRef.current);
       vehicleRoutes.forEach((route, index) => {
         const vehicle = dashboardVehicles[index];
