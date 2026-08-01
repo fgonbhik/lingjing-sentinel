@@ -932,7 +932,8 @@
 
 .data-detail-photo figcaption>strong,
 .data-detail-photo figcaption>small,
-.data-detail-photo figcaption>a{display:block}
+.data-detail-photo figcaption>a,
+.data-detail-photo figcaption>.data-detail-photo-source{display:block}
 .data-detail-photo figcaption>strong{
   margin-top:9px;
   color:#e8fcff;
@@ -944,13 +945,45 @@
   font-size:9px;
   line-height:1.55;
 }
-.data-detail-photo figcaption>a{
+.data-detail-photo figcaption>a,
+.data-detail-photo figcaption>.data-detail-photo-source{
   margin-top:9px;
   color:#51dfea;
   font-size:9px;
   text-decoration:none;
 }
 .data-detail-photo figcaption>a:hover{color:#d8fbff;text-decoration:underline}
+.data-detail-photo[data-photo-provider="kartaview"] figcaption>b{border-color:#4fdba9;background:#103d37;color:#a7ffe1}
+.data-detail-photo-position{color:#6fd9e6!important;font-family:Consolas,monospace}
+.data-detail-photo-empty{
+  display:flex;
+  min-height:235px;
+  aspect-ratio:16/10;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  padding:24px;
+  border-bottom:1px solid #2c6979;
+  background:
+    linear-gradient(#45dff10c 1px,transparent 1px),
+    linear-gradient(90deg,#45dff10c 1px,transparent 1px),
+    radial-gradient(circle at 50% 50%,#164a596e,#06151e 68%);
+  background-size:28px 28px,28px 28px,auto;
+  text-align:center;
+}
+.data-detail-photo-empty:before{
+  content:"";
+  width:54px;
+  height:54px;
+  border:1px solid #4ce6f0;
+  border-radius:50%;
+  box-shadow:0 0 24px #3ce7f040,inset 0 0 18px #3ce7f022;
+  background:radial-gradient(circle,#55e9f4 0 3px,transparent 4px),linear-gradient(90deg,transparent 48%,#55e9f4 49% 51%,transparent 52%),linear-gradient(transparent 48%,#55e9f4 49% 51%,transparent 52%);
+}
+.data-detail-photo-empty i{color:#69eaf2;font:10px Consolas;letter-spacing:2px}
+.data-detail-photo-empty strong{color:#e8fcff;font-size:16px}
+.data-detail-photo-empty span{max-width:280px;color:#8caeb8;font-size:10px;line-height:1.7}
 
 .data-detail-meta{
   display:grid;
@@ -1410,6 +1443,61 @@
   .future-city::before,.future-atmosphere b,.future-horizon i,.future-grid{animation:none}
 }
 
+/* Expanded Beijing digital-twin atmosphere: deeper horizon, broader map, no extra UI chrome. */
+.future-city,
+.future-city.night{
+  background:
+    radial-gradient(ellipse at 50% 34%,#4ec9ff2b 0%,#245f8122 34%,transparent 67%),
+    radial-gradient(ellipse at 18% 72%,#4f75ff24 0%,transparent 42%),
+    radial-gradient(ellipse at 86% 66%,#29d9c81e 0%,transparent 38%),
+    linear-gradient(180deg,#1b526d 0%,#16415a 29%,#102f45 62%,#092235 100%);
+}
+.future-city.day{
+  background:
+    radial-gradient(ellipse at 50% 30%,#d5f4ff80 0%,#78c9e347 34%,transparent 66%),
+    radial-gradient(ellipse at 16% 74%,#739eff30 0%,transparent 44%),
+    radial-gradient(ellipse at 86% 66%,#45decf28 0%,transparent 40%),
+    linear-gradient(180deg,#75aabd 0%,#54889d 31%,#376a81 62%,#1e4a63 100%);
+}
+.future-atmosphere{inset:72px -5% 15%}
+.future-atmosphere::before{
+  left:3%;right:3%;top:20%;
+  background:linear-gradient(90deg,transparent,#81e1ff52 18%,#bdd6ff4a 50%,#75e4df4d 82%,transparent);
+  box-shadow:0 44px 92px #62cfff2b,0 118px 160px #655dff17;
+}
+.future-atmosphere::after{
+  left:9%;right:9%;bottom:3%;height:34%;
+  border-top-color:#8ce7ff4a;
+  box-shadow:0 -22px 68px #4dd7ff27,0 -5px 120px #6a72ff18;
+}
+.future-horizon{left:-4%;right:-4%;height:48%;opacity:.96}
+.future-city.day .future-horizon{opacity:.82}
+.future-horizon:before{
+  left:5%;right:5%;height:48%;
+  background:radial-gradient(ellipse at center,#70d9ff4a,transparent 70%);
+}
+.future-horizon:after{
+  background:
+    repeating-linear-gradient(90deg,transparent 0 12px,#9deaff2d 13px 15px,transparent 16px 28px),
+    linear-gradient(180deg,transparent,#2d8eb943);
+}
+.future-grid{
+  inset:31% -42% -58%;
+  opacity:.36;
+  background-image:linear-gradient(#83ddff28 1px,transparent 1px),linear-gradient(90deg,#83ddff28 1px,transparent 1px);
+  background-size:48px 48px;
+  transform:perspective(720px) rotateX(60deg) scale(1.28);
+}
+.future-city.day .future-grid{opacity:.4}
+.future-scene{
+  background:
+    radial-gradient(circle at 50% 34%,#75abc0 0%,#285f78 62%,#0b3047 100%);
+}
+.future-city.night .future-scene{
+  background:
+    radial-gradient(circle at 50% 34%,#3a7896 0%,#164b69 64%,#082944 100%);
+}
+
 /* 高可见科技蓝：主场景和建筑成为视觉主体，避免日夜模式压黑。 */
 .future-city,
 .future-city.night{
@@ -1514,4 +1602,182 @@
   .future-column .future-demo-card>strong{font-size:clamp(22px,2.2vh,27px)}
   .future-column .future-demo-card>p{font-size:clamp(11px,1.1vh,13px)}
   .future-column .future-demo-card>b,.future-column .future-demo-card>i{font-size:clamp(9px,.92vh,11px)}
+}
+
+/* Product Design pass: richer information wings with presentation-scale type. */
+@media(min-width:1181px){
+  .future-column{gap:12px}
+  .future-column .future-panel{
+    isolation:isolate;
+    border-color:color-mix(in srgb,var(--panel-accent) 60%,#c7f7ff 12%);
+    box-shadow:0 18px 42px #03111d78,0 0 26px var(--panel-soft),inset 0 1px #efffff24,inset 0 0 34px #0917233d
+  }
+  .future-column .future-panel::before{width:78px;height:2px}
+  .future-column .future-panel::after{width:48px;height:2px}
+  .future-column .future-panel>header{
+    height:54px;
+    grid-template-columns:42px 1fr auto;
+    padding-right:14px;
+    border-bottom-color:color-mix(in srgb,var(--panel-accent) 46%,transparent);
+    background:linear-gradient(90deg,color-mix(in srgb,var(--panel-accent) 22%,#102431),#0c1d27b8 72%,transparent)
+  }
+  .future-column .future-panel>header>span{
+    background:color-mix(in srgb,var(--panel-accent) 22%,#102431);
+    border-right:1px solid color-mix(in srgb,var(--panel-accent) 68%,transparent);
+    font-size:clamp(12px,1.18vh,14px);
+    font-weight:700
+  }
+  .future-column .future-panel>header div b{
+    font-size:clamp(16px,1.58vh,19px);
+    line-height:1.08;
+    letter-spacing:1.4px;
+    color:#f4fdff;
+    text-shadow:0 2px 12px #0007
+  }
+  .future-column .future-panel>header div em{
+    margin-top:4px;
+    font-size:clamp(9px,.92vh,11px);
+    letter-spacing:1.25px;
+    color:color-mix(in srgb,var(--panel-accent) 70%,#d9f8ff)
+  }
+  .future-column .future-panel>header>i{
+    padding:4px 7px;
+    border:1px solid color-mix(in srgb,var(--panel-accent) 48%,transparent);
+    background:#07182491;
+    font-size:clamp(10px,1vh,12px);
+    font-weight:700
+  }
+
+  .city-vitals .vital-primary{padding:12px 15px}
+  .city-vitals .vital-primary span{font-size:clamp(12px,1.18vh,14px);color:#b7d9e2}
+  .city-vitals .vital-primary strong{font-size:clamp(36px,3.7vh,46px);line-height:1;color:#dffcff}
+  .city-vitals .vital-primary em{font-size:clamp(10px,1vh,12px);color:#75dcf1}
+  .city-vitals .vital-wave{height:clamp(62px,7.2vh,82px)}
+  .city-vitals .vital-grid{
+    gap:6px;
+    padding:6px;
+    border-top:0;
+    background:transparent
+  }
+  .city-vitals .vital-grid>button{
+    padding:10px 12px;
+    border:1px solid #73ddff27;
+    background:linear-gradient(135deg,#194557b8,#0d2c39a6);
+    box-shadow:inset 0 1px #e9ffff12
+  }
+  .city-vitals .vital-grid span{font-size:clamp(11px,1.1vh,13px);color:#a8cbd5}
+  .city-vitals .vital-grid b{font-size:clamp(18px,1.9vh,24px);color:#f3fdff}
+  .city-vitals .vital-grid b small,.city-vitals .vital-grid em{font-size:clamp(10px,1vh,12px)}
+
+  .event-center .event-list{gap:6px;padding:8px}
+  .event-center .event-list .event-row{
+    grid-template-columns:68px 34px 1fr;
+    padding:0 10px;
+    border:1px solid #ff9b7430;
+    background:linear-gradient(90deg,#4d2b2675,#221e2170);
+    box-shadow:inset 3px 0 color-mix(in srgb,var(--panel-accent) 70%,transparent)
+  }
+  .event-center .event-list time{font-size:clamp(11px,1.08vh,13px);color:#d3a493}
+  .event-center .event-list .event-row>i{width:27px;height:27px;font-size:clamp(10px,1vh,12px)}
+  .event-center .event-list p{font-size:clamp(12px,1.22vh,15px);font-weight:600;color:#f1e6e2}
+  .event-center .event-list p span{font-size:clamp(10px,1vh,12px);font-weight:500}
+
+  .eco-panel .eco-content{grid-template-columns:minmax(126px,44%) 1fr;padding:7px}
+  .eco-panel .air-orbit{width:clamp(94px,10.2vh,118px);height:clamp(94px,10.2vh,118px)}
+  .eco-panel .air-orbit b{font-size:clamp(30px,3.1vh,38px)}
+  .eco-panel .air-orbit span{font-size:clamp(10px,1vh,12px);color:#a9d9c6}
+  .eco-panel .eco-stats{gap:6px;padding-right:0}
+  .eco-panel .eco-stats button{
+    padding:8px 10px;
+    border:1px solid #55e9a52d;
+    background:linear-gradient(90deg,#1644388a,#0f2b2780)
+  }
+  .eco-panel .eco-stats span{font-size:clamp(11px,1.1vh,13px);color:#b5d7ca}
+  .eco-panel .eco-stats b{font-size:clamp(14px,1.45vh,18px);color:#a3ffd1}
+
+  .ai-index .ai-score{padding:8px}
+  .ai-index .score-rings{width:clamp(108px,11.4vh,132px);height:clamp(108px,11.4vh,132px)}
+  .ai-index .score-rings strong{font-size:clamp(30px,3.1vh,38px)}
+  .ai-index .score-rings span,.ai-index .score-copy p{font-size:clamp(10px,1vh,12px)}
+  .ai-index .score-copy span,.ai-index .score-copy em{font-size:clamp(11px,1.1vh,13px)}
+  .ai-index .score-copy b{font-size:clamp(17px,1.7vh,21px);color:#f2efff}
+  .ai-index .ai-dimensions{gap:5px;padding:5px 9px 9px}
+  .ai-index .ai-dimensions>button{
+    padding:6px 9px;
+    border:1px solid #ab9cff2c;
+    background:linear-gradient(90deg,#3a366980,#1a294785)
+  }
+  .ai-index .ai-dimensions span,.ai-index .ai-dimensions em{font-size:clamp(11px,1.1vh,13px)}
+  .ai-index .ai-dimensions>button>i{height:5px}
+
+  .traffic-panel .traffic-number{
+    gap:10px;
+    margin:6px 8px 0;
+    padding:8px 11px;
+    border:1px solid #ffc86b31;
+    background:linear-gradient(90deg,#56412480,#262f3a80)
+  }
+  .traffic-panel .traffic-number span,.traffic-panel .traffic-number em{font-size:clamp(11px,1.1vh,13px)}
+  .traffic-panel .traffic-number strong{font-size:clamp(36px,3.6vh,44px);color:#fff0bd}
+  .traffic-panel .traffic-flow{margin:6px 10px 0}
+  .traffic-panel .traffic-meta{gap:5px;margin:6px 8px 8px;border-top:0}
+  .traffic-panel .traffic-meta button{
+    padding:6px 4px;
+    border:1px solid #ffc86b29;
+    background:#2d322e80
+  }
+  .traffic-panel .traffic-meta span{font-size:clamp(10px,1vh,12px);color:#c8bda4}
+  .traffic-panel .traffic-meta b{font-size:clamp(11px,1.12vh,14px);color:#fff3d2}
+
+  .district-rank>div{gap:5px;padding:6px}
+  .district-rank>div>button{
+    border:1px solid #67aaff2d;
+    background:linear-gradient(90deg,#244b7480,#17324d75);
+    box-shadow:inset 3px 0 #579dff8f
+  }
+  .district-rank button>i{font-size:clamp(10px,1vh,12px)}
+  .district-rank button>span{font-size:clamp(12px,1.2vh,15px);font-weight:600;color:#e8f5ff}
+  .district-rank button>strong{font-size:clamp(14px,1.42vh,18px);color:#dff4ff}
+  .district-rank button>small{font-size:clamp(10px,1vh,12px);color:#83f1c2}
+  .district-rank button>span>em{height:4px;margin-top:6px}
+
+  .future-column .future-demo-card{
+    min-height:0;
+    padding:14px 16px;
+    border-color:#ffb66b99;
+    background:radial-gradient(circle at 88% 20%,#ff8d3150,transparent 42%),linear-gradient(135deg,#55301f,#19222c 74%);
+    box-shadow:0 18px 36px #0007,inset 0 1px #fff1cf2e,0 0 22px #ff8c3030
+  }
+  .future-column .future-demo-card>div span{font-size:clamp(10px,1vh,12px)}
+  .future-column .future-demo-card>div em{font-size:clamp(12px,1.2vh,14px)}
+  .future-column .future-demo-card>strong{font-size:clamp(26px,2.65vh,32px)}
+  .future-column .future-demo-card>p{font-size:clamp(12px,1.2vh,15px)}
+  .future-column .future-demo-card>b,.future-column .future-demo-card>i{font-size:clamp(10px,1vh,12px)}
+}
+
+@media(min-width:1440px){
+  .future-stage{grid-template-columns:minmax(310px,21%) minmax(620px,1fr) minmax(310px,21%);gap:13px}
+}
+
+/* Final background composition for the expanded map. Keep this after all theme passes. */
+.future-city,
+.future-city.night{
+  background:
+    radial-gradient(ellipse at 50% 34%,#4ec9ff2b 0%,#245f8122 34%,transparent 67%),
+    radial-gradient(ellipse at 18% 72%,#4f75ff24 0%,transparent 42%),
+    radial-gradient(ellipse at 86% 66%,#29d9c81e 0%,transparent 38%),
+    linear-gradient(180deg,#1b526d 0%,#16415a 29%,#102f45 62%,#092235 100%);
+}
+.future-city.day{
+  background:
+    radial-gradient(ellipse at 50% 30%,#d5f4ff80 0%,#78c9e347 34%,transparent 66%),
+    radial-gradient(ellipse at 16% 74%,#739eff30 0%,transparent 44%),
+    radial-gradient(ellipse at 86% 66%,#45decf28 0%,transparent 40%),
+    linear-gradient(180deg,#75aabd 0%,#54889d 31%,#376a81 62%,#1e4a63 100%);
+}
+.future-scene{
+  background:radial-gradient(circle at 50% 34%,#75abc0 0%,#285f78 62%,#0b3047 100%);
+}
+.future-city.night .future-scene{
+  background:radial-gradient(circle at 50% 34%,#3a7896 0%,#164b69 64%,#082944 100%);
 }

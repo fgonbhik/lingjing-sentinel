@@ -1,25 +1,48 @@
 @echo off
-chcp 65001 >nul
-title 京域智城 - 灵境哨兵启动器
+setlocal
+title Lingjing Sentinel Demo Launcher
 cd /d "%~dp0"
 
 echo.
 echo ==================================================
-echo   京域智城 × 灵境哨兵比赛演示项目
+echo   Beijing Smart City - Lingjing Sentinel Demo
 echo ==================================================
 echo.
 
+set "NODE_EXE=%~dp0runtime\node.exe"
+if exist "%NODE_EXE%" goto RUN_DEMO
+
 where node >nul 2>nul
-if errorlevel 1 goto ONLINE
+if errorlevel 1 goto NO_NODE
+set "NODE_EXE=node"
 
-echo [启动中] 本地演示地址：http://127.0.0.1:3000
-start "京域智城本地服务" cmd /k "cd /d ""%~dp0"" && set PORT=3000 && node serve-demo.mjs"
-timeout /t 3 /nobreak >nul
-start "" "http://127.0.0.1:3000/"
-exit /b 0
+:RUN_DEMO
+if not exist "serve-demo.mjs" goto FILE_MISSING
+if not exist "offline-demo\index.html" goto FILE_MISSING
 
-:ONLINE
-echo [提示] 未检测到可用的 Node.js 环境，正在打开在线演示版本。
-start "" "https://fgonbhik.github.io/lingjing-sentinel/"
-timeout /t 3 /nobreak >nul
-exit /b 0
+echo [STARTING] Launching the offline demo.
+echo [NOTICE] Keep this window open during the presentation.
+echo [NOTICE] Your browser will open automatically.
+echo.
+"%NODE_EXE%" serve-demo.mjs
+set "EXIT_CODE=%ERRORLEVEL%"
+
+echo.
+echo [STOPPED] Demo server exited with code %EXIT_CODE%.
+echo Keep this window open and capture any error message above.
+pause
+exit /b %EXIT_CODE%
+
+:NO_NODE
+echo [ERROR] No bundled runtime or system Node.js was found.
+echo Check whether runtime\node.exe was removed by antivirus software.
+echo.
+pause
+exit /b 1
+
+:FILE_MISSING
+echo [ERROR] The demo package is incomplete.
+echo Extract the complete ZIP before running this launcher.
+echo.
+pause
+exit /b 1

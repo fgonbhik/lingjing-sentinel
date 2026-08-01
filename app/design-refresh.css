@@ -1,0 +1,332 @@
+/*
+ * Product Design visual refresh
+ * A single typography and surface system shared by the login portal,
+ * Beijing smart-city dashboard and Lingjing Sentinel command center.
+ */
+
+:root{
+  --font-ui:"Microsoft YaHei UI","Noto Sans SC","PingFang SC","Segoe UI",sans-serif;
+  --font-display:"Microsoft YaHei UI","Noto Sans SC","PingFang SC","Segoe UI",sans-serif;
+  --font-data:"Bahnschrift","DIN Alternate","Segoe UI Variable","Consolas",monospace;
+}
+
+html,body,button,input,select,textarea{
+  font-family:var(--font-ui);
+  font-synthesis:none;
+  text-rendering:geometricPrecision;
+  -webkit-font-smoothing:antialiased;
+}
+
+button,input,select,textarea{letter-spacing:.015em}
+.ani-num,time,
+.future-time strong,.vital-primary strong,.vital-grid b,.air-orbit b,
+.score-rings strong,.traffic-number strong,.district-rank button>strong,
+.metrics b,.scenario-now>em,.feed-speed b,.report-summary strong{
+  font-family:var(--font-data);
+  font-variant-numeric:tabular-nums;
+}
+
+/* Login portal — brighter spatial depth, compact enough for 720p, readable from a distance. */
+.auth-shell{
+  --auth-cyan:#55ebff;
+  --auth-green:#68efbd;
+  background:
+    linear-gradient(90deg,#03101bdb 0%,#071b28a6 43%,#03111de4 100%),
+    linear-gradient(180deg,#020912b8 0%,transparent 34%,#020a13cf 100%),
+    url("../og-future-city.png") center/cover no-repeat fixed;
+}
+.auth-grid{opacity:.2;background-size:64px 64px}
+.auth-topbar{height:86px;border-bottom-color:#8df6ff2e}
+.auth-topbar>div:nth-child(2) b{
+  font-family:var(--font-display);
+  font-size:26px;
+  font-weight:750;
+  letter-spacing:5.5px;
+  text-shadow:0 4px 20px #000b;
+}
+.auth-topbar>div:nth-child(2) span{
+  font-family:var(--font-data);
+  font-size:9px;
+  color:#8db9c6;
+}
+.auth-topbar>em{font-size:12px;color:#a4c1c9}
+.auth-layout{grid-template-columns:minmax(0,1.12fr) minmax(440px,.88fr);gap:7vw;padding:38px 20px 58px}
+.auth-kicker{
+  padding:9px 15px;
+  border-color:#69eefa55;
+  background:#133747c2;
+  color:#b7f8ff;
+  font-size:12px;
+  font-weight:600;
+}
+.auth-hero h1{
+  margin:26px 0 18px;
+  font-family:var(--font-display);
+  font-size:clamp(44px,4.25vw,68px);
+  font-weight:780;
+  line-height:1.18;
+  letter-spacing:2px;
+  text-shadow:0 8px 30px #000c;
+}
+.auth-hero h1 span{
+  background:linear-gradient(90deg,#6eeeff,#76f2c4 78%);
+  background-clip:text;
+  -webkit-background-clip:text;
+}
+.auth-hero>p{
+  color:#c0d3d9;
+  font-size:15px;
+  line-height:1.9;
+  font-weight:450;
+}
+.auth-metrics{margin-top:32px;border-color:#68edfa36}
+.auth-metrics>div{padding:17px 22px}
+.auth-metrics strong{font-family:var(--font-data);font-size:30px;color:#effeff}
+.auth-metrics span{font-size:11px;color:#91b1ba}
+.auth-card{
+  min-height:566px;
+  padding:30px 40px 22px;
+  border-color:#6ae9f3a8;
+  background:
+    radial-gradient(circle at 92% 4%,#2e8ca32c,transparent 38%),
+    linear-gradient(150deg,#0c2a38f7,#071722f8 58%,#06121cf8);
+  box-shadow:0 34px 90px #000c,0 0 56px #38dff129,inset 0 1px #d9ffff1f,inset 0 0 60px #4de6f00c;
+}
+.auth-tabs{margin-bottom:24px;border-bottom-color:#4a6a76}
+.auth-tabs button{padding:12px 8px;font-size:14px;font-weight:600;color:#88a5ad}
+.auth-tabs button.active{color:#f0feff}
+.auth-heading>span{font-family:var(--font-data);font-size:10px;color:#68ddeb}
+.auth-heading h2{font-family:var(--font-display);font-size:26px;font-weight:720;color:#f6feff}
+.auth-heading p{margin-bottom:21px;color:#8eabb4;font-size:12px}
+.auth-card form>label,.auth-form-grid>label{margin-bottom:15px}
+.auth-card label>span{font-size:11px;color:#a6bdc4;font-weight:550}
+.auth-input{height:50px;border-color:#3d6674;background:#061722e8}
+.auth-input:focus-within{border-color:#65eefa;box-shadow:0 0 0 2px #48ddeb18,0 0 24px #48ddeb22}
+.auth-input>i{width:46px;font-size:11px;color:#77dbe4}
+.auth-input input,.auth-input select{font-family:var(--font-ui);font-size:13px;color:#effdff}
+.auth-input input::placeholder{color:#5f7d87}
+.auth-input>button,.auth-options label,.auth-options>button{font-size:11px}
+.auth-submit{height:52px;font-size:14px;box-shadow:0 10px 28px #02151f73,0 0 24px #36ddeb29,inset 0 1px #dfffff22}
+.auth-demo{padding:10px;font-size:10px;color:#88a8b1;background:#102a35a8}
+.auth-demo b{font-family:var(--font-data);font-size:11px;color:#7ceaf2}
+.auth-card-footer{font-family:var(--font-data)!important;font-size:9px!important;color:#628892!important}
+.auth-footer{font-family:var(--font-data)!important;font-size:9px!important;color:#6e929d!important}
+
+@media(min-width:981px) and (max-height:780px){
+  .auth-topbar{height:72px}
+  .auth-layout{min-height:calc(100svh - 106px);padding:20px 20px 38px}
+  .auth-kicker{padding:7px 13px}
+  .auth-hero h1{font-size:clamp(42px,4vw,56px);margin:20px 0 14px}
+  .auth-hero>p{font-size:13px;line-height:1.75}
+  .auth-metrics{margin-top:23px}
+  .auth-metrics>div{padding:13px 20px}
+  .auth-metrics strong{font-size:25px}
+  .auth-card{min-height:0;padding:24px 38px 18px}
+  .auth-tabs{margin-bottom:18px}
+  .auth-heading h2{font-size:23px;margin:7px 0}
+  .auth-heading p{margin-bottom:16px}
+  .auth-card form>label{margin-bottom:12px}
+  .auth-input{height:45px}
+  .auth-submit{height:47px;margin-top:7px}
+  .auth-demo{margin-top:9px;padding:8px}
+  .auth-card-footer{margin-top:11px;padding-top:11px}
+  .auth-footer{height:32px!important}
+}
+
+/* Beijing smart-city dashboard — stronger editorial hierarchy and map readability. */
+.future-city{font-family:var(--font-ui);letter-spacing:.01em}
+.future-brand strong{
+  font-family:var(--font-display);
+  font-size:27px;
+  font-weight:780;
+  letter-spacing:5px;
+  color:#f6fdff;
+  text-shadow:0 4px 18px #00101caa;
+}
+.future-brand span{font-family:var(--font-data);font-size:9px;color:#9ac4ce}
+.future-heading>span{font-family:var(--font-data);font-size:9px;color:#b6dce4}
+.future-heading .future-title{
+  font-family:var(--font-display);
+  font-size:clamp(24px,2vw,30px);
+  font-weight:760;
+  letter-spacing:5px;
+}
+.future-heading>div b{font-family:var(--font-data);font-size:8px}
+.future-system,.future-user,.future-logout{font-size:11px;font-weight:600}
+.future-time strong{font-size:24px;font-weight:650}
+.future-time span{font-size:8px;color:#9cb8c0}
+.future-nav button{min-width:118px}
+.future-nav button span{font-size:12px;font-weight:600;white-space:nowrap}
+.future-nav button i{font-family:var(--font-data);font-size:8px}
+.scene-head>div>span{font-size:12px;font-weight:650}
+.scene-head>div>b{font-size:10px;color:#d0e8ed}
+.scene-head>em{font-size:9px;font-weight:650}
+.future-scene{
+  background:
+    radial-gradient(circle at 50% 38%,#4c8298 0%,#1a4960 66%,#0a293b 100%);
+  box-shadow:inset 0 0 52px #02111d9c,inset 0 1px #e5fbff35;
+}
+.future-city.night .future-scene{
+  background:radial-gradient(circle at 50% 38%,#275f7c 0%,#113b55 70%,#071e32 100%);
+}
+.scene-coordinate{font-family:var(--font-data);font-size:8px;color:#c0e6ee}
+.scene-layer span,.scene-layer em{font-size:8px}
+.scene-districts button{font-size:10px;font-weight:650}
+.scene-view-presets>span{font-family:var(--font-data);font-size:8px}
+.scene-view-presets button{font-size:9px}
+.scene-controls button{font-size:10px;font-weight:550}
+.scene-operation-tip{font-size:10px;color:#dffaff}
+.future-footer{font-family:var(--font-data);font-size:9px;color:#a4c0c7}
+.future-footer strong{font-family:var(--font-data);font-size:9px}
+
+/* Lingjing Sentinel — presentation-sized typography without covering the 3D canvas. */
+.emergency-shell{font-family:var(--font-ui);color:#e9f8fb}
+.emergency-shell .brand{min-width:300px}
+.emergency-shell .brand b{
+  font-family:var(--font-display);
+  font-size:24px;
+  font-weight:780;
+  letter-spacing:4px;
+}
+.emergency-shell .brand span{font-family:var(--font-data);font-size:8px;color:#83aab5}
+.emergency-shell .topbar nav button{
+  min-width:96px;
+  padding:0 18px;
+  font-size:12px;
+  font-weight:600;
+  white-space:nowrap;
+}
+.emergency-shell .status{font-size:11px;color:#abc1c7}
+.emergency-shell .status em{font-family:var(--font-data);font-size:9px;color:#7798a1}
+.emergency-shell .command-strip{
+  border-color:#365d69;
+  background:linear-gradient(100deg,#43231f 0%,#152c38 38%,#0c202b 100%);
+  box-shadow:inset 0 1px #dfffff10;
+}
+.emergency-shell .alert-tag{font-size:13px;letter-spacing:.3px}
+.emergency-shell .command-strip strong{font-size:18px;font-weight:720}
+.emergency-shell .command-strip span{font-size:11px;color:#9eb8c0}
+.emergency-shell .command-actions>span{font-size:10px}
+.emergency-shell .command-actions button{font-size:12px;font-weight:650}
+.emergency-shell .panel{
+  border-color:#285063;
+  background:linear-gradient(160deg,#0b202beb,#07151ef2);
+  box-shadow:inset 0 1px #d9ffff0c;
+}
+.emergency-shell .panel-title{
+  font-family:var(--font-display);
+  font-size:15px;
+  font-weight:720;
+  letter-spacing:.8px;
+}
+.emergency-shell .panel-title>span{font-family:var(--font-data);font-size:11px}
+.emergency-shell .panel-title>b{font-family:var(--font-data);font-size:9px;color:#6f97a2}
+.emergency-shell .recognition span{font-size:11px;color:#91adb5}
+.emergency-shell .recognition strong{font-size:15px;color:#f3fcfe}
+.emergency-shell .ai-note b{font-size:12px}
+.emergency-shell .ai-note p{font-size:11px;line-height:1.5;color:#a6bec5}
+.emergency-shell .agent p b{font-size:12px}
+.emergency-shell .agent p span{font-size:10px;color:#8ba7af}
+.emergency-shell .agent>em{font-family:var(--font-data);font-size:9px}
+.emergency-shell .score-card>span{font-size:10px}
+.emergency-shell .score-card>strong{font-size:14px}
+.emergency-shell .score-card>div b{font-family:var(--font-data);font-size:23px}
+.emergency-shell .metrics span{font-size:10px}
+.emergency-shell .metrics b{font-family:var(--font-data);font-size:16px}
+.emergency-shell .metrics small{font-size:8.5px}
+.emergency-shell .plan-steps p{font-size:11px}
+.emergency-shell .plan-steps p span{font-size:9px;color:#7898a1}
+.emergency-shell .algorithm-proof span{font-size:9px}
+.emergency-shell .algorithm-proof b{font-size:10px}
+.emergency-shell .algorithm-proof em{font-family:var(--font-data);font-size:8.5px}
+.emergency-shell .timeline time{font-family:var(--font-data);font-size:9px}
+.emergency-shell .scenario-timeline p b{font-size:10px}
+.emergency-shell .scenario-timeline p span{font-size:8px;color:#617f88}
+.emergency-shell .block-button,.emergency-shell .report{font-size:10px;font-weight:650}
+
+.emergency-shell .map-panel{
+  border-color:#3d7689;
+  background:#06131c;
+  box-shadow:0 14px 38px #0008,inset 0 0 30px #20cfea0a;
+}
+.emergency-shell .real-3d-scene{
+  background:
+    radial-gradient(circle at 50% 32%,#2b6179 0%,#102e42 66%,#071c2b 100%);
+}
+.emergency-shell .scene-badge{
+  padding:7px 10px;
+  border-color:#47cfe4;
+  color:#d7fbff;
+  font-family:var(--font-data);
+  font-size:9px;
+}
+.emergency-shell .scene-help{
+  max-width:440px;
+  padding:5px 8px;
+  color:#b1d0d7;
+  font-size:9px;
+}
+.emergency-shell .map-layer-tools button{
+  padding:7px 9px;
+  border-color:#3d6472;
+  color:#aec7ce;
+  font-size:9px;
+  font-weight:600;
+}
+.emergency-shell .coordinates{font-family:var(--font-data);font-size:8px;color:#89aeb9}
+.emergency-shell .map-attribution{font-size:7px;color:#8daab1}
+.emergency-shell .legend{font-size:9px}
+.emergency-shell .wind span{font-size:9px}
+
+.emergency-shell .scenario-console{padding:10px 12px 9px}
+.emergency-shell .scenario-now div>span{font-family:var(--font-data);font-size:8px;color:#74a8b4}
+.emergency-shell .scenario-now strong{font-size:14px;font-weight:720}
+.emergency-shell .scenario-now p{font-size:9px;color:#9db7be}
+.emergency-shell .scenario-now>em{font-size:17px}
+.emergency-shell .scenario-stage-rail button i{font-family:var(--font-data);font-size:8px}
+.emergency-shell .scenario-stage-rail button span{font-size:7px}
+.emergency-shell .scenario-controls button{font-size:9px;font-weight:600}
+.emergency-shell .time-control>div{font-family:var(--font-data);font-size:9px}
+.emergency-shell .time-control>strong{font-size:10px}
+
+/* Dialogs and evidence views share the same font rhythm. */
+.data-detail-dialog,.demo-entry,.evidence-dialog,.audit-dialog,.report-dialog,.operations-module{
+  font-family:var(--font-ui);
+}
+.data-detail-body h2,.demo-entry h2,.evidence-head h2,.audit-head h2,.report-head h2,.module-header h2{
+  font-family:var(--font-display);
+  font-weight:740;
+}
+.data-detail-body p,.data-detail-body li{font-size:13px;line-height:1.7}
+.evidence-head p,.audit-head p{font-size:11px}
+.metric-grid span,.metric-grid em,.sample-grid span,.algorithm-boundary article p,
+.task-inputs span,.task-inputs small,.audit-stream p{
+  font-size:max(8px,.52rem);
+}
+
+@media(min-width:1480px){
+  .emergency-shell .workspace{grid-template-columns:330px minmax(620px,1fr) 360px}
+  .emergency-shell .panel-title{font-size:16px}
+  .emergency-shell .agent p b{font-size:13px}
+  .emergency-shell .agent p span{font-size:10.5px}
+  .emergency-shell .plan-steps p{font-size:11.5px}
+  .emergency-shell .scenario-stage-rail button span{font-size:8px}
+}
+
+@media(max-width:1180px){
+  .future-brand strong{font-size:23px}
+  .future-heading .future-title{font-size:22px;letter-spacing:3px}
+  .future-nav button{min-width:105px}
+  .emergency-shell .brand{min-width:250px}
+  .emergency-shell .topbar nav button{min-width:82px;padding-inline:11px;font-size:11px}
+}
+
+@media(max-width:760px){
+  .auth-topbar>div:nth-child(2) b{font-size:22px}
+  .auth-hero h1{font-size:36px}
+  .auth-hero>p{font-size:13px}
+  .auth-card{padding:26px 22px 20px}
+  .future-brand strong{font-size:20px}
+  .future-heading .future-title{font-size:19px}
+  .emergency-shell .panel-title{font-size:14px}
+}

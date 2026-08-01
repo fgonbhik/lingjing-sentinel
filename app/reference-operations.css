@@ -1,0 +1,117 @@
+/* Reference composition: dense central city map with compact operational panels. */
+@media (min-width: 1181px) {
+  .future-city {
+    padding: 0 14px 8px;
+    /* `hidden` still creates a programmatically scrollable container. 3D view
+       buttons can therefore scroll the whole fixed dashboard while focusing.
+       `clip` keeps the competition screen pinned without changing its layout. */
+    overflow: clip;
+  }
+
+  .future-header {
+    height: 74px;
+    grid-template-columns: 300px minmax(420px, 1fr) 370px;
+    padding: 0 3px;
+    border-bottom-color: #2b7890;
+    background: linear-gradient(90deg, #071825d9, #0a2a38ed 23%, #0d3c4ceb 50%, #0a2a38ed 77%, #071825d9);
+  }
+
+  .future-heading {
+    align-self: end;
+    padding: 5px 40px 7px;
+    border: 0;
+    background: linear-gradient(180deg, #103b4b70, #0f4357a6);
+    clip-path: polygon(9% 0, 91% 0, 100% 100%, 0 100%);
+  }
+
+  .future-heading .future-title {
+    font-size: clamp(23px, 1.72vw, 29px);
+    letter-spacing: 5px;
+  }
+
+  .future-nav {
+    height: 38px;
+  }
+
+  .future-nav button {
+    height: 29px;
+  }
+
+  .future-stage {
+    height: calc(100vh - 151px);
+    min-height: 590px;
+    grid-template-columns: minmax(235px, 17.5%) minmax(560px, 1fr) minmax(235px, 17.5%);
+    gap: 8px;
+  }
+
+  .future-column {
+    gap: 8px;
+  }
+
+  .future-panel {
+    border-color: color-mix(in srgb, var(--panel-accent, #4cdcff) 48%, #163744);
+    background: linear-gradient(145deg, #082232e8, #03111bdd 72%);
+    box-shadow: 0 12px 34px #0007, inset 0 0 30px #23d6f10a;
+  }
+
+  .future-center {
+    border-color: #31829a;
+    background: #04131e;
+    box-shadow: 0 0 56px #13cbe51d, inset 0 0 68px #1bd7ee0d;
+    clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%, 0 10px);
+  }
+
+  .scene-head {
+    height: 35px;
+    border-bottom-color: #2a7890;
+    background: linear-gradient(90deg, #0d4053, #071d2a 55%, #0b3445);
+  }
+
+  .future-scene,
+  .future-city.night .future-scene {
+    background: radial-gradient(ellipse at 50% 38%, #194e66 0%, #0a3048 64%, #031421 100%);
+  }
+
+  .future-scene::before {
+    box-shadow: inset 0 0 78px #01060c, inset 0 0 15px #35e8ff32;
+  }
+
+  .scene-scanline {
+    display: none;
+    animation: none;
+  }
+
+  /* Keep all large-area layers visually stable. Small charts and local status
+     indicators may animate, but the background must never pulse as a whole. */
+  .future-city::before,
+  .future-grid,
+  .future-horizon i {
+    animation: none !important;
+  }
+
+  .future-grid {
+    opacity: .31;
+  }
+
+  .scene-view-presets {
+    bottom: 59px;
+    border-color: #2a7389;
+    background: #03131fe8;
+  }
+
+  .scene-controls {
+    bottom: 14px;
+    border-color: #2d758b;
+    background: #03131fee;
+  }
+
+  .future-footer {
+    margin-top: 5px;
+  }
+}
+
+@media (min-width: 1600px) {
+  .future-stage {
+    grid-template-columns: minmax(250px, 17%) minmax(720px, 1fr) minmax(250px, 17%);
+  }
+}

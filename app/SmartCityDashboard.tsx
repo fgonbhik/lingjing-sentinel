@@ -55,7 +55,9 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
   const [activeNav, setActiveNav] = useState("全域态势");
   const [nightMode, setNightMode] = useState(true);
   const [buildingLights, setBuildingLights] = useState(true);
-  const [autoTour, setAutoTour] = useState(true);
+  // Start from a presentation-stable camera. Automatic orbit remains available
+  // as an explicit interaction instead of moving the map before the user asks.
+  const [autoTour, setAutoTour] = useState(false);
   const [topView, setTopView] = useState(false);
   const [trafficDensity, setTrafficDensity] = useState(54);
   const [selectedAsset, setSelectedAsset] = useState<SmartAsset | null>(null);
@@ -103,7 +105,7 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
   const sceneLabel = useMemo(() => {
     if (sceneStatus === "loading") return "正在构建北京三维建筑群";
     if (sceneStatus === "degraded") return "城市基础模型已启用";
-    return "5,200 栋建筑在线 · 城市光网运行中";
+    return "5,275 栋地图内建筑在线 · OSM 城市底图已接入";
   }, [sceneStatus]);
 
   const focusDistrict = (district: typeof districtData[number]) => {
@@ -144,7 +146,7 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
 
   const selectNavigation = (item: string, index: number) => {
     const navigationInsights = [
-      ["全域态势总览", "汇总人口、交通、生态、公共安全和城市智能指数，中央三维场景已恢复北京城市全景。", "5,200 栋建筑 · 86.4 万感知节点"],
+      ["全域态势总览", "汇总人口、交通、生态、公共安全和城市智能指数，中央三维场景已恢复北京城市全景。", "5,275 栋地图内建筑 · 6,016 条原始建筑数据"],
       ["城市治理专题", "展示城市事件发现、派单、处置与闭环情况，当前重点事件闭环率为 96.8%。", "事件闭环率 96.8% · 平均响应 4.2 分钟"],
       ["交通脉搏专题", "联动道路车流、平均速度、拥堵里程和信号协调率，三维车流已调整至高密度观察状态。", "平均车速 41.8 km/h · 信号协调率 92.7%"],
       ["生态能源专题", "汇总空气质量、碳排强度、新能源消纳和重点生态空间监测结果。", "空气优良率 94.6% · 碳排强度 -4.8%"],
@@ -274,7 +276,7 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
 
         <section className="future-center">
           <div className="scene-head">
-            <div><i /><span>{activeNav}</span><b>北京核心区三维数字孪生</b></div>
+            <div><i /><span>{activeNav}</span><b>北京核心区三维数字孪生 · OSM 城市底图</b></div>
             <em className={sceneStatus}>{sceneLabel}</em>
           </div>
           <div className="future-scene">

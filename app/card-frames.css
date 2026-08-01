@@ -1,0 +1,303 @@
+/*
+ * Distinct interactive frames for the Beijing smart-city dashboard.
+ * Every group keeps one visual system while exposing a different silhouette,
+ * accent, hover response and selected state.
+ */
+
+.future-panel{
+  --frame-accent:var(--panel-accent,#52e4f5);
+  --frame-fill:#0a202bd9;
+  border-color:color-mix(in srgb,var(--frame-accent) 64%,#85a8b5 12%);
+}
+
+.city-vitals{
+  clip-path:polygon(0 0,calc(100% - 28px) 0,100% 28px,100% 100%,14px 100%,0 calc(100% - 14px));
+}
+.event-center{
+  clip-path:polygon(14px 0,100% 0,100% calc(50% - 18px),calc(100% - 8px) 50%,100% calc(50% + 18px),100% 100%,0 100%,0 14px);
+}
+.eco-panel{
+  clip-path:polygon(0 0,100% 0,100% calc(100% - 22px),calc(100% - 22px) 100%,22px 100%,0 calc(100% - 22px));
+}
+.ai-index{
+  clip-path:polygon(18px 0,calc(100% - 18px) 0,100% 18px,100% 100%,0 100%,0 18px);
+}
+.traffic-panel{
+  clip-path:polygon(0 0,100% 0,100% 100%,20px 100%,0 calc(100% - 20px),8px 50%,0 20px);
+}
+.district-rank{
+  clip-path:polygon(0 0,calc(100% - 34px) 0,100% 34px,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%);
+}
+
+.future-column :is(
+  .vital-grid>button,
+  .event-row,
+  .eco-stats>button,
+  .ai-score,
+  .ai-dimensions>button,
+  .traffic-number,
+  .traffic-flow,
+  .traffic-meta>button,
+  .district-rank>div>button
+){
+  --card-accent:var(--frame-accent);
+  position:relative;
+  overflow:hidden;
+  border:1px solid color-mix(in srgb,var(--card-accent) 52%,transparent);
+  color:#e9faff;
+  background:
+    linear-gradient(115deg,color-mix(in srgb,var(--card-accent) 14%,transparent),transparent 48%),
+    #071822a8;
+  box-shadow:inset 0 1px color-mix(in srgb,var(--card-accent) 22%,transparent);
+  transition:transform .2s ease,border-color .2s ease,background .2s ease,box-shadow .2s ease;
+}
+
+.future-column :is(
+  .vital-grid>button,
+  .event-row,
+  .eco-stats>button,
+  .ai-score,
+  .ai-dimensions>button,
+  .traffic-number,
+  .traffic-flow,
+  .traffic-meta>button,
+  .district-rank>div>button
+):hover{
+  z-index:2;
+  transform:translateY(-1px);
+  border-color:var(--card-accent);
+  background:
+    linear-gradient(115deg,color-mix(in srgb,var(--card-accent) 25%,transparent),transparent 58%),
+    #0a202bde;
+  box-shadow:0 8px 20px #020b1191,0 0 16px color-mix(in srgb,var(--card-accent) 22%,transparent),inset 3px 0 var(--card-accent);
+}
+
+.future-column :is(
+  .vital-grid>button,
+  .event-row,
+  .eco-stats>button,
+  .ai-score,
+  .ai-dimensions>button,
+  .traffic-number,
+  .traffic-flow,
+  .traffic-meta>button,
+  .district-rank>div>button
+):focus-visible{
+  outline:2px solid var(--card-accent);
+  outline-offset:2px;
+}
+
+/* Four independent city-vital instrument frames. */
+.future-column .vital-grid>button:nth-child(1){--card-accent:#45e8ff;clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%)}
+.future-column .vital-grid>button:nth-child(2){--card-accent:#6d9cff;clip-path:polygon(14px 0,100% 0,100% 100%,0 100%,0 14px)}
+.future-column .vital-grid>button:nth-child(3){--card-accent:#59edb5;clip-path:polygon(0 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%)}
+.future-column .vital-grid>button:nth-child(4){--card-accent:#b094ff;clip-path:polygon(0 0,100% 0,100% 100%,14px 100%,0 calc(100% - 14px))}
+
+/* Event frames read as four different incident priority channels. */
+.future-column .event-list .event-row:nth-child(1){--card-accent:#ff795f;border-color:color-mix(in srgb,var(--card-accent) 56%,transparent);background:linear-gradient(110deg,#ff795f1f,transparent 58%),#071822a8;clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,0 100%)}
+.future-column .event-list .event-row:nth-child(2){--card-accent:#ffb858;border-color:color-mix(in srgb,var(--card-accent) 56%,transparent);background:linear-gradient(110deg,#ffb8581f,transparent 58%),#071822a8;clip-path:polygon(8px 0,100% 0,100% 100%,0 100%,0 8px)}
+.future-column .event-list .event-row:nth-child(3){--card-accent:#57d9ff;border-color:color-mix(in srgb,var(--card-accent) 56%,transparent);background:linear-gradient(110deg,#57d9ff1f,transparent 58%),#071822a8;clip-path:polygon(0 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%)}
+.future-column .event-list .event-row:nth-child(4){--card-accent:#6ce7ae;border-color:color-mix(in srgb,var(--card-accent) 56%,transparent);background:linear-gradient(110deg,#6ce7ae1f,transparent 58%),#071822a8;clip-path:polygon(0 0,100% 0,100% 100%,9px 100%,0 calc(100% - 9px))}
+
+/* Ecology: circular sensor plus three independent environmental readouts. */
+.eco-panel .air-orbit{
+  --card-accent:#4ef0b0;
+  border-style:double;
+  border-width:3px;
+  background:radial-gradient(circle,#164d3e 0 42%,#0a2424 72%);
+}
+.future-column .eco-stats>button:nth-child(1){--card-accent:#58efaf;clip-path:polygon(0 0,100% 0,100% 100%,10px 100%,0 calc(100% - 10px))}
+.future-column .eco-stats>button:nth-child(2){--card-accent:#4fdcff;clip-path:polygon(10px 0,100% 0,100% 100%,0 100%,0 10px)}
+.future-column .eco-stats>button:nth-child(3){--card-accent:#ffc468;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%)}
+
+/* AI cards use concentric, segmented and stepped silhouettes. */
+.ai-index .ai-score{
+  --card-accent:#aa96ff;
+  clip-path:polygon(16px 0,100% 0,100% calc(100% - 16px),calc(100% - 16px) 100%,0 100%,0 16px);
+}
+.future-column .ai-dimensions>button:nth-child(1){--card-accent:#b197ff;clip-path:polygon(0 0,100% 0,calc(100% - 8px) 100%,0 100%)}
+.future-column .ai-dimensions>button:nth-child(2){--card-accent:#748dff;clip-path:polygon(8px 0,100% 0,100% 100%,0 100%,0 8px)}
+.future-column .ai-dimensions>button:nth-child(3){--card-accent:#52d9ff;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%)}
+.future-column .ai-dimensions>button:nth-child(4){--card-accent:#58e6b2;clip-path:polygon(0 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%)}
+
+/* Traffic frames distinguish headline, flow chart and three road indicators. */
+.traffic-panel .traffic-number{
+  --card-accent:#ffd16d;
+  clip-path:polygon(0 0,calc(100% - 18px) 0,100% 18px,100% 100%,18px 100%,0 calc(100% - 18px));
+}
+.traffic-panel .traffic-flow{
+  --card-accent:#ff9f58;
+  clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);
+}
+.future-column .traffic-meta>button:nth-child(1){--card-accent:#67d7ff;clip-path:polygon(0 0,100% 0,100% 100%,8px 100%,0 calc(100% - 8px))}
+.future-column .traffic-meta>button:nth-child(2){--card-accent:#ff9a5f;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%)}
+.future-column .traffic-meta>button:nth-child(3){--card-accent:#62edb3;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%)}
+
+/* Ranking rows step progressively so each district remains identifiable. */
+.future-column .district-rank>div>button:nth-child(1){--card-accent:#58b7ff;clip-path:polygon(0 0,100% 0,100% 100%,0 100%)}
+.future-column .district-rank>div>button:nth-child(2){--card-accent:#7c97ff;clip-path:polygon(6px 0,100% 0,100% 100%,0 100%,0 6px)}
+.future-column .district-rank>div>button:nth-child(3){--card-accent:#61e4c1;clip-path:polygon(12px 0,100% 0,100% 100%,0 100%,0 12px)}
+.future-column .district-rank>div>button:nth-child(4){--card-accent:#ffb45e;clip-path:polygon(18px 0,100% 0,100% 100%,0 100%,0 18px)}
+
+/* Top-level interaction families also receive distinct, legible frames. */
+.future-nav button:nth-child(1){--nav-accent:#52e8ff;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%)}
+.future-nav button:nth-child(2){--nav-accent:#719cff;clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,8px 50%)}
+.future-nav button:nth-child(3){--nav-accent:#ffbd62;clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%)}
+.future-nav button:nth-child(4){--nav-accent:#59e8ad;clip-path:polygon(0 0,calc(100% - 9px) 0,100% 9px,100% 100%,9px 100%,0 calc(100% - 9px))}
+.future-nav button:nth-child(5){--nav-accent:#ff735e;clip-path:polygon(9px 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%,0 9px)}
+.future-nav button:hover,.future-nav button.active{border-color:var(--nav-accent);box-shadow:0 0 18px color-mix(in srgb,var(--nav-accent) 28%,transparent)}
+.future-nav button.active i{color:var(--nav-accent)}
+
+.scene-districts button:nth-child(1){--scene-accent:#43e7ff;clip-path:polygon(0 0,100% 0,calc(100% - 8px) 100%,0 100%)}
+.scene-districts button:nth-child(2){--scene-accent:#7899ff;clip-path:polygon(8px 0,100% 0,100% 100%,0 100%,0 8px)}
+.scene-districts button:nth-child(3){--scene-accent:#5ce9af;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%)}
+.scene-districts button:nth-child(4){--scene-accent:#ffad5b;clip-path:polygon(0 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%)}
+.scene-districts button:hover{border-color:var(--scene-accent);box-shadow:inset 3px 0 var(--scene-accent),0 0 12px color-mix(in srgb,var(--scene-accent) 24%,transparent)}
+
+.scene-view-presets button:nth-of-type(1){--view-accent:#51e9ff}
+.scene-view-presets button:nth-of-type(2){--view-accent:#6f9cff}
+.scene-view-presets button:nth-of-type(3){--view-accent:#a68cff}
+.scene-view-presets button:nth-of-type(4){--view-accent:#59e7b0}
+.scene-view-presets button:nth-of-type(5){--view-accent:#ffbd62}
+.scene-view-presets button:nth-of-type(odd){clip-path:polygon(7px 0,100% 0,calc(100% - 7px) 100%,0 100%)}
+.scene-view-presets button:nth-of-type(even){clip-path:polygon(0 0,calc(100% - 7px) 0,100% 100%,7px 100%)}
+.scene-view-presets button:hover,.scene-view-presets button.active{border-color:var(--view-accent);box-shadow:inset 0 -2px var(--view-accent),0 0 10px color-mix(in srgb,var(--view-accent) 24%,transparent)}
+
+.scene-controls button:nth-child(1){--control-accent:#5deaff}
+.scene-controls button:nth-child(2){--control-accent:#7a9cff}
+.scene-controls button:nth-child(3){--control-accent:#b28fff}
+.scene-controls button:nth-child(4){--control-accent:#ffd067}
+.scene-controls button:nth-child(5){--control-accent:#5fe9b1}
+.scene-controls button:nth-child(6){--control-accent:#ff8d65}
+.scene-controls button:hover,.scene-controls button.on{
+  color:#f2fdff;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--control-accent) 24%,#0b2530),#071923);
+  box-shadow:inset 0 -2px var(--control-accent);
+}
+.scene-controls button i{color:var(--control-accent)}
+
+.scene-zoom button:first-child{clip-path:polygon(8px 0,100% 0,100% 100%,0 100%,0 8px)}
+.scene-zoom button:last-child{clip-path:polygon(0 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%)}
+
+@media(max-width:820px){
+  .future-column :is(
+    .vital-grid>button,
+    .event-row,
+    .eco-stats>button,
+    .ai-score,
+    .ai-dimensions>button,
+    .traffic-number,
+    .traffic-flow,
+    .traffic-meta>button,
+    .district-rank>div>button
+  ):hover{transform:none}
+}
+
+/* 1280 × 720 presentation fallback: keep every frame visible without inner scrollbars. */
+@media(min-width:1181px) and (max-height:800px){
+  .future-stage{min-height:0}
+  .future-column{gap:8px}
+  .future-column .future-panel>header{
+    height:40px;
+    grid-template-columns:34px 1fr auto;
+    padding-right:9px
+  }
+  .future-column .future-panel>header>span{font-size:10px}
+  .future-column .future-panel>header div b{font-size:12px;letter-spacing:1px}
+  .future-column .future-panel>header div em{margin-top:2px;font-size:7px}
+  .future-column .future-panel>header>i{padding:3px 5px;font-size:8px}
+
+  .city-vitals .vital-primary{height:70px;flex:none;padding:5px 10px}
+  .city-vitals .vital-primary span{font-size:9px}
+  .city-vitals .vital-primary strong{font-size:24px}
+  .city-vitals .vital-primary em{font-size:8px}
+  .city-vitals .vital-wave{height:42px}
+  .city-vitals .vital-grid{height:calc(100% - 110px);flex:none;gap:3px;padding:3px}
+  .city-vitals .vital-grid>button{min-height:0;padding:4px 7px}
+  .city-vitals .vital-grid span{font-size:8px}
+  .city-vitals .vital-grid b{font-size:12px}
+  .city-vitals .vital-grid b small,.city-vitals .vital-grid em{font-size:7px}
+
+  .event-center .event-list{
+    height:calc(100% - 40px);
+    overflow:hidden;
+    gap:3px;
+    padding:4px;
+    grid-template-rows:repeat(4,minmax(0,1fr))
+  }
+  .event-center .event-list .event-row{
+    min-height:0;
+    grid-template-columns:58px 26px 1fr;
+    padding:0 6px
+  }
+  .event-center .event-list time{font-size:8px}
+  .event-center .event-list .event-row>i{width:21px;height:21px;font-size:8px}
+  .event-center .event-list p{font-size:8.5px;line-height:1.15}
+  .event-center .event-list p span{font-size:7.5px}
+
+  .eco-panel .eco-content{
+    height:calc(100% - 40px);
+    grid-template-columns:88px 1fr;
+    padding:3px
+  }
+  .eco-panel .air-orbit{width:66px;height:66px}
+  .eco-panel .air-orbit b{font-size:21px}
+  .eco-panel .air-orbit span{font-size:7px}
+  .eco-panel .eco-stats{gap:2px;padding-right:0}
+  .eco-panel .eco-stats button{min-height:0;padding:2px 6px}
+  .eco-panel .eco-stats span{font-size:8px}
+  .eco-panel .eco-stats b{font-size:9px}
+
+  .ai-index .ai-score{height:55px;flex:none;padding:3px;grid-template-columns:82px 1fr}
+  .ai-index .score-rings{width:52px;height:52px}
+  .ai-index .score-rings strong{font-size:18px}
+  .ai-index .score-rings span,.ai-index .score-copy p{font-size:6px}
+  .ai-index .score-copy span,.ai-index .score-copy em{font-size:7px}
+  .ai-index .score-copy b{font-size:11px;margin-top:1px}
+  .ai-index .ai-dimensions{min-height:0;gap:2px;padding:2px 5px 4px}
+  .ai-index .ai-dimensions>button{
+    min-height:0;
+    grid-template-columns:54px 1fr 31px;
+    padding:1px 5px
+  }
+  .ai-index .ai-dimensions span,.ai-index .ai-dimensions em{font-size:7.5px}
+  .ai-index .ai-dimensions>button>i{height:3px}
+
+  .traffic-panel .traffic-number{
+    height:29px;
+    flex:none;
+    gap:5px;
+    margin:3px 5px 0;
+    padding:2px 7px
+  }
+  .traffic-panel .traffic-number span,.traffic-panel .traffic-number em{font-size:7.5px}
+  .traffic-panel .traffic-number strong{font-size:20px}
+  .traffic-panel .traffic-flow{height:27px;min-height:0;flex:none;margin:3px 6px 0}
+  .traffic-panel .traffic-meta{min-height:0;gap:3px;margin:3px 5px 4px}
+  .traffic-panel .traffic-meta button{min-height:0;padding:2px}
+  .traffic-panel .traffic-meta span{font-size:7px}
+  .traffic-panel .traffic-meta b{font-size:7.5px}
+
+  .district-rank>div{min-height:0;gap:2px;padding:3px}
+  .district-rank>div>button{
+    min-height:0;
+    grid-template-columns:25px 1fr 31px 46px;
+    padding-inline:6px
+  }
+  .district-rank button>i{font-size:7.5px}
+  .district-rank button>span{font-size:8px}
+  .district-rank button>strong{font-size:8px}
+  .district-rank button>small{font-size:7px}
+  .district-rank button>span>em{height:2px;margin-top:3px}
+
+  .future-column .future-demo-card{padding:8px 11px}
+  .future-column .future-demo-card>div span{font-size:7px}
+  .future-column .future-demo-card>div em{font-size:8px}
+  .future-column .future-demo-card>strong{font-size:20px}
+  .future-column .future-demo-card>p{margin:2px 0;font-size:8px}
+  .future-column .future-demo-card>b,.future-column .future-demo-card>i{font-size:7px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .future-column button{transition:none}
+}
