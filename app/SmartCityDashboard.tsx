@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import SmartCityScene, { type SmartAsset } from "./SmartCityScene";
+import BeijingScopeMap from "./BeijingScopeMap";
+import BeijingDataVPlatform from "./BeijingDataVPlatform";
 import AniNum from "./AniNum";
 import DataDetailDialog from "./DataDetailDialog";
 
@@ -62,6 +64,8 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
   const [trafficDensity, setTrafficDensity] = useState(54);
   const [selectedAsset, setSelectedAsset] = useState<SmartAsset | null>(null);
   const [sceneStatus, setSceneStatus] = useState<"loading" | "ready" | "degraded">("loading");
+  const [mapMode, setMapMode] = useState<"scope" | "buildings">("scope");
+  const [platformMode, setPlatformMode] = useState<"command" | "datav">("command");
   const [now, setNow] = useState(() => new Date());
   const [pulse, setPulse] = useState(0);
   const [barsReady, setBarsReady] = useState(false);
@@ -105,7 +109,7 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
   const sceneLabel = useMemo(() => {
     if (sceneStatus === "loading") return "正在构建北京三维建筑群";
     if (sceneStatus === "degraded") return "城市基础模型已启用";
-    return "5,275 栋地图内建筑在线 · OSM 城市底图已接入";
+    return "5,272 栋地图内建筑在线 · OSM 城市底图已接入";
   }, [sceneStatus]);
 
   const focusDistrict = (district: typeof districtData[number]) => {
@@ -146,14 +150,20 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
 
   const selectNavigation = (item: string, index: number) => {
     const navigationInsights = [
-      ["全域态势总览", "汇总人口、交通、生态、公共安全和城市智能指数，中央三维场景已恢复北京城市全景。", "5,275 栋地图内建筑 · 6,016 条原始建筑数据"],
+      ["全域态势总览", "汇总人口、交通、生态、公共安全和城市智能指数，中央三维场景已恢复北京城市全景。", "5,272 栋地图内建筑 · 6,016 条原始建筑数据"],
       ["城市治理专题", "展示城市事件发现、派单、处置与闭环情况，当前重点事件闭环率为 96.8%。", "事件闭环率 96.8% · 平均响应 4.2 分钟"],
       ["交通脉搏专题", "联动道路车流、平均速度、拥堵里程和信号协调率，三维车流已调整至高密度观察状态。", "平均车速 41.8 km/h · 信号协调率 92.7%"],
       ["生态能源专题", "汇总空气质量、碳排强度、新能源消纳和重点生态空间监测结果。", "空气优良率 94.6% · 碳排强度 -4.8%"],
       ["公共安全专题", "聚合城市告警、应急资源和重点区域风险研判，可从右下角进入灵境哨兵完整演示。", "在线资源 99.3% · 重点区域实时感知"],
     ];
     setActiveNav(item);
+    setPlatformMode(index === 1 ? "datav" : "command");
     setAutoTour(false);
+    if (index === 1) {
+      setSelectedAsset(null);
+      showTip("已进入北京城市数据可视化驾驶舱 · 三维地图与图表联动已开启");
+      return;
+    }
     if (index === 0) resetView();
     if (index === 2) setTrafficDensity(54);
     if (index === 3) {
@@ -181,7 +191,7 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
   };
 
   return (
-    <main className={`future-city ${nightMode ? "night" : "day"}`}>
+    <main className={`future-city ${nightMode ? "night" : "day"} ${platformMode === "datav" ? "datav-fullscreen" : ""}`}>
       <div className="future-grid" aria-hidden="true" />
       <div className="future-aurora future-aurora-a" aria-hidden="true" />
       <div className="future-aurora future-aurora-b" aria-hidden="true" />
@@ -229,7 +239,16 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
         ))}
       </nav>
 
-      <section className="future-stage">
+      {platformMode === "datav" ? (
+        <BeijingDataVPlatform
+          onBack={() => {
+            setPlatformMode("command");
+            setActiveNav(navItems[0]);
+            resetView();
+          }}
+          onOpenDemo={onOpenDemo}
+        />
+      ) : <section className="future-stage">
         <aside className="future-column left">
           <section className="future-panel city-vitals">
             <header><span>01</span><div><b>城市生命体征</b><em>URBAN VITAL SIGNS</em></div><i>LIVE</i></header>
@@ -277,18 +296,26 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
         <section className="future-center">
           <div className="scene-head">
             <div><i /><span>{activeNav}</span><b>北京核心区三维数字孪生 · OSM 城市底图</b></div>
+            <div className="scene-map-switch" aria-label="中央地图模式">
+              <button type="button" className={mapMode === "scope" ? "active" : ""} onClick={() => setMapMode("scope")}>北京区县 HUD</button>
+              <button type="button" className={mapMode === "buildings" ? "active" : ""} onClick={() => setMapMode("buildings")}>城市建筑</button>
+            </div>
             <em className={sceneStatus}>{sceneLabel}</em>
           </div>
           <div className="future-scene">
-            <SmartCityScene
-              topView={topView}
-              nightMode={nightMode}
-              buildingLights={buildingLights}
-              autoTour={autoTour}
-              trafficDensity={trafficDensity}
-              onSelect={handleSceneSelect}
-              onSceneStatus={setSceneStatus}
-            />
+            {mapMode === "scope" ? (
+              <BeijingScopeMap />
+            ) : (
+              <SmartCityScene
+                topView={topView}
+                nightMode={nightMode}
+                buildingLights={buildingLights}
+                autoTour={autoTour}
+                trafficDensity={trafficDensity}
+                onSelect={handleSceneSelect}
+                onSceneStatus={setSceneStatus}
+              />
+            )}
 
             <div className="scene-scanline" aria-hidden="true" />
             <div className="scene-corners" aria-hidden="true"><i /><i /><i /><i /></div>
@@ -301,7 +328,7 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
             </div>
             <div className="scene-orientation"><b>N</b><i /><span>024°</span></div>
 
-            <div className="scene-districts">
+            <div className={`scene-districts ${mapMode === "scope" ? "is-hidden" : ""}`}>
               {districtData.map((district) => (
                 <button key={district.name} onClick={() => focusDistrict(district)}>
                   <i className={district.tone} /><span>{district.name}</span><b>{district.score}</b>
@@ -309,7 +336,7 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
               ))}
             </div>
 
-            <div className="scene-view-presets" aria-label="预设三维视角">
+            <div className={`scene-view-presets ${mapMode === "scope" ? "is-hidden" : ""}`} aria-label="预设三维视角">
               <span>VIEW</span>
               {viewOptions.map((view) => (
                 <button
@@ -323,11 +350,11 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
               ))}
             </div>
 
-            <div key={tipKey} className="scene-operation-tip" role="status" aria-live="polite">
+            <div key={tipKey} className={`scene-operation-tip ${mapMode === "scope" ? "is-hidden" : ""}`} role="status" aria-live="polite">
               <i>⌁</i><span>{interactionTip}</span>
             </div>
 
-            <div className="scene-controls">
+            <div className={`scene-controls ${mapMode === "scope" ? "is-hidden" : ""}`}>
               <button className={topView ? "on" : ""} onClick={() => {
                 const next = !topView;
                 setAutoTour(false);
@@ -430,7 +457,7 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
             <i>立即进入演示项目 <span>→</span></i>
           </button>
         </aside>
-      </section>
+      </section>}
 
       {selectedAsset && <DataDetailDialog data={selectedAsset} onClose={() => setSelectedAsset(null)} />}
 

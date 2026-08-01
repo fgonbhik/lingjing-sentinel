@@ -17,9 +17,8 @@ type DetailData = {
     sourceUrl?: string;
     kind: "real";
     assetId: string;
-    provider: "verified-local" | "kartaview";
+    provider: "verified-local" | "unmatched";
     configured: boolean;
-    lookupUrl?: string;
     position?: {
       longitude: number;
       latitude: number;
@@ -56,51 +55,6 @@ type Props = {
   onClose: () => void;
   tone?: "cyan" | "blue";
 };
-
-type ResolvedStreetPhoto = {
-  src: string;
-  distanceMeters?: number;
-  heading?: number;
-  shotDate?: string;
-  imageId?: string;
-};
-
-type PhotoStatus = "idle" | "loading" | "ready" | "empty" | "error";
-
-const kartaViewPhotoCache = new Map<string, ResolvedStreetPhoto | null>();
-
-function firstString(record: Record<string, unknown>, keys: string[]) {
-  for (const key of keys) {
-    const value = record[key];
-    if (typeof value === "string" && value.startsWith("https://")) return value;
-  }
-  return "";
-}
-
-function parseKartaViewPhoto(payload: unknown): ResolvedStreetPhoto | null {
-  if (!payload || typeof payload !== "object") return null;
-  const result = (payload as { result?: unknown }).result;
-  if (!result || typeof result !== "object") return null;
-  const data = (result as { data?: unknown }).data;
-  if (!Array.isArray(data)) return null;
-
-  for (const candidate of data) {
-    if (!candidate || typeof candidate !== "object") continue;
-    const record = candidate as Record<string, unknown>;
-    const src = firstString(record, ["imageProcUrl", "fileurlProc", "imageLthUrl", "fileurlLTh", "imageThUrl", "fileurlTh"]);
-    if (!src) continue;
-    const distance = Number(record.distance);
-    const heading = Number(record.heading ?? record.headers);
-    return {
-      src,
-      distanceMeters: Number.isFinite(distance) ? Math.round(distance) : undefined,
-      heading: Number.isFinite(heading) ? heading : undefined,
-      shotDate: typeof record.shotDate === "string" ? record.shotDate : undefined,
-      imageId: typeof record.id === "string" ? record.id : undefined,
-    };
-  }
-  return null;
-}
 
 const aiMetrics: DetailMetric[] = [
   { label: "感知覆盖", value: "98%", percent: 98 },
@@ -152,7 +106,7 @@ const platformMetrics: DetailMetric[] = [
 ];
 
 const detailOverrides: Record<string, Partial<DetailProfile>> = {
-  "brand-overview": { accent: "#4ce8ff", secondary: "#4f8fff", code: "P-01", primary: "5,275", primaryLabel: "地图内建筑" },
+  "brand-overview": { accent: "#4ce8ff", secondary: "#4f8fff", code: "P-01", primary: "5,272", primaryLabel: "地图内建筑" },
   "command-center": { accent: "#718fff", secondary: "#aa91ff", code: "P-02", primary: "24 / 24", primaryLabel: "城市模型服务" },
   "system-health": { accent: "#5ce8ae", secondary: "#45cfff", code: "P-03", primary: "99.97%", primaryLabel: "系统健康度" },
   "city-clock": { accent: "#ffbd67", secondary: "#ff855c", code: "P-04", primary: "1s", primaryLabel: "时间同步周期" },
@@ -397,89 +351,44 @@ function DetailVisualization({ profile }: { profile: DetailProfile }) {
 }
 
 function BuildingPhoto({ photo }: { photo: NonNullable<DetailData["photo"]> }) {
-  const cachedAtMount = photo.lookupUrl && kartaViewPhotoCache.has(photo.lookupUrl)
-    ? kartaViewPhotoCache.get(photo.lookupUrl) ?? null
-    : null;
   const [failedPhotoSrc, setFailedPhotoSrc] = useState("");
-  const [resolvedStreetPhoto, setResolvedStreetPhoto] = useState<ResolvedStreetPhoto | null>(() =>
-    photo.provider === "verified-local" ? (photo.src ? { src: photo.src } : null) : cachedAtMount,
-  );
-  const [photoStatus, setPhotoStatus] = useState<PhotoStatus>(() => {
-    if (photo.provider === "verified-local") return photo.src ? "ready" : "empty";
-    if (!photo.lookupUrl) return "error";
-    if (kartaViewPhotoCache.has(photo.lookupUrl)) return cachedAtMount ? "ready" : "empty";
-    return "loading";
-  });
-  const photoFailed = Boolean(resolvedStreetPhoto?.src) && failedPhotoSrc === resolvedStreetPhoto?.src;
-
-  useEffect(() => {
-    if (photo.provider !== "kartaview" || !photo.lookupUrl || kartaViewPhotoCache.has(photo.lookupUrl)) return;
-    const lookupUrl = photo.lookupUrl;
-    const controller = new AbortController();
-    fetch(lookupUrl, { signal: controller.signal, headers: { Accept: "application/json" } })
-      .then(async (response) => {
-        if (!response.ok) throw new Error(`KartaView HTTP ${response.status}`);
-        return await response.json() as unknown;
-      })
-      .then((payload) => {
-        const resolved = parseKartaViewPhoto(payload);
-        kartaViewPhotoCache.set(lookupUrl, resolved);
-        setResolvedStreetPhoto(resolved);
-        setPhotoStatus(resolved ? "ready" : "empty");
-      })
-      .catch((error: unknown) => {
-        if (error instanceof DOMException && error.name === "AbortError") return;
-        setPhotoStatus("error");
-      });
-    return () => controller.abort();
-  }, [photo.lookupUrl, photo.provider]);
+  const photoFailed = Boolean(photo.src) && failedPhotoSrc === photo.src;
+  const hasVerifiedPhoto = photo.provider === "verified-local" && Boolean(photo.src) && !photoFailed;
 
   return (
     <figure className="data-detail-photo" data-photo-kind={photo.kind} data-photo-provider={photo.provider} data-asset-id={photo.assetId}>
-      {photoStatus === "ready" && resolvedStreetPhoto?.src && !photoFailed ? (
-        <a href={resolvedStreetPhoto.src} target="_blank" rel="noreferrer" aria-label={`查看${photo.caption}大图`}>
-          {/* External street imagery cannot use the framework image optimizer. */}
+      {hasVerifiedPhoto ? (
+        <a href={photo.src} target="_blank" rel="noreferrer" aria-label={`查看${photo.caption}大图`}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={resolvedStreetPhoto.src} alt={photo.alt} onError={() => setFailedPhotoSrc(resolvedStreetPhoto.src)} />
-          <span>点击查看真实街景 ↗</span>
+          <img
+            src={photo.src}
+            alt={photo.alt}
+            onError={() => setFailedPhotoSrc(photo.src)}
+          />
+          <span>查看已核验本体照片 ↗</span>
         </a>
       ) : (
         <div className="data-detail-photo-empty" role="status">
-          <i>{photoStatus === "loading" ? "LOOKING UP" : photoStatus === "error" ? "OFFLINE" : photoFailed ? "IMAGE ERROR" : "NO COVERAGE"}</i>
-          <strong>
-            {photoStatus === "loading"
-              ? "正在按建筑坐标检索 KartaView 街景"
-              : photoStatus === "error"
-                ? "KartaView 在线查询暂不可用"
-                : photoFailed
-                  ? "实景图片加载失败"
-                  : "该建筑附近暂无 KartaView 街景覆盖"}
-          </strong>
-          <span>{photoStatus === "loading" ? "仅在打开详情时发起一次查询" : "系统不会使用其他建筑照片替代"}</span>
+          <i>{photoFailed ? "IMAGE ERROR" : "STRICT MATCH"}</i>
+          <strong>{photoFailed ? "已核验照片加载失败" : "暂无已核验本体照片"}</strong>
+          <span>{photoFailed ? "请检查本地素材完整性" : "已排除区域图、道路街景、同名搜索结果和未确认候选"}</span>
         </div>
       )}
       <figcaption>
         <b>{photo.matchLabel}</b>
         <strong>{photo.caption}</strong>
         <small>{photo.credit}</small>
-        {photo.provider === "kartaview" && resolvedStreetPhoto && (
-          <small className="data-detail-photo-position">
-            KartaView 图片 {resolvedStreetPhoto.imageId || "未编号"}
-            {resolvedStreetPhoto.shotDate ? ` · 拍摄 ${resolvedStreetPhoto.shotDate.slice(0, 10)}` : ""}
-            {resolvedStreetPhoto.distanceMeters !== undefined ? ` · 距查询点 ${resolvedStreetPhoto.distanceMeters} m` : ""}
-          </small>
-        )}
         {photo.position && (
           <small className="data-detail-photo-position">
-            WGS84 {photo.position.longitude.toFixed(6)}, {photo.position.latitude.toFixed(6)} · 查询视点距建筑 {photo.position.distanceMeters} m
+            建筑中心 WGS84 {photo.position.longitude.toFixed(6)}, {photo.position.latitude.toFixed(6)} · 资产编号 {photo.assetId}
           </small>
         )}
-        {photo.sourceUrl ? (
+        {photo.provider === "verified-local" && photo.sourceUrl ? (
           <a href={photo.sourceUrl} target="_blank" rel="noreferrer">
-            {photo.provider === "kartaview" ? "KartaView 数据与服务说明 ↗" : "图片授权与原始来源 ↗"}
+            图片授权与原始来源 ↗
           </a>
         ) : (
-          <span className="data-detail-photo-source">已核验本地实景素材</span>
+          <span className="data-detail-photo-source">严格重匹配记录 · 等待人工核验素材</span>
         )}
       </figcaption>
     </figure>

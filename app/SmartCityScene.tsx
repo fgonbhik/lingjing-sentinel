@@ -20,9 +20,8 @@ export type SmartAsset = {
     sourceUrl?: string;
     kind: "real";
     assetId: string;
-    provider: "verified-local" | "kartaview";
+    provider: "verified-local" | "unmatched";
     configured: boolean;
-    lookupUrl?: string;
     position?: {
       longitude: number;
       latitude: number;
@@ -51,20 +50,26 @@ type Building = {
   core?: boolean;
 };
 
-type Road = {
-  id: number;
-  points: Array<[number, number]>;
-  name?: string;
-};
-
 const verifiedBuildingPhotos: Partial<Record<number, NonNullable<SmartAsset["photo"]>>> = {
+  78744949: {
+    src: "./building-photos/beijing-poly-theatre.jpg",
+    alt: "北京保利剧院入口及建筑本体实景",
+    caption: "北京保利剧院本体实景",
+    matchLabel: "建筑编号、名称、坐标与照片主体已人工核验",
+    credit: "摄影：N509FZ · CC BY-SA 4.0 · 已离线缓存",
+    sourceUrl: "https://commons.wikimedia.org/wiki/File:Entrance_of_Poly_Theatre_(20200323173601).jpg",
+    kind: "real",
+    assetId: "BJ-78744949",
+    provider: "verified-local",
+    configured: true,
+  },
   116944490: {
-    src: "./building-photos/china-world.jpg",
-    alt: "中国国际贸易中心三期 A 座及所在建筑群实景",
-    caption: "中国国际贸易中心三期 A 座实景对照",
-    matchLabel: "建筑编号与实景已核验",
-    credit: "摄影：Temlsth · CC BY-SA 3.0 · 已离线缓存",
-    sourceUrl: "https://commons.wikimedia.org/wiki/File:China_World.jpg",
+    src: "./building-photos/china-world-tower-iii.jpg",
+    alt: "中国国际贸易中心三期 A 座单体建筑实景",
+    caption: "中国国际贸易中心三期 A 座本体实景",
+    matchLabel: "建筑编号、名称、坐标与照片主体已人工核验",
+    credit: "摄影：Gary Todd · CC0 1.0 · 已离线缓存",
+    sourceUrl: "https://commons.wikimedia.org/wiki/File:World_Trade_Center_Tower_3_(9870689333).jpg",
     kind: "real",
     assetId: "BJ-116944490",
     provider: "verified-local",
@@ -72,45 +77,14 @@ const verifiedBuildingPhotos: Partial<Record<number, NonNullable<SmartAsset["pho
   },
 };
 
-const KARTAVIEW_DOCS = "https://kartaview.org/doc/faq";
-const KARTAVIEW_PHOTO_API = "https://api.openstreetcam.org/2.0/photo/";
 const MAP_LOCAL_HALF_EXTENT = 180;
 const MAP_BOUNDS = { minLat: 39.879, minLng: 116.419, maxLat: 39.936, maxLng: 116.485 };
-const panoramaPhotoCache = new Map<number, NonNullable<SmartAsset["photo"]>>();
+const strictPhotoMatchCache = new Map<number, NonNullable<SmartAsset["photo"]>>();
 
 function getBuildingCenter(building: Building) {
   const total = building.points.reduce((sum, [x, z]) => ({ x: sum.x + x, z: sum.z + z }), { x: 0, z: 0 });
   const count = Math.max(1, building.points.length);
   return { x: total.x / count, z: total.z / count };
-}
-
-function closestStreetViewPoint(target: { x: number; z: number }, roads: Road[]) {
-  let result = { x: target.x, z: target.z - 1.4, roadName: "最近城市道路", distance: 1.4 };
-  let bestDistanceSquared = Number.POSITIVE_INFINITY;
-  roads.forEach((road) => {
-    for (let index = 1; index < road.points.length; index += 1) {
-      const [ax, az] = road.points[index - 1];
-      const [bx, bz] = road.points[index];
-      const vx = bx - ax;
-      const vz = bz - az;
-      const lengthSquared = vx * vx + vz * vz;
-      if (lengthSquared === 0) continue;
-      const ratio = Math.max(0, Math.min(1, ((target.x - ax) * vx + (target.z - az) * vz) / lengthSquared));
-      const x = ax + vx * ratio;
-      const z = az + vz * ratio;
-      const distanceSquared = (target.x - x) ** 2 + (target.z - z) ** 2;
-      if (distanceSquared < bestDistanceSquared) {
-        bestDistanceSquared = distanceSquared;
-        result = {
-          x,
-          z,
-          roadName: road.name?.trim() || `OSM 道路 ${road.id}`,
-          distance: Math.sqrt(distanceSquared),
-        };
-      }
-    }
-  });
-  return result;
 }
 
 function localPointToWgs84(point: { x: number; z: number }) {
@@ -119,47 +93,38 @@ function localPointToWgs84(point: { x: number; z: number }) {
   return { longitude, latitude };
 }
 
-function createKartaViewPhoto(building: Building, roads: Road[]): NonNullable<SmartAsset["photo"]> {
-  const cached = panoramaPhotoCache.get(building.id);
+function createUnmatchedPhoto(building: Building): NonNullable<SmartAsset["photo"]> {
+  const cached = strictPhotoMatchCache.get(building.id);
   if (cached) return cached;
 
   const buildingCenter = getBuildingCenter(building);
-  const streetPoint = closestStreetViewPoint(buildingCenter, roads);
-  const { longitude, latitude } = localPointToWgs84(streetPoint);
-  const heading = (Math.atan2(buildingCenter.x - streetPoint.x, buildingCenter.z - streetPoint.z) * 180 / Math.PI + 360) % 360;
+  const { longitude, latitude } = localPointToWgs84(buildingCenter);
   const assetId = `BJ-${String(building.id).padStart(6, "0")}`;
   const displayName = building.name?.trim() || `北京城市建筑 ${assetId}`;
-  const parameters = new URLSearchParams({
-    lat: latitude.toFixed(6),
-    lng: longitude.toFixed(6),
-    radius: "160",
-  });
   const photo: NonNullable<SmartAsset["photo"]> = {
     src: "",
-    lookupUrl: `${KARTAVIEW_PHOTO_API}?${parameters.toString()}`,
-    alt: `${displayName} 最近道路附近的 KartaView 真实街景`,
-    caption: `${displayName} · KartaView 附近街景候选`,
-    matchLabel: "建筑坐标独立检索 · 待人工核验",
-    credit: `查询视点：${streetPoint.roadName} · 朝向建筑 ${Math.round(heading)}° · 点击建筑后按需检索`,
-    sourceUrl: KARTAVIEW_DOCS,
+    alt: `${displayName} 暂无已核验本体照片`,
+    caption: `${displayName} · 暂无已核验本体照片`,
+    matchLabel: "严格重匹配完成 · 未通过本体核验",
+    credit: "已排除区域图、道路街景、同名搜索结果和未确认候选",
     kind: "real",
     assetId,
-    provider: "kartaview",
-    configured: true,
+    provider: "unmatched",
+    configured: false,
     position: {
       longitude,
       latitude,
-      heading,
-      roadName: streetPoint.roadName,
-      distanceMeters: Math.round(streetPoint.distance * 15.2),
+      heading: 0,
+      roadName: "建筑几何中心",
+      distanceMeters: 0,
     },
   };
-  panoramaPhotoCache.set(building.id, photo);
+  strictPhotoMatchCache.set(building.id, photo);
   return photo;
 }
 
-function photoForBuilding(building: Building, roads: Road[]): NonNullable<SmartAsset["photo"]> {
-  return verifiedBuildingPhotos[building.id] || createKartaViewPhoto(building, roads);
+function photoForBuilding(building: Building): NonNullable<SmartAsset["photo"]> {
+  return verifiedBuildingPhotos[building.id] || createUnmatchedPhoto(building);
 }
 
 type CameraCommand =
@@ -190,7 +155,10 @@ const CITY_GROUND_RADIUS = 286;
 const CITY_BUILDING_LIMIT = CITY_GROUND_RADIUS - 8;
 const CITY_SKY_RADIUS = 680;
 const ROAD_COORDINATES = [-218, -191, -164, -137, -109, -82, -55, -27, 0, 27, 55, 82, 109, 137, 164, 191, 218];
-const ROAD_LENGTH = 552;
+
+function mapChordLength(offset: number, radius = CITY_GROUND_RADIUS - 12) {
+  return Math.max(0, Math.sqrt(Math.max(0, radius ** 2 - offset ** 2)) * 2);
+}
 
 function getBuildingFootprint(item: Building) {
   const xs = item.points.map((point) => point[0]);
@@ -604,23 +572,6 @@ export default function SmartCityScene({
     grid.visible = false;
     scene.add(grid);
 
-    const backgroundHorizonMaterial = new THREE.MeshBasicMaterial({
-      color: 0x55cfff,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.055,
-      side: THREE.DoubleSide,
-      depthWrite: false,
-      toneMapped: false,
-    });
-    const backgroundHorizon = new THREE.Mesh(
-      new THREE.CylinderGeometry(CITY_GROUND_RADIUS + 18, CITY_GROUND_RADIUS + 18, 86, 112, 9, true),
-      backgroundHorizonMaterial,
-    );
-    backgroundHorizon.position.y = 42;
-    backgroundHorizon.renderOrder = -1;
-    scene.add(backgroundHorizon);
-
     const horizonGlowMaterial = new THREE.MeshBasicMaterial({
       color: 0x47d8ff,
       transparent: true,
@@ -679,12 +630,14 @@ export default function SmartCityScene({
       polygonOffsetFactor: -3,
       polygonOffsetUnits: -3,
     });
-    ROAD_COORDINATES.forEach((x, index) =>
-      addRoad(scene, roadMaterial, laneMaterial, index === 8 ? 7.4 : 4.4, ROAD_LENGTH, x, 0, index % 2 ? 0.025 : -0.02),
-    );
-    ROAD_COORDINATES.forEach((z, index) =>
-      addRoad(scene, roadMaterial, laneMaterial, index === 8 ? 7.4 : 4.4, ROAD_LENGTH, 0, z, Math.PI / 2 + (index % 2 ? 0.02 : -0.018)),
-    );
+    ROAD_COORDINATES.forEach((x, index) => {
+      const roadLength = mapChordLength(x);
+      addRoad(scene, roadMaterial, laneMaterial, index === 8 ? 7.4 : 4.4, roadLength, x, 0, index % 2 ? 0.025 : -0.02);
+    });
+    ROAD_COORDINATES.forEach((z, index) => {
+      const roadLength = mapChordLength(z);
+      addRoad(scene, roadMaterial, laneMaterial, index === 8 ? 7.4 : 4.4, roadLength, 0, z, Math.PI / 2 + (index % 2 ? 0.02 : -0.018));
+    });
 
     const ringMaterial = new THREE.MeshBasicMaterial({
       color: 0x5e8b91,
@@ -728,7 +681,7 @@ export default function SmartCityScene({
       transparent: true,
       opacity: 0.82,
     });
-    const river = new THREE.Mesh(new THREE.PlaneGeometry(566, 14), riverMaterial);
+    const river = new THREE.Mesh(new THREE.PlaneGeometry(mapChordLength(-216, CITY_GROUND_RADIUS - 32), 14), riverMaterial);
     river.rotation.x = -Math.PI / 2;
     river.rotation.z = -0.12;
     river.position.set(0, 1.64, -216);
@@ -953,16 +906,14 @@ export default function SmartCityScene({
     });
     let buildingMesh: THREE.InstancedMesh | null = null;
     let buildingRecords: Building[] = [];
-    let buildingRoads: Road[] = [];
     const buildingBaseColors: THREE.Color[] = [];
 
     const loadBuildings = async () => {
       try {
         const response = await fetch("./beijing-buildings.json");
         if (!response.ok) throw new Error("building dataset unavailable");
-        const payload = (await response.json()) as { buildings: Building[]; roads?: Road[] };
+        const payload = (await response.json()) as { buildings: Building[] };
         if (disposed) return;
-        buildingRoads = Array.isArray(payload.roads) ? payload.roads.filter((road) => road.points.length >= 2) : [];
         const sourceRecords = payload.buildings.filter((item) => item.points.length >= 3).slice(0, 6200);
         const records = sourceRecords.filter(buildingFitsInsideMap);
         const mesh = new THREE.InstancedMesh(buildingGeometry, buildingMaterial, records.length);
@@ -1477,12 +1428,17 @@ export default function SmartCityScene({
       scene.add(vehicle);
       return vehicle;
     });
-    const vehicleRoutes = Array.from({ length: 54 }, (_, index) => ({
-      axis: index % 2,
-      lane: ROAD_COORDINATES[index % ROAD_COORDINATES.length] + (index % 3 - 1) * 1.15,
-      offset: (index * 31) % ROAD_LENGTH,
-      speed: 0.15 + (index % 7) * 0.017,
-    }));
+    const vehicleRoutes = Array.from({ length: 54 }, (_, index) => {
+      const lane = ROAD_COORDINATES[index % ROAD_COORDINATES.length] + (index % 3 - 1) * 1.15;
+      const length = mapChordLength(lane, CITY_GROUND_RADIUS - 16);
+      return {
+        axis: index % 2,
+        lane,
+        length,
+        offset: (index * 31) % length,
+        speed: 0.15 + (index % 7) * 0.017,
+      };
+    });
 
     applyModeRef.current = (night, lights) => {
       scene.background = new THREE.Color(night ? 0x123d5b : 0x4b8aa4);
@@ -1497,8 +1453,6 @@ export default function SmartCityScene({
       floorUniforms.uFloorOpacity.value = night ? 0.56 : 0.38;
       floorOrbitMaterial.color.setHex(night ? 0x50ddff : 0x328dcc);
       floorOrbitMaterial.opacity = night ? 0.72 : 0.48;
-      backgroundHorizonMaterial.color.setHex(night ? 0x47cfff : 0x8ee8ff);
-      backgroundHorizonMaterial.opacity = night ? 0.072 : 0.046;
       horizonGlowMaterial.color.setHex(night ? 0x3cd6ff : 0x7be8ff);
       horizonGlowMaterial.opacity = night ? 0.42 : 0.25;
       backgroundDustMaterial.color.setHex(night ? 0x6de5ff : 0xb4f2ff);
@@ -1615,18 +1569,18 @@ export default function SmartCityScene({
         const buildingId = building?.id ?? hit.instanceId + 1;
         const height = Math.round(building?.heightMeters || 16);
         const knownName = building?.name?.trim();
-        const buildingPhoto = photoForBuilding(building, buildingRoads);
-        const panoramaDescription = buildingPhoto.provider === "verified-local"
+        const buildingPhoto = photoForBuilding(building);
+        const photoDescription = buildingPhoto.provider === "verified-local"
           ? "当前显示与建筑编号核验过的本地实景照片。"
-          : `打开详情后将从${buildingPhoto.position?.roadName || "最近道路"}按该建筑坐标查询 KartaView 真实街景候选；结果会标明待人工核验。`;
+          : "严格重匹配已完成，但尚未找到能够证明为该建筑本体的开放许可照片；系统不会展示区域图、道路街景或同名候选冒充本体。";
         onSelect({
           id: `building-${buildingId}`,
           label: knownName || `北京 CBD 楼宇 BJ-${String(buildingId).padStart(6, "0")}`,
           category: knownName ? "北京三维建筑资产 · 公开名称" : "北京三维建筑资产 · 编号标识",
           details: knownName
-            ? `公开地图数据标注名称为“${knownName}”，建筑高度约 ${height} 米。${panoramaDescription}`
-            : `公开地图数据暂未标注该楼宇名称，系统以唯一资产编号和地理坐标匹配实景。建筑高度约 ${height} 米。${panoramaDescription}`,
-          meta: `资产编号 BJ-${String(buildingId).padStart(6, "0")} · 高度 ${height} m · ${buildingPhoto.provider === "verified-local" ? "实景已核验" : "实景按需查询"}`,
+            ? `公开地图数据标注名称为“${knownName}”，建筑高度约 ${height} 米。${photoDescription}`
+            : `公开地图数据暂未标注该楼宇名称，系统仅保留唯一资产编号与建筑中心坐标。建筑高度约 ${height} 米。${photoDescription}`,
+          meta: `资产编号 BJ-${String(buildingId).padStart(6, "0")} · 高度 ${height} m · ${buildingPhoto.provider === "verified-local" ? "本体实景已核验" : "严格重匹配：暂无合格照片"}`,
           photo: buildingPhoto,
         });
         return;
@@ -1721,7 +1675,7 @@ export default function SmartCityScene({
         const vehicle = dashboardVehicles[index];
         vehicle.visible = index < count;
         if (index >= count) return;
-        const progress = (route.offset + elapsed * route.speed * 30) % ROAD_LENGTH - ROAD_LENGTH / 2;
+        const progress = (route.offset + elapsed * route.speed * 30) % route.length - route.length / 2;
         const x = route.axis ? progress : route.lane;
         const z = route.axis ? route.lane : progress;
         vehicle.position.set(x, 1.46, z);

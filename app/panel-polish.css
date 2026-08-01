@@ -953,7 +953,7 @@
   text-decoration:none;
 }
 .data-detail-photo figcaption>a:hover{color:#d8fbff;text-decoration:underline}
-.data-detail-photo[data-photo-provider="kartaview"] figcaption>b{border-color:#4fdba9;background:#103d37;color:#a7ffe1}
+.data-detail-photo[data-photo-provider="unmatched"] figcaption>b{border-color:#f59e0b;background:#3a2b10;color:#ffe6a7}
 .data-detail-photo-position{color:#6fd9e6!important;font-family:Consolas,monospace}
 .data-detail-photo-empty{
   display:flex;

@@ -7,7 +7,9 @@
   },
   "scripts": {
     "dev": "vinext dev",
-    "build": "vinext build",
+    "build": "npm run map:build && npm run sc-datav:build && vinext build",
+    "map:build": "npm --prefix three-scope-map-vue run build && node scripts/sync-three-map.mjs",
+    "sc-datav:build": "npm --prefix beijing-sc-datav run build && node scripts/sync-sc-datav.mjs",
     "start": "vinext start",
     "offline:build": "node scripts/build-offline-demo.mjs",
     "ai:evaluate": "node scripts/evaluate-ai-model.mjs",

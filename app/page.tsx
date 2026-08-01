@@ -38,6 +38,14 @@ type ScenarioStatus="idle"|"playing"|"paused"|"complete";
 type LocalUser={username:string;displayName:string;department:string;passwordHash:string};
 type AuthSession={username:string;displayName:string};
 
+function BrandMark({className=""}:{className?:string}){
+  return <span className={`auth-brand-mark ${className}`} aria-label="灵境哨兵城市守护标识">
+    {/* SVG brand assets remain relative so the offline package and GitHub Pages use the same file. */}
+    {/* eslint-disable-next-line @next/next/no-img-element */}
+    <img src="./lingjing-sentinel-mark.svg" alt="" />
+  </span>;
+}
+
 const hashPassword=async(value:string)=>{
   const bytes=new TextEncoder().encode(value),digest=await crypto.subtle.digest("SHA-256",bytes);
   return Array.from(new Uint8Array(digest)).map(byte=>byte.toString(16).padStart(2,"0")).join("");
@@ -88,7 +96,7 @@ function AuthPortal({onAuthenticated}:{onAuthenticated:(session:AuthSession,reme
 
   return <main className="auth-shell">
     <div className="auth-grid"/><div className="auth-glow auth-glow-a"/><div className="auth-glow auth-glow-b"/>
-    <header className="auth-topbar"><div className="auth-brand-mark"><i/><i/><i/></div><div><b>京域智城</b><span>BEIJING SMART CITY DIGITAL TWIN</span></div><em><i/>北京市城市运行管理中心</em></header>
+    <header className="auth-topbar"><BrandMark/><div><b>京域智城</b><span>BEIJING SMART CITY DIGITAL TWIN</span></div><em><i/>北京市城市运行管理中心</em></header>
     <section className="auth-layout">
       <div className="auth-hero">
         <div className="auth-kicker"><i/>北京城市数字孪生统一入口</div>
@@ -311,14 +319,14 @@ export default function Home() {
   const toggleFullscreen=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();setSystemNotice(document.fullscreenElement?"已进入全屏演示":"已退出全屏演示")}catch{setSystemNotice("当前浏览器未允许全屏，请使用 F11")}};
   const logout=()=>{if(platformView==="emergency"&&(scenarioStatus==="playing"||scenarioStatus==="paused")&&!window.confirm("当前推演尚未结束，退出将中止本次演示。确定退出吗？"))return;localStorage.removeItem("lingjing-session");sessionStorage.removeItem("lingjing-session");setAccountMenuOpen(false);setDemoEntryOpen(false);setActiveModule("overview");setSceneStatus("loading");setPlatformView("city");setCurrentUser(null)};
 
-  if(!authChecked)return <main className="auth-boot"><div className="auth-brand-mark"><i/><i/><i/></div><span>安全环境初始化中</span></main>;
+  if(!authChecked)return <main className="auth-boot"><BrandMark/><span>安全环境初始化中</span></main>;
   if(!currentUser)return <AuthPortal onAuthenticated={handleAuthenticated}/>;
   if(platformView==="city")return <SmartCityDashboard displayName={currentUser.displayName} onLogout={logout} onOpenDemo={()=>{setDemoEntryOpen(false);setActiveModule("overview");setSceneStatus("loading");setPlatformView("emergency")}}/>;
 
   return (
     <main className="shell emergency-shell">
       <header className="topbar">
-        <div className="brand-mark"><i /><i /><i /></div>
+        <BrandMark className="emergency-brand-mark" />
         <div className="brand"><b>京域智城</b><span>北京智慧城市 3D 大屏 · SMART CITY DIGITAL TWIN</span></div>
         <nav aria-label="主功能导航">{navigation.map(item=><button key={item.id} className={activeModule===item.id&&!demoEntryOpen?"active":""} aria-current={activeModule===item.id&&!demoEntryOpen?"page":undefined} onClick={()=>{setDemoEntryOpen(false);setActiveModule(item.id);setAccountMenuOpen(false)}}>{item.label}</button>)}<button className="demo-nav" onClick={()=>{setDemoEntryOpen(false);setPlatformView("city");setAccountMenuOpen(false)}}>返回智慧城市</button></nav>
         <div className="status"><span className="live-dot" />系统在线 <em>{currentUser.displayName}</em><button className={`avatar ${accountMenuOpen?"open":""}`} onClick={()=>setAccountMenuOpen(value=>!value)} title="打开账号菜单" aria-label="打开账号菜单" aria-expanded={accountMenuOpen} aria-haspopup="menu" aria-controls="account-menu">{currentUser.displayName.slice(0,1)}</button>{accountMenuOpen&&<div className="account-menu" id="account-menu" role="menu"><header><i>{currentUser.displayName.slice(0,1)}</i><div><strong>{currentUser.displayName}</strong><span>{currentUser.username} · 应急指挥中心</span></div></header><button onClick={toggleFullscreen}><span>⛶ 全屏演示</span><b>{typeof document!=="undefined"&&document.fullscreenElement?"退出":"进入"}</b></button><button onClick={()=>{setDirectorMode(value=>!value);setSystemNotice(directorMode?"导演视角已关闭":"导演视角已开启")}}><span>◉ 导演视角</span><b>{directorMode?"开启":"关闭"}</b></button><button onClick={()=>setSystemNotice("快捷键：1–4 切换模块　空格暂停/继续　→ 下一阶段　Esc 返回")}><span>? 演示快捷键</span><b>查看</b></button><button onClick={()=>setSystemNotice(sceneStatus==="ready"?"系统自检通过：真实地图、路网、AI 模型和调度模块均已就绪":sceneStatus==="loading"?"系统自检进行中：真实路网仍在加载":"系统自检警告：真实路网已启用内置降级路线")}><span>✓ 演示自检</span><b>{sceneStatus==="ready"?"通过":sceneStatus==="loading"?"检测中":"降级"}</b></button><button onClick={()=>{setNightMode(value=>!value);setSystemNotice(nightMode?"已切换为白天态势":"已切换为夜间态势")}}><span>◐ 显示模式</span><b>{nightMode?"夜间":"白天"}</b></button><button onClick={()=>{setBuildingLights(value=>!value);setSystemNotice(buildingLights?"已关闭楼宇灯光":"已开启楼宇灯光")}}><span>✦ 楼宇灯光</span><b>{buildingLights?"开启":"关闭"}</b></button><button onClick={()=>{setActiveModule("resources");setAccountMenuOpen(false)}}><span>⌘ 快速调度</span><b>进入</b></button><button className="logout" onClick={logout}><span>↪ 退出登录</span><b>EXIT</b></button></div>}</div>

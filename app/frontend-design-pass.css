@@ -1,0 +1,141 @@
+/* Frontend-design pass: 北京城市脉冲视觉系统 */
+:root{
+  --pulse-ink:#071b2a;
+  --pulse-cyan:#24d8e5;
+  --pulse-blue:#2f7cff;
+  --pulse-amber:#ffb44a;
+  --pulse-paper:#eafbff;
+  --pulse-muted:#86aab7;
+  --pulse-display:"Microsoft YaHei UI","Arial Narrow",sans-serif;
+  --pulse-data:"Bahnschrift SemiCondensed","DIN Alternate",Consolas,monospace;
+}
+
+/* Typography is part of the command language, not decoration. */
+.auth-shell,.future-city,.emergency-shell{font-family:var(--pulse-display)}
+.future-city strong,.future-city time,.future-city [class*="metric"],
+.emergency-shell time,.emergency-shell [class*="metric"],.emergency-shell .camera,
+.auth-metrics strong{font-family:var(--pulse-data)}
+
+/* Signature: one state-bearing pulse axis travels through every product surface. */
+.auth-shell::after,.future-city::after,.emergency-shell::after{
+  content:"";position:absolute;z-index:3;pointer-events:none;
+  background:linear-gradient(90deg,transparent 0 3%,var(--pulse-cyan) 12%,var(--pulse-blue) 50%,var(--pulse-cyan) 88%,transparent 97%);
+  height:2px;left:4vw;right:4vw;top:87px;opacity:.78;
+  box-shadow:0 0 14px #24d8e568;
+  transform-origin:center;
+  animation:city-pulse-axis 5.4s ease-in-out infinite;
+}
+.future-city::after{top:75px;left:18%;right:18%;height:1px;z-index:8}
+.emergency-shell::after{top:58px;left:12px;right:12px;height:1px}
+@keyframes city-pulse-axis{0%,100%{opacity:.38;transform:scaleX(.82)}50%{opacity:.95;transform:scaleX(1)}}
+
+/* Login: a civic threshold, with one decisive entrance instead of generic glass. */
+.auth-shell{
+  background:
+    linear-gradient(90deg,#03101ac7 0%,#06172576 43%,#061522b8 69%,#020a12e8 100%),
+    linear-gradient(180deg,#06152166 0%,transparent 45%,#020811c4 100%),
+    url("../login-beijing-pulse.png") center 42%/cover no-repeat fixed;
+  background-color:#071b2a;
+}
+.auth-shell::before{border-color:#24d8e51f;box-shadow:0 0 0 8vw #2f7cff08,0 0 0 16vw #24d8e506,0 0 100px #24d8e512}
+.auth-topbar{height:88px;border-bottom:0}
+.auth-topbar>div:nth-child(2) b{font-size:25px;font-weight:780;letter-spacing:7px}
+.auth-topbar>div:nth-child(2) span{color:#79a9b6;font-family:var(--pulse-data);letter-spacing:2.7px}
+.auth-hero{border-left:2px solid #24d8e54f;padding-left:28px}
+.auth-hero h1{max-width:650px;font-weight:800;letter-spacing:1px;text-wrap:balance}
+.auth-hero h1 span{background-image:linear-gradient(90deg,#8df8ff,#45bfff 62%,#81f4d3)}
+.auth-hero>p{color:#b4cbd2;font-size:15px;line-height:1.9}
+.auth-kicker{border:0;border-left:3px solid var(--pulse-amber);background:#071a27d9;color:#c6edf1;padding:9px 14px}
+.auth-kicker i{background:var(--pulse-amber);box-shadow:0 0 10px #ffb44a}
+.auth-card{border:1px solid #39677a;background:linear-gradient(155deg,#0b2130f2,#06121cf7 68%);box-shadow:0 32px 90px #000d,0 0 0 1px #92f7ff0a inset;padding:38px 44px 26px}
+.auth-card::before{border-color:var(--pulse-amber);width:48px;height:48px}
+.auth-card::after{border-color:var(--pulse-blue);width:48px;height:48px}
+.auth-card-line{background:linear-gradient(90deg,var(--pulse-amber),var(--pulse-cyan),transparent);box-shadow:none;left:0;right:38%;height:3px}
+.auth-tabs button{font-size:14px;font-weight:700;color:#7898a3}
+.auth-tabs button.active{color:var(--pulse-paper)}
+.auth-tabs button.active::after{background:var(--pulse-amber);box-shadow:none}
+.auth-heading h2{font-size:26px;font-weight:760;line-height:1.35}
+.auth-heading p,.auth-card label>span{font-size:12px;color:#85a5af}
+.auth-input{height:52px;border-color:#315363;background:#06131d}
+.auth-input:focus-within{border-color:var(--pulse-cyan);box-shadow:3px 0 0 var(--pulse-amber),0 0 22px #24d8e514}
+.auth-input input,.auth-input select{font-size:14px}
+.auth-submit{height:54px;border:0;border-left:4px solid var(--pulse-amber);background:linear-gradient(90deg,#155b73,#147e98 58%,#176e89);font-size:14px;box-shadow:0 14px 30px #00101999}
+.auth-submit:hover{filter:none;background:linear-gradient(90deg,#1b718c,#1697b1 58%,#237fc0)}
+.auth-demo{border-style:solid;border-color:#345362;color:#83a7b0;font-size:11px}
+
+/* City screen: reinforce hierarchy and let the map remain the hero. */
+.future-city{--panel-outline:#315b70}
+.future-header{background:linear-gradient(90deg,#071b2ae8,#0b2b3ce8 52%,#071b2ae8);border-bottom:1px solid #38687a}
+.future-brand-symbol{transform:none!important;border:0!important;background:url("../lingjing-sentinel-mark.svg") center/contain no-repeat;filter:drop-shadow(0 0 10px #24d8e55f)}
+.future-brand-symbol>*{display:none!important}
+.future-brand-copy strong{font-size:25px!important;font-weight:800!important;letter-spacing:4px!important}
+.future-title{font-size:27px!important;font-weight:780!important;letter-spacing:2px!important;text-shadow:0 2px 14px #000!important}
+.future-nav button{min-width:142px;font-size:14px!important;letter-spacing:.8px!important}
+.future-nav button i{color:#67a4b4!important;font-family:var(--pulse-data)}
+.future-nav button.active{background:linear-gradient(90deg,#15465a,#17677a)!important;color:#fff!important;border-bottom:2px solid var(--pulse-amber)!important}
+.future-panel{background:linear-gradient(145deg,#092131f2,#071925f4)!important;border-color:#31586b!important;box-shadow:0 14px 28px #00101d66!important}
+.future-panel>header{border-bottom-color:#31566a!important;background:linear-gradient(90deg,#103548,#0b2230)!important}
+.future-panel>header>span{color:var(--pulse-amber)!important;font:700 13px var(--pulse-data)!important}
+.future-panel>header b{font-size:16px!important;letter-spacing:.6px!important;color:#f0fdff!important}
+.future-panel>header em{font-size:9px!important;color:#75b3c0!important}
+.future-column.left .future-panel:nth-child(2)>header{border-left:3px solid var(--pulse-amber)}
+.future-column.left .future-panel:nth-child(3)>header{border-left:3px solid #58dda7}
+.future-column.right .future-panel:nth-child(1)>header{border-left:3px solid #8a83ff}
+.future-column.right .future-panel:nth-child(2)>header{border-left:3px solid var(--pulse-amber)}
+.future-column.right .future-panel:nth-child(3)>header{border-left:3px solid var(--pulse-blue)}
+.future-map-head{background:linear-gradient(90deg,#0b3040f2,#0a1f2bf2)!important;border-bottom:1px solid #3c6978!important}
+.future-map-head strong{font-size:15px!important}
+.future-demo-entry{border-color:#8d6338!important;background:linear-gradient(140deg,#342312f0,#161c27f5)!important;box-shadow:0 16px 34px #000a!important}
+.future-demo-entry::before{background:linear-gradient(90deg,var(--pulse-amber),transparent)!important}
+.future-demo-entry strong{font-size:24px!important;color:#fff7e8!important}
+
+/* Emergency: the incident state outranks chrome and secondary statistics. */
+.emergency-shell{background:radial-gradient(circle at 50% 36%,#10344a 0,#071923 48%,#040d13 100%)}
+.emergency-shell .topbar{background:#071a25e8;border-bottom:1px solid #3a6372}
+.emergency-brand-mark{width:43px;height:43px;margin-left:2px}
+.emergency-shell .brand b{font-size:21px;font-weight:800;letter-spacing:3px;color:var(--pulse-paper)}
+.emergency-shell .brand span{color:#76a2ae;letter-spacing:1.4px}
+.emergency-shell .topbar nav button{font-size:12px;font-weight:650;padding-inline:15px}
+.emergency-shell .topbar nav button.active{color:#fff;border-bottom:2px solid var(--pulse-amber);background:#153342}
+.command-strip{background:linear-gradient(90deg,#0b2938,#102f3d 58%,#0a202d)!important;border-color:#3c6674!important;box-shadow:0 12px 26px #0007}
+.command-strip .alert-tag{border-left:4px solid var(--pulse-amber)!important;background:#2d2118!important;color:#ffd697!important;font:700 11px var(--pulse-data)!important}
+.command-strip strong{font-size:15px!important;color:#f1fcff!important}
+.command-strip span{font-size:10px!important;color:#8eb0b9!important}
+.command-actions button{border:0!important;border-left:3px solid var(--pulse-amber)!important;background:#176b7d!important;font-weight:750!important;color:#fff!important}
+.emergency-shell .panel{border-color:#325665!important;background:#071923f2!important;box-shadow:0 14px 30px #0008!important}
+.emergency-shell .panel-title{font-size:14px!important;font-weight:750!important;background:linear-gradient(90deg,#103344,#0a202c)!important;border-bottom:1px solid #315563!important}
+.emergency-shell .panel-title>span{color:var(--pulse-amber)!important;font-family:var(--pulse-data)!important}
+.emergency-shell .panel-title b{color:#72c4d1!important;font-size:9px!important}
+.emergency-shell button:focus-visible,.future-city button:focus-visible{outline:2px solid var(--pulse-amber)!important;outline-offset:2px}
+
+@media(max-width:980px){
+  .auth-shell::after{top:71px;left:24px;right:24px}
+  .auth-hero{border-left:0;padding-left:0}
+  .future-nav button{min-width:112px}
+}
+@media(max-width:600px){
+  .auth-card{padding:28px 22px 20px}
+  .auth-card-line{right:45%}
+  .auth-heading h2{font-size:22px}
+  .future-city::after{top:68px}
+}
+@media(prefers-reduced-motion:reduce){
+  .auth-shell::after,.future-city::after,.emergency-shell::after{animation:none}
+  .auth-radar{animation:none}
+}
+
+/* Integrated Beijing district HUD map: the Vue/Three.js skill renderer lives
+   inside the existing React command screen without replacing the old scene. */
+.scene-map-switch{display:flex;gap:4px;padding:3px;border:1px solid #315363;background:#06131dd9}
+.scene-map-switch button{min-height:30px;padding:0 13px;border:0;background:transparent;color:#7da4af;font:700 11px var(--pulse-data);letter-spacing:.8px;cursor:pointer}
+.scene-map-switch button.active{background:linear-gradient(90deg,#e8ff4f24,#24d8e51c);color:#efffc1;box-shadow:inset 2px 0 #e8ff4f}
+.beijing-scope-map{position:absolute;inset:0;z-index:1;overflow:hidden;background:radial-gradient(ellipse at 50% 46%,#14536d 0%,#08283c 48%,#03111d 100%)}
+.beijing-scope-map::before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,#61d7f00a 1px,transparent 1px),linear-gradient(#61d7f00a 1px,transparent 1px);background-size:42px 42px;mask-image:radial-gradient(ellipse at center,#000 18%,transparent 88%)}
+.beijing-scope-map iframe{position:relative;z-index:1;display:block;width:100%;height:100%;border:0;background:transparent;opacity:0;transition:opacity .35s ease}
+.beijing-scope-map.is-ready iframe{opacity:1}
+.beijing-scope-loader{position:absolute;inset:0;z-index:2;display:grid;place-content:center;gap:14px;color:#dff58d;font:700 12px var(--pulse-data);letter-spacing:1.8px;background:radial-gradient(circle at center,#12475d 0%,#061c2a 48%,#020b13 100%)}
+.beijing-scope-loader i{justify-self:center;width:34px;height:34px;border:1px solid #e8ff4f4a;border-top-color:#e8ff4f;border-radius:50%;animation:scope-loader-spin .8s linear infinite}
+.future-scene .is-hidden{display:none!important}
+@keyframes scope-loader-spin{to{transform:rotate(360deg)}}
+@media(max-width:900px){.scene-map-switch button{padding:0 8px;font-size:9px}}
+@media(prefers-reduced-motion:reduce){.beijing-scope-map iframe{transition:none}.beijing-scope-loader i{animation:none}}

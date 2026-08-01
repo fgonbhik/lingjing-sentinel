@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+**/node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -37,7 +38,21 @@ yarn-error.log*
 # typescript
 next-env.d.ts
 /dist/
+**/dist/
 /.wrangler/
 /outputs/
 /work/
 /deliverables/
+
+# local Codex/skill/reference caches
+/.agents/
+/.pnpm-store/
+/.reference/
+/runtime/
+/skills-lock.json
+/audit/
+
+# generated development caches
+**/__pycache__/
+*.pyc
+*.tsbuildinfo

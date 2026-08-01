@@ -38,6 +38,36 @@ test("比赛入口合同：登录后先进入新北京智慧城市大屏", async
   assert.match(dashboard, /future-demo-card/);
 });
 
+test("品牌图标合同：浏览器与登录入口使用统一的原创城市守护标识", async () => {
+  const [page, layout, favicon, mark] = await Promise.all([
+    read("app/page.tsx"),
+    read("app/layout.tsx"),
+    read("public/favicon.svg"),
+    read("public/lingjing-sentinel-mark.svg"),
+  ]);
+  assert.match(page, /function BrandMark/);
+  assert.match(page, /lingjing-sentinel-mark\.svg/);
+  assert.match(layout, /favicon\.svg/);
+  assert.match(favicon, /<svg[\s\S]*shield/);
+  assert.match(mark, /灵境哨兵城市守护标识/);
+});
+
+test("前端设计合同：城市脉冲视觉系统覆盖三类界面并尊重减少动态效果", async () => {
+  const [layout, page, design] = await Promise.all([
+    read("app/layout.tsx"),
+    read("app/page.tsx"),
+    read("app/frontend-design-pass.css"),
+  ]);
+  assert.match(layout, /frontend-design-pass\.css/);
+  assert.match(page, /emergency-brand-mark/);
+  assert.match(design, /--pulse-amber:#ffb44a/);
+  assert.match(design, /\.auth-shell::after,\.future-city::after,\.emergency-shell::after/);
+  assert.match(design, /prefers-reduced-motion:reduce/);
+  assert.match(design, /button:focus-visible/);
+  assert.match(design, /login-beijing-pulse\.png/);
+  await access(new URL("../public/login-beijing-pulse.png", import.meta.url));
+});
+
 test("三维动画合同：首帧时间不得产生负数曲线采样", async () => {
   const scene = await read("app/SmartCityScene.tsx");
   assert.match(scene, /Math\.max\(0,\s*\(time - startTime\) \/ 1000\)/);
@@ -99,8 +129,13 @@ test("清晰写实合同：日夜场景兼顾可读性和克制泛光", async ()
   assert.match(dashboardScene, /const CITY_SKY_RADIUS = 680/);
   assert.match(dashboardScene, /new THREE\.CircleGeometry\(CITY_GROUND_RADIUS, 224\)/);
   assert.match(dashboardScene, /new THREE\.SphereGeometry\(CITY_SKY_RADIUS, 40, 24\)/);
-  assert.match(dashboardScene, /backgroundHorizon/);
+  assert.doesNotMatch(dashboardScene, /backgroundHorizon/);
   assert.match(dashboardScene, /backgroundDustPositions/);
+  assert.match(dashboardScene, /function mapChordLength\(offset: number/);
+  assert.match(dashboardScene, /const roadLength = mapChordLength\(x\)/);
+  assert.match(dashboardScene, /const roadLength = mapChordLength\(z\)/);
+  assert.match(dashboardScene, /mapChordLength\(-216, CITY_GROUND_RADIUS - 32\)/);
+  assert.match(dashboardScene, /% route\.length - route\.length \/ 2/);
   assert.match(dashboardScene, /new THREE\.TextureLoader\(\)\.load\("\.\/beijing-map-base\.jpg"\)/);
   assert.match(dashboardScene, /emissiveMap: cityMapTexture/);
   assert.match(dashboardScene, /uniform float uSkyTime/);
@@ -135,7 +170,7 @@ test("视觉层级合同：科幻背景、地图裁剪和独特交互框架完�
     read("app/reference-operations.css"),
   ]);
   assert.match(dashboard, /future-atmosphere/);
-  assert.match(dashboard, /5,275 栋地图内建筑在线/);
+  assert.match(dashboard, /5,272 栋地图内建筑在线/);
   assert.match(scene, /districtZones/);
   assert.match(scene, /facadeFins/);
   assert.match(scene, /facadeRails/);
@@ -159,7 +194,7 @@ test("视觉层级合同：科幻背景、地图裁剪和独特交互框架完�
   assert.match(scene, /ground\.receiveShadow = false/);
   assert.match(scene, /cityMapTexture\.anisotropy = renderer\.capabilities\.getMaxAnisotropy\(\)/);
   assert.doesNotMatch(scene, /floorUniforms\.uFloorTime\.value = elapsed/);
-  assert.doesNotMatch(scene, /backgroundHorizon\.rotation\.y = elapsed/);
+  assert.doesNotMatch(scene, /backgroundHorizon/);
   assert.doesNotMatch(scene, /backgroundDust\.rotation\.y = -elapsed/);
   assert.doesNotMatch(scene, /float scanRadius = mod\(uFloorTime/);
   assert.match(scene, /CITY_BUILDING_LIMIT = CITY_GROUND_RADIUS - 8/);
@@ -237,34 +272,43 @@ test("关键演示能力合同：数据详情、封路重规划和报告仍存�
   assert.match(dataDialog, /role="dialog"/);
 });
 
-test("建筑实景合同：本地核验照片优先，KartaView 按建筑坐标独立查询且不冒充已核验", async () => {
+test("建筑实景合同：全部建筑执行严格重匹配，未核验候选不得进入本体主图", async () => {
   const [scene, dialog] = await Promise.all([
     read("app/SmartCityScene.tsx"),
     read("app/DataDetailDialog.tsx"),
   ]);
-  assert.match(scene, /photoForBuilding\(building, buildingRoads\)/);
+  assert.match(scene, /photoForBuilding\(building\)/);
   assert.match(scene, /verifiedBuildingPhotos\[building\.id\]/);
-  assert.match(scene, /createKartaViewPhoto\(building, roads\)/);
-  assert.match(scene, /closestStreetViewPoint/);
+  assert.match(scene, /78744949:/);
+  assert.match(scene, /116944490:/);
+  assert.match(scene, /建筑编号、名称、坐标与照片主体已人工核验/);
+  assert.match(scene, /createUnmatchedPhoto\(building\)/);
+  assert.match(scene, /provider: "unmatched"/);
   assert.match(scene, /localPointToWgs84/);
-  assert.match(scene, /api\.openstreetcam\.org\/2\.0\/photo/);
-  assert.match(scene, /radius: "160"/);
-  assert.match(scene, /lookupUrl/);
+  assert.match(scene, /严格重匹配完成 · 未通过本体核验/);
+  assert.match(scene, /已排除区域图、道路街景、同名搜索结果和未确认候选/);
   assert.match(scene, /公开地图数据暂未标注该楼宇名称/);
-  assert.match(scene, /建筑坐标独立检索 · 待人工核验/);
+  assert.match(scene, /暂无合格照片/);
+  assert.doesNotMatch(scene, /api\.openstreetcam\.org\/2\.0\/photo/);
+  assert.doesNotMatch(scene, /commons\.wikimedia\.org\/w\/api\.php/);
+  assert.doesNotMatch(scene, /commonsLookupUrl|lookupUrl|commonsSearchLabel/);
   assert.doesNotMatch(scene, /baidu|百度/i);
   assert.doesNotMatch(scene, /createBuildingSnapshot|buildingSnapshotCache|数字孪生模型快照/);
   assert.doesNotMatch(scene, /return buildingPhotoCatalog\.cbd/);
   assert.match(dialog, /data-detail-photo/);
   assert.match(dialog, /data-asset-id/);
-  assert.match(dialog, /parseKartaViewPhoto/);
-  assert.match(dialog, /点击查看真实街景/);
+  assert.match(dialog, /暂无已核验本体照片/);
+  assert.match(dialog, /严格重匹配记录 · 等待人工核验素材/);
+  assert.match(dialog, /查看已核验本体照片/);
   assert.match(dialog, /图片授权与原始来源/);
-  assert.match(dialog, /该建筑附近暂无 KartaView 街景覆盖/);
-  assert.match(dialog, /系统不会使用其他建筑照片替代/);
+  assert.doesNotMatch(dialog, /parseKartaViewPhoto|parseWikimediaCommonsPhoto/);
+  assert.doesNotMatch(dialog, /点击查看真实影像|Wikimedia Commons 名称匹配|KartaView 附近街景候选/);
   await Promise.all([
     access(new URL("../KARTAVIEW_STREET_IMAGERY.md", import.meta.url)),
+    access(new URL("../BUILDING_PHOTO_MANUAL_AUDIT.md", import.meta.url)),
     access(new URL("../public/building-photos/beijing-cbd-day.jpg", import.meta.url)),
+    access(new URL("../public/building-photos/beijing-poly-theatre.jpg", import.meta.url)),
+    access(new URL("../public/building-photos/china-world-tower-iii.jpg", import.meta.url)),
     access(new URL("../public/building-photos/china-world.jpg", import.meta.url)),
     access(new URL("../public/building-photos/cctv-headquarters.jpg", import.meta.url)),
   ]);
@@ -301,6 +345,8 @@ test("离线交付合同：模型、地图与相对静态资源全部可用", as
     access(new URL("../offline-demo/models/ort-wasm-simd-threaded.wasm", import.meta.url)),
     access(new URL("../offline-demo/ai-benchmark/fire-01-campfire-flames.jpg", import.meta.url)),
     access(new URL("../offline-demo/building-photos/beijing-cbd-day.jpg", import.meta.url)),
+    access(new URL("../offline-demo/building-photos/beijing-poly-theatre.jpg", import.meta.url)),
+    access(new URL("../offline-demo/building-photos/china-world-tower-iii.jpg", import.meta.url)),
     access(new URL("../offline-demo/building-photos/china-world.jpg", import.meta.url)),
     access(new URL("../offline-demo/building-photos/cctv-headquarters.jpg", import.meta.url)),
   ]);
@@ -406,4 +452,65 @@ test("数据详情差异化合同：每类可点击卡片拥有独立结构、�
   assert.match(styles, /\.detail-district-rank/);
   assert.match(styles, /overflow:hidden/);
   assert.match(layout, /detail-dialogs\.css/);
+});
+
+test("北京区县 HUD 地图应与原城市建筑大屏并存", async () => {
+  const [dashboard, wrapper, adapter, theme] = await Promise.all([
+    read("app/SmartCityDashboard.tsx"),
+    read("app/BeijingScopeMap.tsx"),
+    read("three-scope-map-vue/src/components/map/mapDataAdapter.ts"),
+    read("three-scope-map-vue/src/components/map/mapTheme.ts"),
+  ]);
+  assert.match(dashboard, /BeijingScopeMap/);
+  assert.match(dashboard, /北京区县 HUD/);
+  assert.match(dashboard, /城市建筑/);
+  assert.match(wrapper, /three-scope-map\/index\.html/);
+  assert.match(adapter, /scope:\s*'city'/);
+  assert.match(adapter, /code:\s*'110000'/);
+  assert.match(theme, /MAP_THEME_PRIMARY\s*=\s*'#E8FF4F'/);
+  await access(new URL("public/three-scope-map/index.html", root));
+});
+
+test("北京 SC-DATAV 驾驶舱使用独立 R3F 渲染器并保留原地图入口", async () => {
+  const [dashboard, datav, wrapper, renderer, styles, notices, layout] = await Promise.all([
+    read("app/SmartCityDashboard.tsx"),
+    read("app/BeijingDataVPlatform.tsx"),
+    read("app/ScDataVBeijingMap.tsx"),
+    read("beijing-sc-datav/src/App.tsx"),
+    read("app/beijing-datav.css"),
+    read("THIRD_PARTY_NOTICES.md"),
+    read("app/layout.tsx"),
+  ]);
+  assert.match(dashboard, /BeijingDataVPlatform/);
+  assert.match(dashboard, /index === 1 \? "datav" : "command"/);
+  assert.match(dashboard, /datav-fullscreen/);
+  assert.match(datav, /北京城市数据可视化驾驶舱/);
+  assert.match(datav, /ScDataVBeijingMap/);
+  assert.doesNotMatch(datav, /BeijingScopeMap/);
+  assert.match(wrapper, /beijing-sc-datav\/index\.html/);
+  assert.match(renderer, /@react-three\/fiber/);
+  assert.match(renderer, /beijingData/);
+  assert.match(renderer, /SweepSideMaterial/);
+  assert.match(renderer, /OrbitControls/);
+  assert.match(renderer, /SATELLITE_TILE/);
+  assert.match(renderer, /SATELLITE_SOURCE/);
+  assert.match(renderer, /webst01\.is\.autonavi\.com/);
+  assert.match(renderer, /createOfflineTerrainTexture/);
+  assert.match(renderer, /卫星影像/);
+  assert.match(renderer, /地形晕渲/);
+  assert.match(renderer, /科技底图/);
+  assert.match(renderer, /影像 © 高德地图/);
+  assert.match(datav, /进入灵境哨兵演示/);
+  assert.match(datav, /纯净地图模式/);
+  assert.match(styles, /\.bj-datav-grid/);
+  assert.match(styles, /\.bj-datav\.is-pure/);
+  assert.match(styles, /height:100%/);
+  assert.match(styles, /html:has\(\.future-city\.datav-fullscreen\)/);
+  assert.match(styles, /future-city\.datav-fullscreen>\.future-header/);
+  assert.match(notices, /knight-L\/sc-datav/);
+  assert.match(notices, /Apache License 2\.0/);
+  assert.match(notices, /knight-L\/sat-hunter/);
+  assert.match(layout, /beijing-datav\.css/);
+  await access(new URL("public/beijing-sc-datav/index.html", root));
+  await access(new URL("beijing-sc-datav/public/tiles/8/210/95.jpg", root));
 });
