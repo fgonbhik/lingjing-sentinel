@@ -6,6 +6,7 @@ import ScDataVBeijingMap from "./ScDataVBeijingMap";
 
 type Props = {
   onBack: () => void;
+  onOpenLegacyGovernance: () => void;
   onOpenDemo: () => void;
 };
 
@@ -20,7 +21,7 @@ const districtRows = [
 const hourlyFlow = [32, 39, 47, 45, 58, 67, 73, 64, 81, 76, 62, 55];
 const governance = [86, 92, 89, 96, 91, 94, 97];
 
-export default function BeijingDataVPlatform({ onBack, onOpenDemo }: Props) {
+export default function BeijingDataVPlatform({ onBack, onOpenLegacyGovernance, onOpenDemo }: Props) {
   const [pureMode, setPureMode] = useState(false);
   const [activeMetric, setActiveMetric] = useState("城市治理");
   const [activeDistrict, setActiveDistrict] = useState("朝阳区");
@@ -41,6 +42,7 @@ export default function BeijingDataVPlatform({ onBack, onOpenDemo }: Props) {
           <p>真实区县边界 · 三维地图 · 多图表联动 · 城市治理专题</p>
         </div>
         <div className="bj-datav-actions">
+          <button type="button" className="legacy" onClick={onOpenLegacyGovernance}>进入原城市治理</button>
           <button type="button" className={streaming ? "active" : ""} onClick={() => setStreaming((value) => !value)}>
             <i />{streaming ? "实时数据接入" : "数据流已暂停"}
           </button>

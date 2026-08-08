@@ -501,6 +501,9 @@ test("北京 SC-DATAV 驾驶舱使用独立 R3F 渲染器并保留原地图入�
   assert.match(renderer, /科技底图/);
   assert.match(renderer, /影像 © 高德地图/);
   assert.match(datav, /进入灵境哨兵演示/);
+  assert.match(datav, /进入原城市治理/);
+  assert.match(dashboard, /onOpenLegacyGovernance/);
+  assert.match(dashboard, /城市建筑、事件详情与原有交互已恢复/);
   assert.match(datav, /纯净地图模式/);
   assert.match(styles, /\.bj-datav-grid/);
   assert.match(styles, /\.bj-datav\.is-pure/);

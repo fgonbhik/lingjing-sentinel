@@ -246,6 +246,20 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
             setActiveNav(navItems[0]);
             resetView();
           }}
+          onOpenLegacyGovernance={() => {
+            setPlatformMode("command");
+            setActiveNav(navItems[1]);
+            setMapMode("buildings");
+            setAutoTour(false);
+            openInsight(
+              "navigation-1",
+              "城市治理专题",
+              "城市治理",
+              "展示城市事件发现、派单、处置与闭环情况，当前重点事件闭环率为 96.8%。",
+              "事件闭环率 96.8% · 平均响应 4.2 分钟",
+            );
+            showTip("已返回原城市治理 · 城市建筑、事件详情与原有交互已恢复");
+          }}
           onOpenDemo={onOpenDemo}
         />
       ) : <section className="future-stage">
