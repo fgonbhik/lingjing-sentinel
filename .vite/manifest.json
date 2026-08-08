@@ -1,4 +1,16 @@
 {
+  "_DataDetailDialog-BL8t8S-T.js": {
+    "file": "assets/DataDetailDialog-BL8t8S-T.js",
+    "name": "DataDetailDialog",
+    "imports": [
+      "_rolldown-runtime-S-ySWqyJ.js",
+      "_framework-CXnKph_e.js"
+    ]
+  },
+  "_RoundedBoxGeometry-Dzr4CP3l.js": {
+    "file": "assets/RoundedBoxGeometry-Dzr4CP3l.js",
+    "name": "RoundedBoxGeometry"
+  },
   "_framework-CXnKph_e.js": {
     "file": "assets/framework-CXnKph_e.js",
     "name": "framework",
@@ -10,18 +22,47 @@
     "file": "assets/rolldown-runtime-S-ySWqyJ.js",
     "name": "rolldown-runtime"
   },
+  "app/CityScene.tsx": {
+    "file": "assets/CityScene-b3hwqpqz.js",
+    "name": "CityScene",
+    "src": "app/CityScene.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rolldown-runtime-S-ySWqyJ.js",
+      "_framework-CXnKph_e.js",
+      "_RoundedBoxGeometry-Dzr4CP3l.js"
+    ]
+  },
+  "app/SmartCityDashboard.tsx": {
+    "file": "assets/SmartCityDashboard-ZwFpETAE.js",
+    "name": "SmartCityDashboard",
+    "src": "app/SmartCityDashboard.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rolldown-runtime-S-ySWqyJ.js",
+      "_DataDetailDialog-BL8t8S-T.js",
+      "_framework-CXnKph_e.js",
+      "_RoundedBoxGeometry-Dzr4CP3l.js"
+    ]
+  },
   "app/page.tsx": {
-    "file": "assets/page-yhvGE0vz.js",
+    "file": "assets/page-B1Fqhfpr.js",
     "name": "page",
     "src": "app/page.tsx",
     "isDynamicEntry": true,
     "imports": [
       "_rolldown-runtime-S-ySWqyJ.js",
+      "virtual:vinext-app-browser-entry",
+      "_DataDetailDialog-BL8t8S-T.js",
       "_framework-CXnKph_e.js"
+    ],
+    "dynamicImports": [
+      "app/SmartCityDashboard.tsx",
+      "app/CityScene.tsx"
     ]
   },
   "node_modules/vinext/dist/shims/layout-segment-context.js": {
-    "file": "assets/layout-segment-context-3-ZHp5qX.js",
+    "file": "assets/layout-segment-context-tBVUG5fg.js",
     "name": "layout-segment-context",
     "src": "node_modules/vinext/dist/shims/layout-segment-context.js",
     "isDynamicEntry": true,
@@ -32,7 +73,7 @@
     ]
   },
   "virtual:vinext-app-browser-entry": {
-    "file": "assets/index-C2-t57fX.js",
+    "file": "assets/index-CMNJSaII.js",
     "name": "index",
     "src": "virtual:vinext-app-browser-entry",
     "isEntry": true,
