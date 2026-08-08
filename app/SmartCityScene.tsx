@@ -329,17 +329,24 @@ export default function SmartCityScene({
     camera.position.set(...viewPresets.panorama.position);
     cameraRef.current = camera;
 
+    const deviceMemory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8;
+    const logicalCores = navigator.hardwareConcurrency || 8;
+    const compactViewport = window.innerWidth <= 1380;
+    const lowPowerDevice = compactViewport || deviceMemory <= 4 || logicalCores <= 4;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const targetFrameInterval = 1000 / (reducedMotion ? 24 : lowPowerDevice ? 30 : 45);
+
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
       alpha: false,
       powerPreference: "high-performance",
     });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.35));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, lowPowerDevice ? 1.05 : 1.3));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.26;
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type = lowPowerDevice ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
     renderer.shadowMap.autoUpdate = false;
     renderer.shadowMap.needsUpdate = true;
     element.appendChild(renderer.domElement);
@@ -1615,6 +1622,11 @@ export default function SmartCityScene({
     const observer = new ResizeObserver(resize);
     observer.observe(element);
     resize();
+    let sceneVisible = true;
+    const visibilityObserver = new IntersectionObserver(([entry]) => {
+      sceneVisible = entry?.isIntersecting ?? true;
+    }, { rootMargin: "120px" });
+    visibilityObserver.observe(element);
 
     type CameraFlight = {
       from: THREE.Vector3;
@@ -1663,8 +1675,12 @@ export default function SmartCityScene({
 
     const startTime = performance.now();
     let frame = 0;
+    let lastRenderTime = 0;
     const animate = (time: number) => {
       frame = requestAnimationFrame(animate);
+      if (document.hidden || !sceneVisible) return;
+      if (time - lastRenderTime < targetFrameInterval) return;
+      lastRenderTime = time - ((time - lastRenderTime) % targetFrameInterval);
       // A first requestAnimationFrame timestamp can precede performance.now()
       // by a fraction of a frame. Keep curve sampling inside [0, 1) so
       // CatmullRomCurve3 never receives a negative parameter.
@@ -1722,6 +1738,7 @@ export default function SmartCityScene({
       cancelAnimationFrame(hoverFrame);
       cancelAnimationFrame(resizeFrame);
       observer.disconnect();
+      visibilityObserver.disconnect();
       renderer.domElement.removeEventListener("pointermove", hover);
       renderer.domElement.removeEventListener("pointerleave", clearHover);
       renderer.domElement.removeEventListener("pointerdown", rememberPointer);

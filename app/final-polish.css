@@ -1,6 +1,12 @@
 /* Final competition polish: Beijing City Pulse, applied after every feature stylesheet. */
 :root{--city-ice:#dffbff;--city-cyan:#52e8f3;--city-blue:#4892ff;--city-green:#58e6ac;--city-warm:#ffb06f;--city-alert:#ff7868;--city-line:#3b6876;--city-panel:#081d29e8}
 
+.auth-shell,.future-city,.bj-datav,.district-weather,.emergency-shell{
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  text-rendering:geometricPrecision;
+}
+
 /* A calmer shell lets the map and live data carry the visual energy. */
 .future-city{background:radial-gradient(ellipse at 50% 38%,#17455b 0,#0a2637 42%,#04131f 100%)}
 .future-header,.future-nav{backdrop-filter:blur(15px)}
@@ -35,6 +41,57 @@
 
 /* Login and Sentinel share one operational language: cyan action, amber focus, green ready, coral risk. */
 .auth-topbar,.emergency-shell .topbar{border-bottom-color:#4f879733!important;backdrop-filter:blur(16px)}
+.scene-loading{position:absolute;z-index:2;inset:0;display:grid;place-content:center;justify-items:center;gap:12px;background:radial-gradient(circle at center,#153845,#07141d 68%);color:#a9d7de;font:700 10px var(--font-data);letter-spacing:1.2px}.scene-loading i{width:34px;height:34px;border:2px solid #55e9f32b;border-top-color:var(--city-cyan);border-radius:50%;animation:scene-loader-spin .8s linear infinite}@keyframes scene-loader-spin{to{transform:rotate(360deg)}}
+
+/* Dashboard brand lockup: keep the English descriptor as one compact HUD line. */
+.future-brand-symbol{
+  transform:translateY(-5px)!important;
+}
+.future-brand-copy{
+  min-width:0;
+  white-space:nowrap;
+}
+.future-brand-copy>span{
+  display:block!important;
+  margin-top:3px!important;
+  font-size:7px!important;
+  line-height:1!important;
+  letter-spacing:1.35px!important;
+  color:#bfeaf0!important;
+  white-space:nowrap;
+}
+.future-panel>header>div{
+  min-width:0;
+  padding-left:12px;
+}
+.future-panel>header>div :where(b,em){
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.future-fullscreen,.future-logout{
+  width:auto!important;
+  min-width:48px;
+  padding:0 11px!important;
+  font-size:11px!important;
+  line-height:30px;
+  white-space:nowrap;
+  writing-mode:horizontal-tb;
+  word-break:keep-all;
+}
+@media(min-width:821px){
+  .future-heading{
+    align-self:center!important;
+    display:grid!important;
+    height:100%!important;
+    max-height:100%;
+    place-content:center;
+    overflow:hidden;
+    padding:4px 18px!important;
+  }
+  .future-heading .future-title{margin:0 0 3px!important;line-height:1.12!important}
+  .future-heading>span,.future-heading>div{line-height:1!important}
+}
 .auth-metrics>div{position:relative;background:linear-gradient(180deg,#0b25320f,transparent);transition:background .22s ease,transform .22s ease}
 .auth-metrics>div::before{content:"";position:absolute;left:0;right:22%;top:-1px;height:2px;background:var(--metric-accent,var(--city-cyan));box-shadow:0 0 11px color-mix(in srgb,var(--metric-accent,var(--city-cyan)) 52%,transparent)}
 .auth-metrics>div:nth-child(1){--metric-accent:var(--city-blue)}.auth-metrics>div:nth-child(2){--metric-accent:var(--city-warm)}.auth-metrics>div:nth-child(3){--metric-accent:var(--city-green)}
@@ -50,11 +107,343 @@
 .emergency-shell .vehicle-feed{box-shadow:inset 0 0 32px #02080b8c,0 12px 30px #0007}
 .report-dialog{border-top:3px solid var(--city-warm)}.report-head{background:linear-gradient(110deg,#0d3140,#07151d 64%)}
 
+/* Competition-screen contrast pass: secondary copy stays secondary, never faint. */
+.auth-shell :where(.auth-topbar span,.auth-topbar em,.auth-hero>p,.auth-kicker,.auth-metrics span,.auth-input label,.auth-card-footer,.auth-footer){color:#a9cbd3!important}
+.auth-shell :where(.auth-card h2,.auth-input input,.auth-input select,.auth-metrics strong){color:#f2fdff!important}
+.auth-shell :where(.auth-input input,.auth-input select)::placeholder{color:#8eafb7!important;opacity:1}
+
+.future-city :where(.future-heading>span,.future-heading>div b,.future-time span,.future-user,.future-nav button,.scene-head span,.scene-head em,.scene-coordinate,.scene-layer,.scene-view-presets button,.scene-controls button,.future-footer,.future-panel>header div em,.vital-primary span,.vital-primary em,.vital-grid span,.event-list time,.event-list p,.air-orbit span,.eco-stats span,.score-copy span,.score-copy p,.ai-dimensions span,.traffic-number span,.traffic-meta span,.district-rank button>i){color:#a8ccd4!important}
+.future-city :where(.future-panel>header div b,.scene-head b,.vital-grid b,.event-list p b,.eco-stats b,.score-copy b,.traffic-meta b,.district-rank button>span,.district-rank button>strong){color:#eefbff!important}
+.future-city .future-nav button.active,.future-city .future-nav button:hover,.future-city :where(.scene-view-presets button.active,.scene-controls button.on){color:#f7feff!important}
+.future-city .ai-index .score-rings strong{
+  color:#f1fdff!important;
+  font-weight:800!important;
+  opacity:1!important;
+  text-shadow:0 1px 2px #00131c,0 0 12px #68ddff70!important;
+}
+.future-city .ai-index .score-rings span{
+  color:#c8e8ee!important;
+  font-weight:700!important;
+  letter-spacing:.45px;
+  opacity:1!important;
+  text-shadow:0 1px 2px #00131c;
+}
+
+.bj-datav :where(.bj-datav-embedded-head p,.bj-datav-header p,.bj-datav-kpis span,.bj-datav-card>footer,.bj-flow-bars span,.bj-service-radar>div span,.bj-service-radar li,.bj-datav-map-head span,.bj-datav-map-status,.bj-datav-footer,.governance-card footer span){color:#abd0d8!important}
+.bj-datav :where(.bj-datav-embedded-head h2,.bj-datav-header h2,.bj-datav-card h3,.bj-datav-kpis strong,.bj-datav-map-head div,.bj-district-list button>span,.bj-district-list strong){color:#f3fdff!important}
+.bj-datav-kpis button{
+  padding:12px 20px!important;
+}
+.bj-datav-kpis span{
+  font-size:clamp(14px,.82vw,17px)!important;
+  font-weight:650;
+  line-height:1.25;
+}
+.bj-datav-kpis strong{
+  font-size:clamp(29px,1.65vw,35px)!important;
+  font-weight:820;
+  line-height:1;
+}
+.bj-datav-kpis em{
+  font-size:clamp(12px,.72vw,15px)!important;
+  font-weight:700;
+}
+.bj-datav.is-embedded{grid-template-rows:86px 84px minmax(0,1fr)!important}
+.bj-datav-embedded-head{
+  min-width:0;
+  overflow:hidden;
+  padding:11px 22px!important;
+}
+.bj-datav-embedded-head>div:first-child{
+  min-width:0;
+  padding-left:5px;
+}
+.bj-datav-embedded-head h2{
+  margin:4px 0 2px!important;
+  line-height:1.16;
+  white-space:nowrap;
+}
+.bj-datav-embedded-head p{
+  display:block!important;
+  overflow:hidden;
+  margin:0!important;
+  line-height:1.4;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.district-weather :where(.weather-source,.weather-kpis span,.weather-map-head b,.selected-weather-card>span,.selected-weather-card dt,.temperature-line span,.rain-bars span,.weather-alert span){color:#a9ccd4!important}
+.district-weather :where(.weather-titlebar h2,.weather-panel header h3,.weather-kpis button,.district-selector button,.weather-map-head span,.selected-weather-card dd,.weather-alert strong){color:#f2fdff!important}
+.district-weather .weather-mode button{color:#bed7dc!important}
+.district-weather .weather-kpis span{font-size:clamp(11px,.66vw,13px)!important;font-weight:650}
+.district-weather .weather-kpis strong{display:flex;align-items:baseline;gap:6px;font-size:clamp(34px,2vw,42px)!important;line-height:1;white-space:nowrap}
+.district-weather .weather-kpis strong .ani-num{font-size:clamp(40px,2.35vw,50px)!important;font-weight:850;letter-spacing:-1.5px}
+.district-weather .weather-kpis strong small{font-size:.45em;font-weight:750;letter-spacing:0}
+.district-weather .weather-kpis em{font-size:clamp(10px,.58vw,12px)!important;font-weight:700;line-height:1.2;white-space:nowrap}
+.district-weather .district-selector button{
+  min-height:64px;
+  padding:10px 12px!important;
+}
+.district-weather .district-selector button span{
+  font-size:clamp(15px,.9vw,18px)!important;
+  font-weight:700;
+}
+.district-weather .district-selector button strong{
+  font-size:clamp(21px,1.2vw,25px)!important;
+  line-height:1;
+}
+.district-weather .district-selector button i{
+  font-size:clamp(11px,.68vw,14px)!important;
+  font-weight:750;
+}
+.district-weather .district-selector>header h3{font-size:clamp(18px,1.08vw,22px)!important}
+.district-weather .district-selector>header span{font-size:clamp(10px,.62vw,13px)!important}
+.district-weather .district-selector>header{
+  height:72px!important;
+  overflow:hidden;
+  padding:10px 14px!important;
+}
+.district-weather .district-selector>header h3{
+  margin:4px 0 0!important;
+  line-height:1.08;
+}
+.district-weather .district-selector>div{
+  height:calc(100% - 72px)!important;
+}
+.district-weather .weather-side .weather-panel>header{
+  height:68px!important;
+  overflow:hidden;
+  padding:10px 14px!important;
+}
+.district-weather .weather-side .weather-panel>header h3{
+  margin:4px 0 0!important;
+  line-height:1.12;
+}
+.district-weather .weather-side :where(.temperature-line,.rain-bars){
+  height:calc(100% - 68px)!important;
+}
+@media(min-width:901px){
+  .district-weather{
+    grid-template-rows:70px 116px minmax(0,1fr)!important;
+  }
+  .district-weather .weather-kpis button{
+    align-content:center;
+    padding:14px 18px!important;
+  }
+}
+
+.emergency-shell :where(.brand span,.status,.status em,.command-strip span,.panel-title>b,.recognition span,.ai-note p,.agent p span,.timeline p,.score-card>span,.metrics span,.plan-steps p span,footer){color:#a9c9d1!important}
+.emergency-shell :where(.brand b,.command-strip strong,.panel-title,.recognition strong,.agent p b,.score-card>strong,.metrics b,.plan-steps p,.timeline .done p){color:#effbfe!important}
+
 @keyframes city-surface-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @keyframes building-name-in{from{opacity:0;transform:translateX(18px) scale(.98)}to{opacity:1;transform:none}}
 @keyframes chart-column-breathe{0%,100%{filter:brightness(.92)}50%{filter:brightness(1.18)}}
 @keyframes chart-line-draw{to{stroke-dashoffset:0}}
 @keyframes chart-node-pulse{0%,100%{transform:scale(.86);opacity:.72}50%{transform:scale(1.2);opacity:1}}
+@keyframes event-pulse-cycle{0%,20%,100%{background:transparent;transform:none}3%,12%{background:linear-gradient(90deg,#ff805722,transparent);transform:translateX(2px)}}
+.event-row.event-pulse-cycle{animation:event-pulse-cycle 9.6s ease-in-out infinite}
 
 @media(max-width:900px){.building-name-card{right:12px;top:52px}.building-name-card strong{font-size:15px}}
-@media(prefers-reduced-motion:reduce){.future-stage,.district-weather,.bj-datav.is-embedded,.building-name-card,.bj-flow-bars>i,.temperature-line>i,.rain-bars>i,.governance-card .line,.governance-card circle,.traffic-flow i,.vital-wave i{animation:none!important}.bj-flow-bars>i,.temperature-line>i,.rain-bars>i,.governance-card .line,.governance-card .area,.governance-card circle,.auth-metrics>div,.emergency-shell .panel{transition:none!important}}
+@media(prefers-reduced-motion:reduce){.future-stage,.district-weather,.bj-datav.is-embedded,.building-name-card,.bj-flow-bars>i,.temperature-line>i,.rain-bars>i,.governance-card .line,.governance-card circle,.traffic-flow i,.vital-wave i,.event-row.event-pulse-cycle{animation:none!important}.bj-flow-bars>i,.temperature-line>i,.rain-bars>i,.governance-card .line,.governance-card .area,.governance-card circle,.auth-metrics>div,.emergency-shell .panel{transition:none!important}}
+
+/* Final presentation pass: a clearer command hierarchy and quieter technical depth. */
+.future-panel,.weather-panel,.bj-datav-card{
+  isolation:isolate;
+  background-image:
+    linear-gradient(145deg,#17384620,transparent 44%),
+    linear-gradient(180deg,#0b2633f2,#071923f5)!important;
+}
+.future-panel::selection,.weather-panel::selection,.bj-datav-card::selection{background:#54e8f355;color:#fff}
+.weather-kpis button,.bj-datav-kpis button{
+  position:relative;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 92% 8%,#55e8f318,transparent 34%),
+    linear-gradient(145deg,#113342f4,#071923f6)!important;
+}
+.weather-kpis button::after,.bj-datav-kpis button::after{
+  content:"";
+  position:absolute;
+  inset:auto 12px 0;
+  height:1px;
+  background:linear-gradient(90deg,transparent,#dffeff55,transparent);
+  opacity:.75;
+}
+.weather-kpis button:hover,.bj-datav-kpis button:hover{
+  transform:translateY(-2px);
+  filter:saturate(1.08) brightness(1.06);
+}
+.district-weather .district-selector button{
+  background:linear-gradient(135deg,#0e2935,#091d27)!important;
+  transition:border-color .18s ease,background .18s ease,box-shadow .18s ease,transform .18s ease;
+}
+.district-weather .district-selector button:hover{
+  transform:translateX(2px);
+  background:linear-gradient(135deg,#174352,#0c2833)!important;
+}
+.district-weather .district-selector button.active{
+  background:linear-gradient(135deg,#194b5a,#0e2c38)!important;
+  box-shadow:inset 4px 0 var(--city-cyan),0 0 18px #4fe4ef1f!important;
+}
+.district-weather :where(.temperature-line,.rain-bars){
+  background-image:repeating-linear-gradient(180deg,transparent 0 24%,#83e8ef0c 24.4% 24.8%,transparent 25.2% 49%);
+}
+.future-city :where(button,[role="button"]):focus-visible,
+.district-weather :where(button,[role="button"]):focus-visible,
+.bj-datav :where(button,[role="button"]):focus-visible{
+  outline:2px solid var(--city-warm)!important;
+  outline-offset:2px;
+}
+
+/* 1366px laptops: retain the big-screen composition without cramped header controls. */
+@media(min-width:1181px) and (max-width:1380px){
+  .future-header{grid-template-columns:260px minmax(360px,1fr) 352px!important}
+  .future-brand-symbol{transform:translateY(-2px)!important}
+  .future-brand-copy strong{font-size:23px!important;letter-spacing:3.4px!important}
+  .future-brand-copy>span{font-size:6px!important;letter-spacing:1px!important}
+  .future-heading .future-title{font-size:clamp(20px,2vw,26px)!important;letter-spacing:3.5px!important;white-space:nowrap}
+  .future-account{gap:5px!important}
+  .future-time{min-width:104px!important;padding-inline:7px!important}
+  .future-time strong{font-size:19px!important}
+  .future-system,.future-user{font-size:9px!important;padding-inline:7px!important}
+  .future-fullscreen,.future-logout{min-width:42px;padding-inline:8px!important}
+
+  .district-weather .weather-kpis button{padding:12px 14px!important}
+  .district-weather .weather-kpis strong{font-size:32px!important}
+  .district-weather .weather-kpis strong .ani-num{font-size:38px!important}
+  .district-weather .weather-grid{grid-template-columns:minmax(230px,19%) minmax(500px,1fr) minmax(285px,24%)!important}
+  .district-weather .district-selector button{min-height:56px;padding:8px 10px!important}
+  .district-weather .district-selector button span{font-size:13px!important}
+  .district-weather .district-selector button strong{font-size:19px!important}
+  .district-weather .district-selector button i{font-size:10px!important}
+
+  .bj-datav-kpis button{padding:10px 14px!important}
+  .bj-datav-kpis span{font-size:12px!important}
+  .bj-datav-kpis strong{font-size:27px!important}
+  .bj-datav-kpis em{font-size:11px!important}
+}
+
+/* Performance tier for laptops and integrated GPUs: retain the look, remove perpetual paint work. */
+@media(max-width:1380px),(update:slow){
+  .future-city::before,.future-grid,.future-atmosphere b,.future-horizon i,
+  .bj-flow-bars>i,.temperature-line>i,.rain-bars>i,.traffic-flow i,.vital-wave i,
+  .event-row.event-pulse-cycle{animation:none!important}
+  .future-panel,.weather-panel,.bj-datav-card{backdrop-filter:none!important}
+  .future-header,.future-nav{backdrop-filter:blur(7px)!important}
+}
+
+/* Compact desktop / landscape tablet: protect the map first and simplify supporting chrome. */
+@media(min-width:901px) and (max-width:1180px){
+  .future-header{grid-template-columns:225px minmax(330px,1fr) 258px!important}
+  .future-brand-symbol{width:38px!important;height:38px!important;transform:none!important}
+  .future-brand-copy strong{font-size:21px!important;letter-spacing:3px!important}
+  .future-brand-copy>span{display:none!important}
+  .future-heading .future-title{font-size:20px!important;letter-spacing:2.5px!important;white-space:nowrap}
+  .future-heading>span,.future-heading>div{display:none!important}
+  .future-time strong{font-size:18px!important}
+  .future-system,.future-user-profile{display:none!important}
+  .future-fullscreen,.future-logout{min-width:42px;padding-inline:7px!important}
+
+  .district-weather{grid-template-rows:68px 100px minmax(0,1fr)!important}
+  .district-weather .weather-titlebar h2{font-size:20px!important;letter-spacing:2.2px!important}
+  .district-weather .weather-kpis button{padding:10px 11px!important}
+  .district-weather .weather-kpis strong{font-size:27px!important}
+  .district-weather .weather-kpis strong .ani-num{font-size:32px!important}
+  .district-weather .weather-grid{grid-template-columns:190px minmax(390px,1fr) 245px!important}
+  .district-weather .district-selector>header{height:64px!important}
+  .district-weather .district-selector>div{height:calc(100% - 64px)!important;grid-template-columns:1fr!important}
+  .district-weather .district-selector button{min-height:48px!important}
+  .district-weather .district-selector button span{font-size:12px!important}
+  .district-weather .district-selector button strong{font-size:18px!important}
+  .district-weather .weather-side .weather-panel>header{height:62px!important}
+  .district-weather .weather-side :where(.temperature-line,.rain-bars){height:calc(100% - 62px)!important}
+
+  .bj-datav.is-embedded{grid-template-rows:72px 72px minmax(0,1fr)!important}
+  .bj-datav-kpis button{padding:9px 10px!important}
+  .bj-datav-kpis span{font-size:11px!important}
+  .bj-datav-kpis strong{font-size:23px!important}
+  .bj-datav-kpis em{font-size:10px!important}
+}
+
+/* Narrow layouts become a readable operations feed instead of a scaled-down wallboard. */
+@media(max-width:900px){
+  .future-city{overflow-x:hidden!important}
+  .future-header{min-height:68px;height:auto!important;padding:6px 4px!important}
+  .future-brand-symbol{width:36px!important;height:36px!important;transform:none!important}
+  .future-brand-copy strong{font-size:19px!important;letter-spacing:2.4px!important}
+  .future-brand-copy>span{display:none!important}
+  .future-time{min-width:98px!important}
+  .future-time strong{font-size:17px!important}
+  .future-nav{scrollbar-width:none;overscroll-behavior-x:contain}
+  .future-nav::-webkit-scrollbar{display:none}
+  .future-stage{padding-bottom:12px}
+
+  .district-weather{padding:0 4px 10px!important;gap:8px!important}
+  .weather-titlebar{padding:10px 12px!important}
+  .weather-titlebar h2{font-size:20px!important;letter-spacing:2px!important}
+  .weather-mode button{min-height:34px;padding-inline:10px!important;font-size:11px}
+  .district-weather .weather-kpis{gap:6px}
+  .district-weather .weather-kpis button{min-height:92px;padding:11px 12px!important}
+  .district-weather .weather-kpis strong{font-size:27px!important}
+  .district-weather .weather-kpis strong .ani-num{font-size:32px!important}
+  .district-weather .weather-grid{gap:8px!important}
+  .district-weather .district-selector>header{height:64px!important}
+  .district-weather .district-selector>div{height:calc(100% - 64px)!important}
+  .district-weather .weather-map{height:min(68vh,560px)!important;min-height:430px}
+  .district-weather .weather-side{height:540px!important}
+
+  .bj-datav.is-embedded{padding-bottom:10px}
+  .bj-datav-embedded-head{min-height:74px!important;padding:11px 13px!important}
+  .bj-datav-embedded-head h2{font-size:20px!important;letter-spacing:2px!important}
+  .bj-datav-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:5px!important;padding:5px;background:transparent}
+  .bj-datav-kpis button{min-height:86px;padding:11px 13px!important;border:1px solid #3f7080!important}
+  .bj-datav-kpis button:last-child{grid-column:1/-1}
+  .bj-datav-kpis strong{font-size:25px!important}
+}
+
+@media(max-width:560px){
+  .future-brand{gap:8px!important;padding-inline:4px!important}
+  .future-brand-copy strong{font-size:17px!important;letter-spacing:1.8px!important}
+  .future-time{min-width:88px!important;padding-inline:6px!important}
+  .future-time strong{font-size:15px!important;letter-spacing:.6px!important}
+  .future-time span{font-size:6px!important}
+  .district-weather .weather-titlebar{display:grid;grid-template-columns:1fr;gap:9px}
+  .district-weather .weather-mode{justify-content:flex-start}
+  .district-weather .weather-kpis strong{font-size:24px!important}
+  .district-weather .weather-kpis strong .ani-num{font-size:29px!important}
+  .district-weather .weather-kpis span{font-size:10px!important}
+  .district-weather .district-selector>div{grid-template-columns:1fr!important}
+  .district-weather .selected-weather-card{right:8px;top:50px;width:166px!important}
+  .district-weather .weather-map-legend{left:8px;bottom:8px;min-width:150px!important}
+}
+
+/* Switch to the stacked information flow before the desktop columns become illegible. */
+@media(max-width:980px){
+  .future-city{position:relative!important;height:auto!important;min-height:100svh;overflow-y:auto!important;padding:0 8px!important}
+  .future-header{grid-template-columns:1fr auto!important;min-height:68px!important;height:68px!important;padding:0 4px!important}
+  .future-brand>.future-brand-symbol,.future-brand>.future-brand-copy{display:block!important}
+  .future-heading{display:none!important}
+  .future-account{gap:6px!important}
+  .future-system,.future-user-profile{display:none!important}
+  .future-nav{justify-content:flex-start!important;overflow-x:auto!important}
+  .future-nav button{flex:0 0 auto;min-width:112px!important}
+  .future-stage{height:auto!important;min-height:0!important;display:flex!important;flex-direction:column;gap:10px!important}
+  .future-center{order:-1;height:min(68svh,610px)!important;min-height:460px}
+  .future-column{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-template-rows:none!important;gap:10px!important;transform:none!important}
+  .future-column.left,.future-column.right{display:grid!important}
+  .future-panel,.future-demo-card{min-height:210px}
+  .scene-districts{display:none!important}
+  .scene-controls{width:calc(100% - 24px);overflow-x:auto;justify-content:flex-start;scrollbar-width:none}
+  .scene-controls::-webkit-scrollbar{display:none}
+  .scene-controls button{flex:0 0 auto;min-width:88px}
+  .scene-view-presets{max-width:calc(100% - 24px);overflow-x:auto;scrollbar-width:none}
+  .scene-view-presets::-webkit-scrollbar{display:none}
+  .future-footer{position:relative!important;grid-template-columns:118px 1fr!important}
+  .future-footer>em,.future-footer>strong{display:none!important}
+}
+
+@media(max-width:620px){
+  .future-column{grid-template-columns:1fr!important}
+  .future-center{height:540px!important;min-height:440px}
+  .future-fullscreen,.future-logout{display:none!important}
+}

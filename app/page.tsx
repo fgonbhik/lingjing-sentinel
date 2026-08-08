@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import CityScene, { type SceneAsset } from "./CityScene";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import type { SceneAsset } from "./CityScene";
 import InteractiveModules, { type ModuleId } from "./InteractiveModules";
 import DemoProjectEntry from "./DemoProjectEntry";
-import SmartCityDashboard from "./SmartCityDashboard";
 import AniNum from "./AniNum";
 import DataDetailDialog from "./DataDetailDialog";
 import AiEvidenceCenter from "./AiEvidenceCenter";
 import AgentAuditDialog from "./AgentAuditDialog";
 import { analyzeAccidentImage, computeAStarRoute, computeGaussianPlume, type VisionResult } from "./decision-engine";
+
+const SmartCityDashboard = lazy(() => import("./SmartCityDashboard"));
+const CityScene = lazy(() => import("./CityScene"));
 
 const departments = [
   { icon: "焰", name: "消防智能体", text: "2 辆泡沫消防车已从青岚站出发", tone: "orange" },
@@ -321,7 +323,7 @@ export default function Home() {
 
   if(!authChecked)return <main className="auth-boot"><BrandMark/><span>安全环境初始化中</span></main>;
   if(!currentUser)return <AuthPortal onAuthenticated={handleAuthenticated}/>;
-  if(platformView==="city")return <SmartCityDashboard displayName={currentUser.displayName} onLogout={logout} onOpenDemo={()=>{setDemoEntryOpen(false);setActiveModule("overview");setSceneStatus("loading");setPlatformView("emergency")}}/>;
+  if(platformView==="city")return <Suspense fallback={<main className="auth-boot"><BrandMark/><span>智慧城市引擎加载中</span></main>}><SmartCityDashboard displayName={currentUser.displayName} onLogout={logout} onOpenDemo={()=>{setDemoEntryOpen(false);setActiveModule("overview");setSceneStatus("loading");setPlatformView("emergency")}}/></Suspense>;
 
   return (
     <main className="shell emergency-shell">
@@ -372,7 +374,7 @@ export default function Home() {
         <section className="map-panel panel">
           <div className="panel-title"><span>03</span>真实城市三维推演 <b>REAL-WORLD DIGITAL TWIN</b><div className="map-tools"><button aria-label="缩小" onClick={()=>window.dispatchEvent(new CustomEvent("city-camera",{detail:"zoomOut"}))}>−</button><button aria-label="放大" onClick={()=>window.dispatchEvent(new CustomEvent("city-camera",{detail:"zoomIn"}))}>＋</button></div></div>
           <div className="map" onClick={()=>setSelectedAsset(null)}>
-            <CityScene running={running} blocked={blocked} blockedRoadId={blockedRoadId} showRisk={showRisk} topView={!tilt} nightMode={nightMode} buildingLights={buildingLights} autoTour={autoTour} suspended={demoEntryOpen||activeModule!=="overview"||reportOpen||aiEvidenceOpen||agentAuditOpen} scenarioPhase={scenarioPhase} scenarioTime={scenarioTime} scenarioPlaying={scenarioStatus==="playing"} trafficDensity={trafficDensity} splitView={splitView} fireRoute={realRoute?.roads} onSelect={setSelectedAsset} onRealRoute={setRealRoute} onSceneStatus={status=>{setSceneStatus(status);if(status==="degraded")setSystemNotice("真实路网数据异常，已自动启用内置完整路线")}} plume={plume} />
+            <Suspense fallback={<div className="scene-loading"><i/><span>真实路网与车辆模型加载中</span></div>}><CityScene running={running} blocked={blocked} blockedRoadId={blockedRoadId} showRisk={showRisk} topView={!tilt} nightMode={nightMode} buildingLights={buildingLights} autoTour={autoTour} suspended={demoEntryOpen||activeModule!=="overview"||reportOpen||aiEvidenceOpen||agentAuditOpen} scenarioPhase={scenarioPhase} scenarioTime={scenarioTime} scenarioPlaying={scenarioStatus==="playing"} trafficDensity={trafficDensity} splitView={splitView} fireRoute={realRoute?.roads} onSelect={setSelectedAsset} onRealRoute={setRealRoute} onSceneStatus={status=>{setSceneStatus(status);if(status==="degraded")setSystemNotice("真实路网数据异常，已自动启用内置完整路线")}} plume={plume} /></Suspense>
             <div className="map-layer-tools"><button className={tilt?"on":""} onClick={()=>{stopFollowing();setDirectorMode(false);setTilt(v=>!v)}}>◈ {tilt?"自由三维":"垂直俯视"}</button><button className={showRisk?"on":""} onClick={()=>setShowRisk(v=>!v)}>◉ 风险热区</button><button className={nightMode?"on":""} onClick={()=>setNightMode(v=>!v)}>{nightMode?"☀ 白天":"☾ 夜间"}</button><button className={buildingLights?"on":""} onClick={()=>setBuildingLights(v=>!v)}>✦ 楼宇灯光</button><button className={autoTour?"on":""} onClick={()=>{stopFollowing();setDirectorMode(false);setAutoTour(v=>!v)}}>{autoTour?"■ 停止巡航":"▶ 自动巡航"}</button>{followingId&&<button className="on" onClick={stopFollowing}>■ 停止跟随</button>}<button onClick={()=>{stopFollowing();setDirectorMode(false);setAutoTour(false);window.dispatchEvent(new CustomEvent("city-camera",{detail:"incident"}))}}>◎ 聚焦事故</button><button onClick={()=>{stopFollowing();setDirectorMode(false);setAutoTour(false);window.dispatchEvent(new CustomEvent("city-camera",{detail:"reset"}))}}>⌖ 复位</button></div>
             <div className="coordinates">39°54′27″N&nbsp;&nbsp;116°27′07″E　|　北京 CBD</div>
             <div className="wind">↖<span>东南风 3.4m/s<br/>吹向西北</span></div>

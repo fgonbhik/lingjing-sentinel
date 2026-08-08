@@ -46,6 +46,36 @@ const viewOptions = [
   { id: "horizon", code: "05", label: "天际" },
 ] as const;
 
+type CityClockSnapshot = { date: string; time: string; week: string };
+
+function CityClock({ onInspect }: { onInspect: (snapshot: CityClockSnapshot) => void }) {
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const update = () => {
+      if (!document.hidden) setNow(new Date());
+    };
+    const clock = window.setInterval(update, 1000);
+    document.addEventListener("visibilitychange", update);
+    return () => {
+      window.clearInterval(clock);
+      document.removeEventListener("visibilitychange", update);
+    };
+  }, []);
+
+  const snapshot = {
+    time: now.toLocaleTimeString("zh-CN", { hour12: false }),
+    date: now.toLocaleDateString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit" }),
+    week: ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"][now.getDay()],
+  };
+
+  return (
+    <button type="button" className="future-time future-header-action" onClick={() => onInspect(snapshot)}>
+      <strong>{snapshot.time}</strong><span>{snapshot.date} · {snapshot.week}</span>
+    </button>
+  );
+}
+
 const districtViews: Record<string, { position: [number, number, number]; target: [number, number, number] }> = {
   朝阳: { position: [83, 45, 72], target: [38, 9, 18] },
   海淀: { position: [-88, 48, 82], target: [-48, 9, 40] },
@@ -67,8 +97,6 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
   const [sceneStatus, setSceneStatus] = useState<"loading" | "ready" | "degraded">("loading");
   const [mapMode, setMapMode] = useState<"scope" | "buildings">("buildings");
   const [platformMode, setPlatformMode] = useState<"command" | "datav" | "weather">("command");
-  const [now, setNow] = useState(() => new Date());
-  const [pulse, setPulse] = useState(0);
   const [barsReady, setBarsReady] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeView, setActiveView] = useState<(typeof viewOptions)[number]["id"]>("panorama");
@@ -76,14 +104,10 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
   const [tipKey, setTipKey] = useState(0);
 
   useEffect(() => {
-    const clock = window.setInterval(() => setNow(new Date()), 1000);
-    const heartbeat = window.setInterval(() => setPulse((value) => (value + 1) % 8), 2400);
     const barFrame = window.requestAnimationFrame(() => setBarsReady(true));
     const syncFullscreen = () => setIsFullscreen(Boolean(document.fullscreenElement));
     document.addEventListener("fullscreenchange", syncFullscreen);
     return () => {
-      window.clearInterval(clock);
-      window.clearInterval(heartbeat);
       window.cancelAnimationFrame(barFrame);
       document.removeEventListener("fullscreenchange", syncFullscreen);
     };
@@ -112,9 +136,6 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
     if (asset) showTip(`已选中：${asset.label} · 详情卡片已展开`);
   }, [showTip]);
 
-  const time = now.toLocaleTimeString("zh-CN", { hour12: false });
-  const date = now.toLocaleDateString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit" });
-  const week = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"][now.getDay()];
   const sceneLabel = useMemo(() => {
     if (sceneStatus === "loading") return "正在构建北京三维建筑群";
     if (sceneStatus === "degraded") return "城市基础模型已启用";
@@ -243,16 +264,16 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
           openInsight("command-center", "北京市智慧城市运行指挥中心", "全域感知指挥中枢", "点击标题可启动或暂停三维城市自动巡航；当前场景支持建筑选择、区域聚焦、视角切换与车流调节。", `自动巡航：${autoTour ? "即将暂停" : "即将启动"} · 场景状态：${sceneStatus}`);
           showTip(autoTour ? "标题交互：自动巡航已暂停" : "标题交互：自动巡航已启动");
         }}>
-          <span><i /> BEIJING DIGITAL TWIN · 2026</span>
           <strong className="future-title">北京市智慧城市运行指挥中心</strong>
+          <span><i /> BEIJING DIGITAL TWIN · 2026</span>
           <div><i /><i /><b>全域感知</b><i /><i /></div>
         </button>
 
         <div className="future-account">
           <button type="button" className="future-system future-header-action" onClick={() => openInsight("system-health", "城市系统健康度 99.97%", "实时运行状态", "建筑、道路、感知设备和城市指标数据链路运行正常，三维渲染与交互引擎已就绪。", "数据延迟 128ms · 设备在线率 99.97%")}><i />系统正常</button>
-          <button type="button" className="future-time future-header-action" onClick={() => openInsight("city-clock", "城市运行时钟", "实时数据基准", `当前城市数字孪生时间为 ${date} ${time}，所有动态指标以本地演示时钟同步刷新。`, `${week} · 每秒同步`)}><strong>{time}</strong><span>{date} · {week}</span></button>
+          <CityClock onInspect={({ date, time, week }) => openInsight("city-clock", "城市运行时钟", "实时数据基准", `当前城市数字孪生时间为 ${date} ${time}，所有动态指标以本地演示时钟同步刷新。`, `${week} · 每秒同步`)} />
           <button type="button" className="future-user future-user-profile future-header-action" onClick={() => openInsight("operator", displayName, "当前值班用户", "当前账户具有城市态势浏览、三维交互、数据详情查看和应急演示入口权限。", "本地演示会话 · 权限正常")}><i />{displayName}</button>
-          <button type="button" className="future-fullscreen future-header-action" aria-label={isFullscreen ? "退出全屏" : "进入全屏"} onClick={toggleFullscreen}>{isFullscreen ? "收" : "全"}</button>
+          <button type="button" className="future-fullscreen future-header-action" aria-label={isFullscreen ? "退出全屏" : "进入全屏"} onClick={toggleFullscreen}>{isFullscreen ? "收起" : "全屏"}</button>
           <button type="button" className="future-logout" onClick={onLogout}>退出</button>
         </div>
       </header>
@@ -316,7 +337,8 @@ export default function SmartCityDashboard({ displayName, onOpenDemo, onLogout }
                 <button
                   type="button"
                   key={event.time}
-                  className={`event-row ${pulse === index ? "pulse" : ""}`}
+                  className="event-row event-pulse-cycle"
+                  style={{ animationDelay: `${index * -2.4}s` }}
                   onClick={() => openInsight(`event-${index}`, event.text, "城市事件中枢", `${event.time} 由${event.level}类城市感知模型完成研判，当前处置状态为“${event.state}”。`, `事件编号 BJ-${event.time.replaceAll(":", "")} · ${event.state}`)}
                 >
                   <time>{event.time}</time><i>{event.level}</i><p>{event.text}<span>{event.state}</span></p>

@@ -29,7 +29,7 @@ export default function AniNum({
     const startedAt = performance.now();
     let frame = 0;
 
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || duration <= 0) {
+    if (document.hidden || window.matchMedia("(prefers-reduced-motion: reduce)").matches || duration <= 0) {
       current.current = to;
       setDisplay(to);
       return;

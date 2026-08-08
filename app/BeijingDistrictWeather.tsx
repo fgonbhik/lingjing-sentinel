@@ -53,7 +53,9 @@ export default function BeijingDistrictWeather({ onOpenInsight }: Props) {
 
   useEffect(() => {
     if (!playing) return;
-    const timer = window.setInterval(() => setChartTick((value) => value + 1), 2400);
+    const timer = window.setInterval(() => {
+      if (!document.hidden) setChartTick((value) => value + 1);
+    }, 3200);
     return () => window.clearInterval(timer);
   }, [playing]);
 
@@ -79,9 +81,9 @@ export default function BeijingDistrictWeather({ onOpenInsight }: Props) {
       </header>
 
       <div className="weather-kpis">
-        <button onClick={() => onOpenInsight("全市", `北京市 16 个区当前平均气温为 ${cityAverageTemp.toFixed(1)}°C。`, `Open-Meteo · ${weatherSource === "live" ? "实时更新" : "缓存/离线兜底"}`)}><span>全市平均气温</span><strong><AniNum to={cityAverageTemp} decimals={1} />°C</strong><em>16 区经纬度采样</em></button>
-        <button onClick={() => onOpenInsight("全市", `今日全市平均累计降水 ${cityAverageRain.toFixed(1)} mm。`, `最大雨量 ${Math.max(...districts.map((item) => item.rain)).toFixed(1)} mm`)}><span>今日平均降水</span><strong><AniNum to={cityAverageRain} decimals={1} /> mm</strong><em>逐小时降水累计</em></button>
-        <button onClick={() => onOpenInsight("全市", `全市共 ${highRiskCount} 个区处于较高气象风险状态。`, "根据降水与湿度自动分级")}><span>重点关注区县</span><strong><AniNum to={highRiskCount} /> 区</strong><em>风险动态研判</em></button>
+        <button onClick={() => onOpenInsight("全市", `北京市 16 个区当前平均气温为 ${cityAverageTemp.toFixed(1)}°C。`, `Open-Meteo · ${weatherSource === "live" ? "实时更新" : "缓存/离线兜底"}`)}><span>全市平均气温</span><strong><AniNum to={cityAverageTemp} decimals={1} /><small>°C</small></strong><em>16 区经纬度采样</em></button>
+        <button onClick={() => onOpenInsight("全市", `今日全市平均累计降水 ${cityAverageRain.toFixed(1)} mm。`, `最大雨量 ${Math.max(...districts.map((item) => item.rain)).toFixed(1)} mm`)}><span>今日平均降水</span><strong><AniNum to={cityAverageRain} decimals={1} /><small>mm</small></strong><em>逐小时降水累计</em></button>
+        <button onClick={() => onOpenInsight("全市", `全市共 ${highRiskCount} 个区处于较高气象风险状态。`, "根据降水与湿度自动分级")}><span>重点关注区县</span><strong><AniNum to={highRiskCount} /><small>区</small></strong><em>风险动态研判</em></button>
         <button onClick={() => onOpenInsight("数据源", "当前气象数据来自 Open-Meteo Forecast API；断网时自动使用 30 分钟缓存或本地演示数据。", `最近更新 ${new Date(updatedAt).toLocaleString("zh-CN")}`)}><span>实时数据接口</span><strong>{weatherSource === "live" ? "ONLINE" : "SAFE"}</strong><em>{weatherSource === "live" ? "接口连接正常" : "缓存兜底运行"}</em></button>
       </div>
 

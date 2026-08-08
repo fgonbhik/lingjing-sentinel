@@ -48,7 +48,9 @@ export default function BeijingDataVPlatform({ embedded = false, onBack, onOpenL
 
   useEffect(() => {
     if (!streaming) return;
-    const timer = window.setInterval(() => setChartTick((value) => value + 1), 2200);
+    const timer = window.setInterval(() => {
+      if (!document.hidden) setChartTick((value) => value + 1);
+    }, 3000);
     return () => window.clearInterval(timer);
   }, [streaming]);
 
