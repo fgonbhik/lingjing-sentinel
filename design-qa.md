@@ -1,54 +1,58 @@
-# Product Design QA — 北京智慧城市建筑模型精修 v7.8
+# 北京区县气象图表响应式修复 — Design QA
 
-## Evidence
+- Source visual truth: `C:/Users/Public/MSYS2-~1/codex-clipboard-17b44b70-2f68-458f-8079-25445bce2c17.png`
+- Source dimensions: 1130 × 2048 px
+- Implementation capture: `C:/Users/王昊鹏/Documents/Codex/2026-07-20/new-chat/weather-layout-after-1130.png`
+- Implementation dimensions: 1130 × 2048 px
+- Combined comparison: `C:/Users/王昊鹏/Documents/Codex/2026-07-20/new-chat/weather-layout-comparison-1130.png`
+- CSS viewport: 1130 × 2048
+- Device density normalization: both artifacts compared at identical pixel and CSS dimensions; no resampling for the final comparison.
+- State: 已登录 → 北京区县 → 气温图层 → Open-Meteo 实时数据。
 
-- Source visual truth: `C:/Users/Public/MSYS2-~1/codex-clipboard-cd80527f-2d4e-4063-a263-632ad44c449b.jpg`
-- Earlier implementation: `work/design-qa-implementation-v78-final.png`
-- Final overview: `work/design-qa-buildings-refined.png`
-- Final stable CBD view: `work/design-qa-buildings-stable-final.png`
-- Browser viewport: 1280 × 720 CSS px
-- Device pixel ratio: 1.5
-- State: authenticated Beijing smart-city dashboard, night mode, CBD camera preset.
+## Full-view comparison evidence
 
-## Findings and fixes
+The source capture shows live rainfall columns escaping the precipitation panel, crossing the temperature chart and navigation as a cyan vertical strip. The post-fix capture retains the same dashboard state and 1130 × 2048 viewport while keeping every column inside its own chart card. Runtime measurements report `barsOutside: 0`, `scrollWidth: 1115`, and `clientWidth: 1130`.
 
-### Pass 1
+## Focused region comparison evidence
 
-- [P1] Distant buildings were obscured by heavy fog and the city footprint felt smaller than the reference.
-  - Fix: reduced fog density, expanded the real OSM building field and raised the overhead camera so the whole map reads as one continuous city.
+The combined comparison places the source and post-fix full views side-by-side. A separate focused crop was unnecessary because the affected temperature and precipitation regions are large and fully legible at the normalized 1:1 dimensions.
 
-- [P2] Buildings were visually uniform and many footprints ignored their real road-facing orientation.
-  - Fix: derived a dominant angle from every real polygon, projected footprint extents into local axes, and rotated the complete building assembly as one unit.
+## Comparison history
 
-### Pass 2
+### Pass 1 — blocked
 
-- [P2] The skyline still lacked secondary massing and roof detail at closer views.
-  - Fix: added attached podium/annex forms, roof crowns, facade rails, vertical fins, floor bands, mechanical rooms and antennas. Detail coverage now includes core towers, buildings above 28 m and a distributed sample of lower blocks.
+- [P0] Rainfall values were converted directly with `20 + value * 3%`; real API values above roughly 27 mm produced heights greater than 100%.
+- [P1] Chart containers allowed visible overflow, so rainfall columns painted over unrelated cards and navigation.
+- [P2] The 901–1180 px layout lacked a tailored three-column proportion, making the weather side rail too dominant.
 
-- [P1] Activating a camera preset could scroll the fixed dashboard container by 264 px, making the entire screen appear to jump.
-  - Fix: desktop `.future-city` now uses `overflow: clip`, which prevents programmatic container scrolling while preserving the fixed competition layout.
+Fixes made:
 
-### Final pass
+- Normalized rainfall columns against the current seven-day peak.
+- Normalized temperature columns against the visible temperature range.
+- Added `overflow: hidden`, `contain: layout paint`, and maximum column heights.
+- Added a dedicated 901–1180 px responsive grid and typography pass.
 
-- No actionable P0, P1 or P2 findings remain.
-- CBD preset validation: header top stayed at 0 px and main scroll position stayed at 0 before and after the click.
-- Browser console errors: none.
+### Pass 2 — passed
+
+- At 1130 × 2048, no chart column leaves its panel.
+- There is no horizontal page overflow.
+- Map, district list, selected telemetry, KPI cards, layer controls and both charts remain visible and interactive.
+- Browser console check from the earlier live-weather pass contained zero errors; the current layout pass introduced no runtime exceptions.
 
 ## Required fidelity surfaces
 
-- Composition: narrow operational panels frame a large central city, matching the reference hierarchy.
-- Map density: 5,275 in-bounds OSM-derived buildings form a continuous Beijing city field.
-- Building geometry: real footprint orientation, varied height and footprint scale, secondary annex massing, crowns and rooftop equipment.
-- Materials: unified blue physical material with controlled emissive detail, restrained glow and readable night contrast.
-- District context: district labels, beacons, highlighted zones, compass and camera tabs remain visible without covering the city.
-- Interaction: full view, CBD, central axis, overhead and skyline presets remain functional; switching views no longer moves the dashboard shell.
+- Fonts and typography: existing Beijing City Pulse families, weights and labels remain unchanged; chart value labels no longer collide with adjacent panels.
+- Spacing and layout rhythm: three-column proportions are balanced at 1130 px; chart padding now reserves space for values and x-axis labels.
+- Colors and visual tokens: temperature orange, precipitation cyan, live green and dark HUD surfaces remain consistent.
+- Image quality and asset fidelity: the Three.js Beijing terrain remains sharp and unobstructed; no source imagery or branding was replaced.
+- Copy and content: real API status, district values, forecast labels and navigation copy are preserved.
 
-## Verification
+## Findings
 
-- Visual comparison: reference and final screenshot reviewed together.
-- Production build: passed.
-- Offline build: passed.
-- Competition contract tests: 18/18 passed.
-- Targeted ESLint: 0 errors; one existing `<img>` performance advisory retained for offline-compatible real building photographs.
+No actionable P0, P1, or P2 findings remain.
+
+## Follow-up polish
+
+- [P3] On unusually tall portrait windows, the center map becomes intentionally dominant; a future presentation preset could cap its height if a landscape-only competition screen is guaranteed.
 
 final result: passed

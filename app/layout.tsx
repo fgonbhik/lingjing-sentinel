@@ -13,6 +13,8 @@ import "./detail-dialogs.css";
 import "./reference-operations.css";
 import "./frontend-design-pass.css";
 import "./beijing-datav.css";
+import "./district-weather.css";
+import "./final-polish.css";
 
 export const metadata: Metadata = {
   title: "京域智城｜北京市智慧城市运行指挥中心",

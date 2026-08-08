@@ -145,6 +145,8 @@
 .future-nav button:nth-child(3){--nav-accent:#ffbd62;clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%)}
 .future-nav button:nth-child(4){--nav-accent:#59e8ad;clip-path:polygon(0 0,calc(100% - 9px) 0,100% 9px,100% 100%,9px 100%,0 calc(100% - 9px))}
 .future-nav button:nth-child(5){--nav-accent:#ff735e;clip-path:polygon(9px 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%,0 9px)}
+.future-nav button:nth-child(6){--nav-accent:#70e2aa;clip-path:polygon(7px 0,calc(100% - 7px) 0,100% 50%,calc(100% - 7px) 100%,7px 100%,0 50%)}
+.future-nav button:nth-child(7){--nav-accent:#ff6f86;clip-path:polygon(11px 0,100% 0,100% 100%,11px 100%,0 50%)}
 .future-nav button:hover,.future-nav button.active{border-color:var(--nav-accent);box-shadow:0 0 18px color-mix(in srgb,var(--nav-accent) 28%,transparent)}
 .future-nav button.active i{color:var(--nav-accent)}
 

@@ -73,6 +73,8 @@
 .future-nav button{min-width:142px;font-size:14px!important;letter-spacing:.8px!important}
 .future-nav button i{color:#67a4b4!important;font-family:var(--pulse-data)}
 .future-nav button.active{background:linear-gradient(90deg,#15465a,#17677a)!important;color:#fff!important;border-bottom:2px solid var(--pulse-amber)!important}
+.future-nav.nav-compact{gap:8px}
+.future-nav.nav-compact button{min-width:210px}
 .future-panel{background:linear-gradient(145deg,#092131f2,#071925f4)!important;border-color:#31586b!important;box-shadow:0 14px 28px #00101d66!important}
 .future-panel>header{border-bottom-color:#31566a!important;background:linear-gradient(90deg,#103548,#0b2230)!important}
 .future-panel>header>span{color:var(--pulse-amber)!important;font:700 13px var(--pulse-data)!important}
@@ -138,4 +140,5 @@
 .future-scene .is-hidden{display:none!important}
 @keyframes scope-loader-spin{to{transform:rotate(360deg)}}
 @media(max-width:900px){.scene-map-switch button{padding:0 8px;font-size:9px}}
+@media(max-width:900px){.future-nav.nav-compact button{min-width:132px}}
 @media(prefers-reduced-motion:reduce){.beijing-scope-map iframe{transition:none}.beijing-scope-loader i{animation:none}}

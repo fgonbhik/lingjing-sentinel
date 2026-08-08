@@ -454,24 +454,46 @@ test("数据详情差异化合同：每类可点击卡片拥有独立结构、�
   assert.match(layout, /detail-dialogs\.css/);
 });
 
-test("北京区县 HUD 地图应与原城市建筑大屏并存", async () => {
-  const [dashboard, wrapper, adapter, theme] = await Promise.all([
+test("顶部仅保留全域态势、城市治理与北京区县三个入口", async () => {
+  const [dashboard, weather, weatherStyles, wrapper, adapter, theme, mapRenderer] = await Promise.all([
     read("app/SmartCityDashboard.tsx"),
+    read("app/BeijingDistrictWeather.tsx"),
+    read("app/district-weather.css"),
     read("app/BeijingScopeMap.tsx"),
     read("three-scope-map-vue/src/components/map/mapDataAdapter.ts"),
     read("three-scope-map-vue/src/components/map/mapTheme.ts"),
+    read("three-scope-map-vue/src/components/map/ZhejiangThreeMap.vue"),
   ]);
-  assert.match(dashboard, /BeijingScopeMap/);
-  assert.match(dashboard, /北京区县 HUD/);
-  assert.match(dashboard, /城市建筑/);
+  assert.match(weather, /BeijingScopeMap/);
+  assert.match(dashboard, /const navItems = \["全域态势", "城市治理", "北京区县"\]/);
+  assert.match(dashboard, /nav-compact/);
+  assert.match(dashboard, /platformMode === "weather"/);
+  assert.match(weather, /北京区县气象运行图/);
+  assert.match(weather, /全市平均气温/);
+  assert.match(weather, /今日平均降水/);
+  assert.match(weather, /地势图层/);
+  assert.match(weather, /温差空间变化/);
+  assert.match(weather, /降水量空间变化/);
+  assert.match(weather, /onDistrictInteraction/);
+  assert.match(weather, /districts\.map/);
+  assert.match(weatherStyles, /\.district-weather/);
   assert.match(wrapper, /three-scope-map\/index\.html/);
   assert.match(adapter, /scope:\s*'city'/);
   assert.match(adapter, /code:\s*'110000'/);
   assert.match(theme, /MAP_THEME_PRIMARY\s*=\s*'#E8FF4F'/);
+  const weatherLayers = await read("three-scope-map-vue/src/components/map/beijingWeatherLayers.ts");
+  assert.match(weatherLayers, /temperature/);
+  assert.match(weatherLayers, /terrain/);
+  assert.match(weatherLayers, /rainfall/);
+  assert.match(weatherLayers, /elevation/);
+  assert.match(mapRenderer, /subdivideTerrainGeometry/);
+  assert.match(mapRenderer, /getTerrainReliefAt/);
+  assert.match(mapRenderer, /createTerrainPolygonSideWalls/);
+  assert.match(mapRenderer, /position: \[52, -420, 224\]/);
   await access(new URL("public/three-scope-map/index.html", root));
 });
 
-test("北京 SC-DATAV 驾驶舱使用独立 R3F 渲染器并保留原地图入口", async () => {
+test("北京城市治理使用独立 R3F 渲染器并嵌入智慧城市大屏", async () => {
   const [dashboard, datav, wrapper, renderer, styles, notices, layout] = await Promise.all([
     read("app/SmartCityDashboard.tsx"),
     read("app/BeijingDataVPlatform.tsx"),
@@ -482,8 +504,9 @@ test("北京 SC-DATAV 驾驶舱使用独立 R3F 渲染器并保留原地图入�
     read("app/layout.tsx"),
   ]);
   assert.match(dashboard, /BeijingDataVPlatform/);
-  assert.match(dashboard, /index === 1 \? "datav" : "command"/);
-  assert.match(dashboard, /datav-fullscreen/);
+  assert.match(dashboard, /item === "城市治理"/);
+  assert.match(dashboard, /<BeijingDataVPlatform\s+embedded/);
+  assert.doesNotMatch(dashboard, /datav-fullscreen/);
   assert.match(datav, /北京城市数据可视化驾驶舱/);
   assert.match(datav, /ScDataVBeijingMap/);
   assert.doesNotMatch(datav, /BeijingScopeMap/);
@@ -508,12 +531,66 @@ test("北京 SC-DATAV 驾驶舱使用独立 R3F 渲染器并保留原地图入�
   assert.match(styles, /\.bj-datav-grid/);
   assert.match(styles, /\.bj-datav\.is-pure/);
   assert.match(styles, /height:100%/);
-  assert.match(styles, /html:has\(\.future-city\.datav-fullscreen\)/);
-  assert.match(styles, /future-city\.datav-fullscreen>\.future-header/);
+  assert.match(styles, /\.bj-datav\.is-embedded/);
+  assert.match(styles, /height:calc\(100vh - 151px\)/);
+  assert.doesNotMatch(styles, /future-city\.datav-fullscreen/);
   assert.match(notices, /knight-L\/sc-datav/);
   assert.match(notices, /Apache License 2\.0/);
   assert.match(notices, /knight-L\/sat-hunter/);
   assert.match(layout, /beijing-datav\.css/);
   await access(new URL("public/beijing-sc-datav/index.html", root));
   await access(new URL("beijing-sc-datav/public/tiles/8/210/95.jpg", root));
+});
+
+test("最终美化合同：动态图表持续更新且建筑点击只显示名称", async () => {
+  const [dashboard, governance, weather, polish, layout] = await Promise.all([
+    read("app/SmartCityDashboard.tsx"),
+    read("app/BeijingDataVPlatform.tsx"),
+    read("app/BeijingDistrictWeather.tsx"),
+    read("app/final-polish.css"),
+    read("app/layout.tsx"),
+  ]);
+  assert.match(layout, /final-polish\.css/);
+  assert.match(dashboard, /asset\?\.category\.startsWith\("北京三维建筑资产"\)/);
+  assert.match(dashboard, /setSelectedBuildingName\(asset\.label\)/);
+  assert.match(dashboard, /className="building-name-card"/);
+  assert.match(dashboard, /setSelectedAsset\(null\)/);
+  assert.match(governance, /liveFlow/);
+  assert.match(governance, /governancePath/);
+  assert.match(governance, /setInterval/);
+  assert.match(weather, /liveTemperature/);
+  assert.match(weather, /liveRain/);
+  assert.match(weather, /setInterval/);
+  assert.match(polish, /\.building-name-card/);
+  assert.match(polish, /@keyframes chart-line-draw/);
+  assert.match(polish, /\.auth-submit,\.command-actions button/);
+  assert.match(polish, /@media\(prefers-reduced-motion:reduce\)/);
+});
+
+test("真实气象接口合同：16 区实时温度降水、缓存兜底与三维图层联动", async () => {
+  const [api, weather, weatherStyles, wrapper, mapRenderer] = await Promise.all([
+    read("app/weather-api.ts"),
+    read("app/BeijingDistrictWeather.tsx"),
+    read("app/district-weather.css"),
+    read("app/BeijingScopeMap.tsx"),
+    read("three-scope-map-vue/src/components/map/ZhejiangThreeMap.vue"),
+  ]);
+  assert.match(api, /api\.open-meteo\.com\/v1\/forecast/);
+  assert.match(api, /temperature_2m,relative_humidity_2m,precipitation/);
+  assert.match(api, /daily:\s*"precipitation_sum"/);
+  assert.match(api, /locations\.map/);
+  assert.match(api, /CACHE_TTL\s*=\s*30 \* 60 \* 1000/);
+  assert.match(api, /readCache\(\) \?\? fallback/);
+  assert.match(weather, /loadBeijingWeather/);
+  assert.match(weather, /OPEN-METEO 实时数据/);
+  assert.match(weather, /weatherData=\{mapWeatherData\}/);
+  assert.match(weather, /temperatureSpread/);
+  assert.match(weather, /rainPeak/);
+  assert.doesNotMatch(weather, /20 \+ value \* 3/);
+  assert.match(weatherStyles, /live API values must never escape their cards/);
+  assert.match(weatherStyles, /contain:layout paint/);
+  assert.match(weatherStyles, /max-width:1180px/);
+  assert.match(wrapper, /beijing-weather-data/);
+  assert.match(mapRenderer, /message\?\.type === 'beijing-weather-data'/);
+  assert.match(mapRenderer, /applyWeatherLayer\(activeWeatherLayer\)/);
 });

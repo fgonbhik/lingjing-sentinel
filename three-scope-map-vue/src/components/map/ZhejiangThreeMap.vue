@@ -41,12 +41,18 @@ import type { GeoFeatureCollection, Position } from '../../types/geo';
 import { initialMapState, loadMapLevel, prefetchMapLevel, type MapScope, type MapState } from './mapDataAdapter';
 import { createMapTerrainMaterial, waitForTerrainTexturesReady } from './mapTerrainMaterial';
 import { mapTheme, mapThemeStyle } from './mapTheme';
+import {
+  beijingWeatherByDistrict,
+  getBeijingWeatherVisual,
+  type BeijingWeatherLayer,
+} from './beijingWeatherLayers';
 
 // ThreeScopeMap attribution: 作者全平台ID：宋夏天Dazzle；公众号：送你整个夏天
 // Code-only attribution. Do not render it in the UI.
 
 type MapFeature = GeoFeatureCollection['features'][number];
 type MapLabel = { name: string; coord: Position; ripple?: boolean };
+type TerrainSample = { point: THREE.Vector2; elevation: number };
 type CameraViewPreset = {
   fov: number;
   position: [number, number, number];
@@ -112,6 +118,9 @@ let projectedMapPolygonsCache: ProjectedPolygonLookup[] | undefined;
 let provinceOuterEdgesCache: ProvinceOuterEdge[] | undefined;
 const flyLineMaterials: THREE.ShaderMaterial[] = [];
 let hoveredFeature = '';
+let activeWeatherLayer: BeijingWeatherLayer = 'temperature';
+let currentTerrainSamples: TerrainSample[] = [];
+let preTerrainCameraView: CameraViewPreset | undefined;
 let isDrilling = false;
 let hasEmittedReady = false;
 let hasUserAdjustedCamera = false;
@@ -353,22 +362,22 @@ function flashButtonText(button: HTMLButtonElement, text: string, fallbackText: 
 function handleCameraControlAction(action: string | undefined, button: HTMLButtonElement) {
   if (action === 'save-view-default') {
     saveCurrentCameraView('default');
-    flashButtonText(button, '已保存统一', '保存统一');
+    flashButtonText(button, '已保存', '全局视角');
     return true;
   }
   if (action === 'save-view-scope') {
     saveCurrentCameraView('scope');
-    flashButtonText(button, '已保存本层', '保存本层');
+    flashButtonText(button, '已保存', '保存视角');
     return true;
   }
   if (action === 'reset-view-scope') {
     resetCameraView('scope');
-    flashButtonText(button, '已恢复本层', '恢复本层');
+    flashButtonText(button, '已恢复', '恢复视角');
     return true;
   }
   if (action === 'reset-view-all') {
     resetCameraView('all');
-    flashButtonText(button, '已恢复全部', '恢复全部');
+    flashButtonText(button, '已重置', '重置全部');
     return true;
   }
   return false;
@@ -404,6 +413,7 @@ function updateSouthSeaInsetSize() {
 
 function getCityLabelScale(cameraDistance: number) {
   if (!controls) return 0.75;
+  let scale: number;
   if (cameraDistance <= labelReferenceDistance) {
     const nearProgress = THREE.MathUtils.clamp(
       (labelReferenceDistance - cameraDistance)
@@ -411,15 +421,18 @@ function getCityLabelScale(cameraDistance: number) {
       0,
       1,
     );
-    return THREE.MathUtils.lerp(0.75, 1, THREE.MathUtils.smoothstep(nearProgress, 0, 1));
+    scale = THREE.MathUtils.lerp(0.75, 1, THREE.MathUtils.smoothstep(nearProgress, 0, 1));
+  } else {
+    const farProgress = THREE.MathUtils.clamp(
+      (cameraDistance - labelReferenceDistance)
+        / Math.max(controls.maxDistance - labelReferenceDistance, 1),
+      0,
+      1,
+    );
+    scale = THREE.MathUtils.lerp(0.75, 0.62, THREE.MathUtils.smoothstep(farProgress, 0, 1));
   }
-  const farProgress = THREE.MathUtils.clamp(
-    (cameraDistance - labelReferenceDistance)
-      / Math.max(controls.maxDistance - labelReferenceDistance, 1),
-    0,
-    1,
-  );
-  return THREE.MathUtils.lerp(0.75, 0.62, THREE.MathUtils.smoothstep(farProgress, 0, 1));
+  if (currentState.scope === 'city') return THREE.MathUtils.clamp(scale * 0.76, 0.56, 0.7);
+  return scale;
 }
 
 function updateCityLabelPresentation() {
@@ -477,7 +490,7 @@ function getScopeTransform() {
   }
   return {
     position: new THREE.Vector3(-16, -42, -22),
-    scale: currentState.scope === 'country' ? 0.7 : 0.768,
+    scale: currentState.scope === 'country' ? 0.7 : currentState.scope === 'city' ? 0.84 : 0.768,
   };
 }
 
@@ -829,6 +842,97 @@ function applyMapTerrainUv(geometry: THREE.BufferGeometry) {
   geometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
   geometry.computeVertexNormals();
   return geometry;
+}
+
+function createTerrainSamples(features: MapFeature[]) {
+  const samples = features.flatMap((feature) => {
+    const featureName = getFeatureName(feature);
+    const datum = beijingWeatherByDistrict[featureName];
+    if (!datum) return [];
+    const center = projectPoint(featureCenter(feature));
+    return [{ point: new THREE.Vector2(center.x, center.y), elevation: datum.elevation }];
+  });
+  return samples.length >= 12 ? samples : [];
+}
+
+function getTerrainReliefAt(x: number, y: number, samples = currentTerrainSamples) {
+  if (!samples.length) return 0;
+  let weightedElevation = 0;
+  let totalWeight = 0;
+  samples.forEach((sample) => {
+    const distanceSq = sample.point.distanceToSquared(new THREE.Vector2(x, y));
+    const weight = 1 / Math.pow(distanceSq + 625, 1.08);
+    weightedElevation += sample.elevation * weight;
+    totalWeight += weight;
+  });
+  const elevation = weightedElevation / Math.max(totalWeight, 0.000001);
+  const normalized = THREE.MathUtils.clamp((elevation - 20) / 780, 0, 1);
+  const baseRelief = THREE.MathUtils.lerp(0.8, 35, Math.pow(normalized, 0.78));
+  const mountainFactor = THREE.MathUtils.smoothstep(elevation, 110, 520);
+  const ridge = (
+    Math.sin(x * 0.042 + y * 0.017)
+    + Math.sin(y * 0.058 - x * 0.013)
+  ) * 1.35 * mountainFactor;
+  return Math.max(0, baseRelief + ridge);
+}
+
+function subdivideTerrainGeometry(source: THREE.BufferGeometry, iterations: number) {
+  let geometry = source.index ? source.toNonIndexed() : source.clone();
+  for (let pass = 0; pass < iterations; pass += 1) {
+    const position = geometry.getAttribute('position') as THREE.BufferAttribute;
+    const next: number[] = [];
+    const pushTriangle = (a: THREE.Vector3, b: THREE.Vector3, c: THREE.Vector3) => {
+      next.push(a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z);
+    };
+    for (let index = 0; index < position.count; index += 3) {
+      const a = new THREE.Vector3().fromBufferAttribute(position, index);
+      const b = new THREE.Vector3().fromBufferAttribute(position, index + 1);
+      const c = new THREE.Vector3().fromBufferAttribute(position, index + 2);
+      const ab = a.clone().add(b).multiplyScalar(0.5);
+      const bc = b.clone().add(c).multiplyScalar(0.5);
+      const ca = c.clone().add(a).multiplyScalar(0.5);
+      pushTriangle(a, ab, ca);
+      pushTriangle(ab, b, bc);
+      pushTriangle(ca, bc, c);
+      pushTriangle(ab, bc, ca);
+    }
+    geometry.dispose();
+    geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(next, 3));
+  }
+  return geometry;
+}
+
+function createTerrainTopGeometry(shapes: THREE.Shape[]) {
+  const baseGeometry = new THREE.ShapeGeometry(shapes);
+  if (!currentTerrainSamples.length) return applyMapTerrainUv(baseGeometry);
+  const baseVertexCount = (baseGeometry.getAttribute('position') as THREE.BufferAttribute).count;
+  const geometry = subdivideTerrainGeometry(baseGeometry, baseVertexCount > 1800 ? 1 : 2);
+  baseGeometry.dispose();
+  const position = geometry.getAttribute('position') as THREE.BufferAttribute;
+  for (let index = 0; index < position.count; index += 1) {
+    position.setZ(index, getTerrainReliefAt(position.getX(index), position.getY(index)));
+  }
+  position.needsUpdate = true;
+  return applyMapTerrainUv(geometry);
+}
+
+function makeTerrainBoundarySegments(rings: Position[][], baseZ: number, material: THREE.Material) {
+  if (!currentTerrainSamples.length) return makeBoundarySegments(rings, baseZ, material);
+  const points: THREE.Vector3[] = [];
+  rings.forEach((ring) => {
+    for (let index = 0; index < ring.length; index += 1) {
+      const start = projectPoint(ring[index]);
+      const end = projectPoint(ring[(index + 1) % ring.length]);
+      start.z = baseZ + getTerrainReliefAt(start.x, start.y);
+      end.z = baseZ + getTerrainReliefAt(end.x, end.y);
+      points.push(start, end);
+    }
+  });
+  const geometry = new THREE.BufferGeometry().setFromPoints(points);
+  const line = new THREE.LineSegments(geometry, material);
+  line.renderOrder = 8;
+  return line;
 }
 
 function makeBoundary(ring: Position[], z: number, material: THREE.Material) {
@@ -1468,6 +1572,38 @@ function createPolygonSideWalls(polygon: Position[][], material: THREE.Material)
   return mesh;
 }
 
+function createTerrainPolygonSideWalls(polygon: Position[][], material: THREE.Material) {
+  if (!currentTerrainSamples.length) return createPolygonSideWalls(polygon, material);
+  const topZ = 44;
+  const bottomZ = 24;
+  const positions: number[] = [];
+  const indices: number[] = [];
+
+  polygon.forEach((ring) => {
+    for (let index = 0; index < ring.length; index += 1) {
+      const start = projectPoint(ring[index]);
+      const end = projectPoint(ring[(index + 1) % ring.length]);
+      const topStart = start.clone().setZ(topZ + getTerrainReliefAt(start.x, start.y));
+      const topEnd = end.clone().setZ(topZ + getTerrainReliefAt(end.x, end.y));
+      const bottomEnd = end.clone().setZ(bottomZ);
+      const bottomStart = start.clone().setZ(bottomZ);
+      const offset = positions.length / 3;
+      [topStart, topEnd, bottomEnd, bottomStart].forEach((point) => {
+        positions.push(point.x, point.y, point.z);
+      });
+      indices.push(offset, offset + 1, offset + 2, offset, offset + 2, offset + 3);
+    }
+  });
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.renderOrder = 6;
+  return mesh;
+}
+
 function createWorldSideWalls(material: THREE.Material) {
   const topZ = 46;
   const bottomZ = 30;
@@ -1888,6 +2024,7 @@ async function createMap() {
   });
 
   const renderableFeatures = getRenderableFeatures();
+  currentTerrainSamples = createTerrainSamples(renderableFeatures);
   for (let featureIndex = 0; featureIndex < renderableFeatures.length; featureIndex += 1) {
     const feature = renderableFeatures[featureIndex];
     const featureName = getFeatureName(feature);
@@ -1909,12 +2046,14 @@ async function createMap() {
     featureGroup.add(geoBase);
     featureGroup.add(makeBoundarySegments(featureRings, 21, geoBaseLineMaterial));
 
-    const liftSideMaterial = createSideGradientMaterial(0);
-    featureGroup.add(createPolygonSideWalls(featureRings, liftSideMaterial));
+    const liftSideMaterial = createSideGradientMaterial(0, currentTerrainSamples.length ? 80 : 44, 24);
+    featureGroup.add(createTerrainPolygonSideWalls(featureRings, liftSideMaterial));
     featureSideMaterials.set(featureName, [liftSideMaterial]);
 
-    const topGeometry = applyMapTerrainUv(new THREE.ShapeGeometry(shapes));
-    const mesh = new THREE.Mesh(topGeometry, topMaterial.clone());
+    const topGeometry = createTerrainTopGeometry(shapes);
+    const featureTopMaterial = topMaterial.clone();
+    if (currentTerrainSamples.length) featureTopMaterial.displacementScale = 0.8;
+    const mesh = new THREE.Mesh(topGeometry, featureTopMaterial);
     mesh.position.z = 44;
     mesh.userData.featureName = featureName;
     mesh.userData.featureCode = getFeatureCode(feature);
@@ -1923,19 +2062,19 @@ async function createMap() {
     interactiveMeshes.push(mesh);
     featureMeshes.set(featureName, [mesh]);
 
-    const topGlow = new THREE.Mesh(new THREE.ShapeGeometry(shapes), topGlowMaterial);
-    topGlow.position.z = 48;
+    const topGlow = new THREE.Mesh(topGeometry, topGlowMaterial);
+    topGlow.position.z = 44.4;
     featureGroup.add(topGlow);
 
     const highlightInstanceMaterial = highlightMaterial.clone();
     highlightInstanceMaterial.userData.targetOpacity = 0;
-    const highlightMesh = new THREE.Mesh(new THREE.ShapeGeometry(shapes), highlightInstanceMaterial);
-    highlightMesh.position.z = 52;
+    const highlightMesh = new THREE.Mesh(topGeometry, highlightInstanceMaterial);
+    highlightMesh.position.z = 44.8;
     highlightMesh.renderOrder = 7;
     featureGroup.add(highlightMesh);
     featureHighlightMaterials.set(featureName, [highlightInstanceMaterial]);
 
-    featureGroup.add(makeBoundarySegments(featureRings, 44, lineMaterial));
+    featureGroup.add(makeTerrainBoundarySegments(featureRings, 44.3, lineMaterial));
     if (props.active && featureIndex % 2 === 1) await waitForNextFrame();
     if (!props.active && featureIndex % 6 === 5) await waitForPreloadSlice();
   }
@@ -1955,13 +2094,93 @@ async function createMap() {
 
   group.add(createRotatingRingDecor());
 
+  applyWeatherLayer(activeWeatherLayer);
+
   primeGroupOpacity(group);
   return group;
+}
+
+function restoreFeatureSideMaterial(material: THREE.ShaderMaterial) {
+  material.uniforms.topColor.value.set(material.userData.weatherTop ?? mapTheme.accent);
+  material.uniforms.midColor.value.set(material.userData.weatherMid ?? mapTheme.sideMid);
+  material.uniforms.bottomColor.value.set(material.userData.weatherBottom ?? mapTheme.sideBottom);
+  material.uniforms.alpha.value = material.userData.weatherAlpha ?? 0;
+}
+
+function applyWeatherLayer(layer: BeijingWeatherLayer) {
+  activeWeatherLayer = layer;
+  if (layer === 'terrain' && currentTerrainSamples.length && !hasUserAdjustedCamera) {
+    preTerrainCameraView ??= getCurrentCameraView();
+    if (controls) controls.minDistance = 360;
+    applyCameraView(fitBuiltInCameraViewToViewport({
+      fov: 30,
+      position: [52, -420, 224],
+      target: [-18, -30, 22],
+    }));
+  } else if (layer !== 'terrain' && preTerrainCameraView && !hasUserAdjustedCamera) {
+    if (controls) controls.minDistance = 520;
+    applyCameraView(preTerrainCameraView);
+    preTerrainCameraView = undefined;
+  }
+  featureMeshes.forEach((meshes, featureName) => {
+    const visual = getBeijingWeatherVisual(featureName, layer);
+    featureLiftGroups.get(featureName)?.forEach((featureGroup) => {
+      const baseLift = currentTerrainSamples.length ? 0 : visual.lift;
+      featureGroup.userData.baseZ = baseLift;
+      featureGroup.userData.targetZ = baseLift;
+    });
+    meshes.forEach((mesh) => {
+      const material = mesh.material;
+      if (!(material instanceof THREE.MeshStandardMaterial)) return;
+      material.color.copy(visual.color);
+      material.emissive.copy(visual.emissive);
+      material.emissiveIntensity = layer === 'terrain' ? 0.16 : 0.3;
+      if (currentTerrainSamples.length) material.displacementScale = layer === 'terrain' ? 2.8 : 0.8;
+      material.opacity = 0.92;
+      material.userData.baseColor = `#${visual.color.getHexString()}`;
+      material.userData.baseEmissive = `#${visual.emissive.getHexString()}`;
+      material.userData.baseEmissiveIntensity = material.emissiveIntensity;
+      material.userData.baseOpacity = material.opacity;
+    });
+    featureSideMaterials.get(featureName)?.forEach((material) => {
+      const top = visual.color.clone().offsetHSL(0, 0.06, 0.08);
+      const mid = visual.color.clone().multiplyScalar(0.48);
+      const bottom = visual.color.clone().multiplyScalar(0.16);
+      material.userData.weatherTop = `#${top.getHexString()}`;
+      material.userData.weatherMid = `#${mid.getHexString()}`;
+      material.userData.weatherBottom = `#${bottom.getHexString()}`;
+      material.userData.weatherAlpha = layer === 'terrain' ? 0.9 : 0.62;
+      restoreFeatureSideMaterial(material);
+    });
+  });
+  window.parent.postMessage({ type: 'beijing-weather-layer-ready', layer }, '*');
+}
+
+function onWeatherLayerMessage(event: MessageEvent) {
+  const message = event.data as {
+    type?: string;
+    layer?: BeijingWeatherLayer;
+    values?: Record<string, { temperature: number; rainfall: number; elevation: number }>;
+  } | undefined;
+  if (message?.type === 'beijing-weather-data' && message.values) {
+    Object.entries(message.values).forEach(([name, value]) => {
+      if (!beijingWeatherByDistrict[name]) return;
+      beijingWeatherByDistrict[name] = { ...beijingWeatherByDistrict[name], ...value };
+    });
+    applyWeatherLayer(activeWeatherLayer);
+    return;
+  }
+  if (message?.type !== 'beijing-weather-layer') return;
+  if (!message.layer || !['temperature', 'terrain', 'rainfall'].includes(message.layer)) return;
+  applyWeatherLayer(message.layer);
 }
 
 function createCityMarkers(group: THREE.Group) {
   currentLabels.forEach((city) => {
     const anchorPoint = projectPoint(city.coord, 58);
+    if (currentTerrainSamples.length) {
+      anchorPoint.z = 44 + getTerrainReliefAt(anchorPoint.x, anchorPoint.y) + 14;
+    }
     const labelAnchor = document.createElement('div');
     labelAnchor.className = 'city-label-anchor';
 
@@ -2001,10 +2220,7 @@ function setFeatureHighlight(featureName: string) {
       group.userData.targetZ = group.userData.baseZ ?? 0;
     });
     featureSideMaterials.get(hoveredFeature)?.forEach((material) => {
-      material.uniforms.topColor.value.set(mapTheme.accent);
-      material.uniforms.midColor.value.set(mapTheme.sideMid);
-      material.uniforms.bottomColor.value.set(mapTheme.sideBottom);
-      material.uniforms.alpha.value = 0;
+      restoreFeatureSideMaterial(material);
     });
     featureHighlightMaterials.get(hoveredFeature)?.forEach((material) => {
       material.userData.targetOpacity = 0;
@@ -2022,9 +2238,10 @@ function setFeatureHighlight(featureName: string) {
 
   hoveredFeature = featureName;
   setCityLabelSelected(featureName);
+  window.parent.postMessage({ type: 'beijing-weather-hover', featureName, layer: activeWeatherLayer }, '*');
   if (!featureName) return;
   featureLiftGroups.get(featureName)?.forEach((group) => {
-    group.userData.targetZ = 16;
+    group.userData.targetZ = (group.userData.baseZ ?? 0) + 16;
   });
   featureSideMaterials.get(featureName)?.forEach((material) => {
     material.uniforms.topColor.value.set(mapTheme.accent);
@@ -2058,10 +2275,7 @@ function resetAllFeatureHighlights() {
   });
   featureSideMaterials.forEach((materials) => {
     materials.forEach((material) => {
-      material.uniforms.topColor.value.set(mapTheme.accent);
-      material.uniforms.midColor.value.set(mapTheme.sideMid);
-      material.uniforms.bottomColor.value.set(mapTheme.sideBottom);
-      material.uniforms.alpha.value = 0;
+      restoreFeatureSideMaterial(material);
     });
   });
   featureHighlightMaterials.forEach((materials) => {
@@ -2099,6 +2313,7 @@ function onPointerMove(event: PointerEvent) {
 
 function onPointerLeave() {
   resetAllFeatureHighlights();
+  window.parent.postMessage({ type: 'beijing-weather-hover', featureName: '', layer: activeWeatherLayer }, '*');
 }
 
 function isChinaFeature(feature: MapFeature) {
@@ -2166,12 +2381,17 @@ function refreshDrillControl() {
   const actionDisabled = isDrilling ? 'disabled' : '';
 
   drillControlEl.innerHTML = `
-    <button type="button" data-map-action="back" ${backDisabled}>返回上级</button>
-    <span>${scopeLabel} / ${currentState.regionName}</span>
-    <button type="button" data-map-action="save-view-default" ${actionDisabled}>保存统一</button>
-    <button type="button" data-map-action="save-view-scope" ${actionDisabled}>保存本层</button>
-    <button type="button" data-map-action="reset-view-scope" ${actionDisabled}>恢复本层</button>
-    <button type="button" data-map-action="reset-view-all" ${actionDisabled}>恢复全部</button>
+    <div class="map-drill-control__scope">
+      <i></i>
+      <span><small>MAP SCOPE</small>${scopeLabel} · ${currentState.regionName}</span>
+    </div>
+    <div class="map-drill-control__actions">
+      <button type="button" data-map-action="back" ${backDisabled}><b>↩</b> 上一级</button>
+      <button type="button" data-map-action="save-view-default" ${actionDisabled}>全局视角</button>
+      <button type="button" data-map-action="save-view-scope" ${actionDisabled}>保存视角</button>
+      <button type="button" data-map-action="reset-view-scope" ${actionDisabled}>恢复视角</button>
+      <button type="button" data-map-action="reset-view-all" ${actionDisabled}>重置全部</button>
+    </div>
   `;
   drillControlEl.querySelectorAll('button').forEach((button) => {
     button.addEventListener('click', () => {
@@ -2360,6 +2580,10 @@ function onPointerDown(event: PointerEvent) {
   raycaster.setFromCamera(pointer, camera);
   const hit = raycaster.intersectObjects(interactiveMeshes, false)[0];
   const featureName = hit?.object.userData.featureName;
+  if (typeof featureName === 'string' && currentState.scope === 'city') {
+    window.parent.postMessage({ type: 'beijing-weather-select', featureName, layer: activeWeatherLayer }, '*');
+    return;
+  }
   if (currentState.scope === 'world') {
     if (!hit || !mapGroup) return;
     const localPoint = hit.point.clone();
@@ -2514,6 +2738,7 @@ function getHostSize() {
 onMounted(() => {
   setup();
   window.addEventListener('resize', resize);
+  window.addEventListener('message', onWeatherLayerMessage);
   if (host.value && 'ResizeObserver' in window) {
     resizeObserver = new ResizeObserver(() => resize());
     resizeObserver.observe(host.value);
@@ -2525,6 +2750,7 @@ onBeforeUnmount(() => {
   if (resolutionUpgradeHandle !== undefined) globalThis.clearTimeout(resolutionUpgradeHandle);
   stopMapAnimation();
   window.removeEventListener('resize', resize);
+  window.removeEventListener('message', onWeatherLayerMessage);
   resizeObserver?.disconnect();
   resizeObserver = undefined;
   host.value?.removeEventListener('pointermove', onPointerMove);
@@ -2630,33 +2856,105 @@ onBeforeUnmount(() => {
 .map-host :deep(.map-drill-control) {
   position: absolute;
   left: 50%;
-  top: 176px;
-  z-index: 3;
+  bottom: 24px;
+  z-index: 12;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  min-height: 42px;
+  padding: 5px 6px 5px 12px;
   transform: translateX(-50%);
+  border: 1px solid color-mix(in srgb, var(--map-accent) 42%, transparent);
+  border-radius: 3px;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--map-accent) 10%, transparent), transparent 34%),
+    rgb(4 18 24 / 92%);
+  box-shadow: 0 16px 34px rgb(0 0 0 / 36%), inset 0 1px rgb(255 255 255 / 5%);
   color: var(--map-drill-text-alpha);
-  font-size: 14px;
+  font-size: 11px;
   line-height: 1;
-  text-shadow: 0 0 10px var(--map-drill-glow);
+  backdrop-filter: blur(12px);
   pointer-events: auto;
 }
 
-.map-host :deep(.map-drill-control button) {
-  height: 26px;
-  border: 1px solid var(--map-drill-border);
-  border-radius: 2px;
-  padding: 0 12px;
-  background: var(--map-drill-background);
+.map-host :deep(.map-drill-control::before) {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--map-accent), transparent);
+  opacity: 0.72;
+}
+
+.map-host :deep(.map-drill-control__scope) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 130px;
+  padding-right: 12px;
+  border-right: 1px solid color-mix(in srgb, var(--map-accent) 22%, transparent);
+}
+
+.map-host :deep(.map-drill-control__scope i) {
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--map-accent);
+  transform: rotate(45deg);
+  box-shadow: 0 0 10px var(--map-drill-glow);
+}
+
+.map-host :deep(.map-drill-control__scope span) {
+  display: grid;
+  gap: 3px;
   color: var(--map-drill-text);
-  font: inherit;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.map-host :deep(.map-drill-control__scope small) {
+  color: color-mix(in srgb, var(--map-accent) 72%, white);
+  font: 700 7px/1 ui-monospace, Consolas, monospace;
+  letter-spacing: 1.5px;
+}
+
+.map-host :deep(.map-drill-control__actions) {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.map-host :deep(.map-drill-control button) {
+  height: 30px;
+  min-width: 68px;
+  border: 1px solid color-mix(in srgb, var(--map-drill-border) 78%, transparent);
+  border-radius: 2px;
+  padding: 0 9px;
+  background: linear-gradient(180deg, rgb(31 77 67 / 74%), rgb(12 47 39 / 86%));
+  color: var(--map-drill-text);
+  font: 700 10px/1 "Microsoft YaHei", sans-serif;
   cursor: pointer;
-  box-shadow: inset 0 0 14px var(--map-drill-box-inner), 0 0 12px var(--map-drill-box-outer);
+  box-shadow: inset 0 1px rgb(255 255 255 / 8%);
+  transition: border-color 160ms ease, color 160ms ease, transform 160ms ease, background 160ms ease;
+  white-space: nowrap;
+}
+
+.map-host :deep(.map-drill-control button:hover:not(:disabled)) {
+  border-color: var(--map-accent);
+  background: linear-gradient(180deg, rgb(52 111 87 / 88%), rgb(17 62 49 / 94%));
+  color: white;
+  transform: translateY(-1px);
+}
+
+.map-host :deep(.map-drill-control button b) {
+  margin-right: 2px;
+  color: var(--map-accent);
+  font-size: 12px;
 }
 
 .map-host :deep(.map-drill-control button:disabled) {
-  opacity: 0.35;
+  opacity: 0.3;
   cursor: default;
 }
 
@@ -2733,6 +3031,43 @@ onBeforeUnmount(() => {
   overflow: hidden;
   text-align: center;
   text-overflow: ellipsis;
+}
+
+@media (max-width: 820px) {
+  .map-host :deep(.map-drill-control) {
+    left: calc(50% + 58px);
+    bottom: 16px;
+    width: auto;
+    max-width: calc(100% - 190px);
+    gap: 8px;
+    padding-left: 6px;
+  }
+
+  .map-host :deep(.map-drill-control__scope) {
+    display: none;
+  }
+
+  .map-host :deep(.map-drill-control__actions) {
+    flex: initial;
+  }
+
+  .map-host :deep(.map-drill-control button) {
+    flex: initial;
+    min-width: 66px;
+    padding: 0 5px;
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 560px) {
+  .map-host :deep(.map-drill-control) {
+    left: 50%;
+    max-width: calc(100% - 24px);
+  }
+
+  .map-host :deep(.map-drill-control button) {
+    min-width: 58px;
+  }
 }
 
 @keyframes jinhua-ripple {
