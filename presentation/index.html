@@ -7,6 +7,7 @@
 *{box-sizing:border-box}html,body{height:100%;overflow:hidden}html{scroll-snap-type:y mandatory;scroll-behavior:auto}body{margin:0;background:var(--navy);color:var(--ink);font-family:"Microsoft YaHei","Noto Sans SC","Segoe UI",sans-serif}.slide{width:100vw;height:100vh;height:100dvh;overflow:hidden;scroll-snap-align:start;scroll-snap-stop:always;display:flex;flex-direction:column;position:relative;background:#03101a}.slide-content{flex:1;display:flex;flex-direction:column;justify-content:center;max-height:100%;overflow:hidden;padding:var(--pad);position:relative;z-index:4}.slide:before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(92,236,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(92,236,255,.035) 1px,transparent 1px);background-size:clamp(34px,4vw,66px) clamp(34px,4vw,66px);mask-image:linear-gradient(90deg,#000,transparent 80%);pointer-events:none}.slide:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(105deg,rgba(0,0,0,.35),transparent 58%),radial-gradient(circle at 88% 12%,rgba(92,236,255,.1),transparent 28%)}
 .bg-city{background:#020914 url('assets/bg-city-a.png') center/cover no-repeat}.bg-tech{background:#020914 url('assets/bg-evidence-c.png') center/cover no-repeat}.bg-incident{background:#09060a url('assets/bg-incident-b.png') center/cover no-repeat}.bg-city:after,.bg-tech:after,.bg-incident:after{background:linear-gradient(90deg,rgba(1,7,15,.96) 0,rgba(1,9,18,.84) 31%,rgba(1,9,18,.12) 62%,rgba(1,9,18,.25) 100%),linear-gradient(0deg,rgba(1,7,15,.58),transparent 42%)}
 .kicker{font:700 var(--small)/1.4 Consolas,monospace;letter-spacing:.27em;color:var(--cyan);text-transform:uppercase;margin-bottom:clamp(.45rem,1.4vh,1rem)}h1,h2,h3,p{margin-top:0}h1{font-size:var(--title);line-height:1.03;letter-spacing:.035em;margin-bottom:clamp(.7rem,2vh,1.5rem);text-shadow:0 .2rem 2rem #000}h2{font-size:var(--h2);line-height:1.12;letter-spacing:.025em;margin-bottom:clamp(.6rem,1.7vh,1.25rem)}h3{font-size:var(--h3);line-height:1.25;margin-bottom:.45rem}p{font-size:var(--body);line-height:1.72;color:#b8d1d9;margin-bottom:.8rem}.lead{max-width:min(46rem,70vw);font-size:clamp(1rem,1.55vw,1.45rem);color:#d1e8ee;line-height:1.75}.accent{color:var(--cyan)}.lime{color:var(--lime)}.orange{color:var(--orange)}.muted{color:var(--muted)}.rule{width:clamp(9rem,25vw,24rem);height:3px;background:linear-gradient(90deg,var(--lime),var(--cyan),transparent);box-shadow:0 0 18px #5cecff;margin:clamp(.5rem,1.4vh,1rem) 0}.safe-left{width:min(46rem,46vw)}
+.semantic-word{display:inline;background-clip:text!important;-webkit-background-clip:text!important;color:transparent!important;-webkit-text-fill-color:transparent;text-shadow:none;filter:drop-shadow(0 0 .32rem rgba(92,236,255,.16))}.semantic-word.cyan{background:linear-gradient(105deg,#dffcff 5%,#5cecff 52%,#27bfe8 100%)}.semantic-word.lime{background:linear-gradient(105deg,#efffb2 0%,#9dff7e 48%,#d8ff4f 100%)}.semantic-word.orange{background:linear-gradient(105deg,#ffd6c5 0%,#ff9b6a 48%,#e3c879 100%)}.semantic-word.violet{background:linear-gradient(105deg,#d8c8ff 0%,#9b7cff 48%,#63dfff 100%)}.semantic-word.mint{background:linear-gradient(105deg,#c9fff0 0%,#72edc3 48%,#9dff7e 100%)}
 .eyebrow{position:absolute;left:var(--pad);top:clamp(.8rem,2.1vh,1.55rem);z-index:7;font:700 var(--small) Consolas;letter-spacing:.2em;color:#78a9b7}.page{position:absolute;right:var(--pad);bottom:clamp(.6rem,1.6vh,1.25rem);z-index:8;font:700 var(--small) Consolas;color:#78a3af;letter-spacing:.16em}.page b{color:var(--cyan);font-size:1.2em}.corner{position:absolute;width:clamp(2.2rem,4vw,4.5rem);height:clamp(2.2rem,4vw,4.5rem);z-index:5}.corner.tl{left:1.1rem;top:1.1rem;border-left:2px solid var(--cyan);border-top:2px solid var(--cyan)}.corner.br{right:1.1rem;bottom:1.1rem;border-right:2px solid var(--lime);border-bottom:2px solid var(--lime)}
 .split{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:clamp(1rem,3.5vw,4rem);align-items:center;min-height:0}.split.equal{grid-template-columns:1fr 1fr}.visual{min-width:0;min-height:0;position:relative}.photo-frame{position:relative;border:1px solid #3b7180;background:#061722;padding:clamp(.35rem,.7vw,.65rem);box-shadow:0 1.4rem 4rem #0007}.photo-frame:before,.photo-frame:after{content:"";position:absolute;width:18%;height:18%;z-index:2}.photo-frame:before{left:-1px;top:-1px;border-left:3px solid var(--cyan);border-top:3px solid var(--cyan)}.photo-frame:after{right:-1px;bottom:-1px;border-right:3px solid var(--lime);border-bottom:3px solid var(--lime)}.photo-frame img{display:block;width:100%;height:min(60vh,620px);object-fit:cover;max-height:min(60vh,620px)}.caption{font:var(--small) Consolas;color:#8eb6c1;margin-top:.55rem;letter-spacing:.05em}
 .metrics{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);background:#04141ed9;backdrop-filter:blur(8px);margin-top:clamp(1rem,3vh,2rem);max-width:60rem}.metric{padding:clamp(.8rem,1.5vw,1.3rem);border-right:1px solid var(--line)}.metric:last-child{border:0}.metric b{display:block;font:800 clamp(1.35rem,2.3vw,2.4rem) Consolas;color:#f0ffff}.metric small{display:block;margin-top:.35rem;color:#86abb6;font-size:var(--small)}
@@ -1066,6 +1067,42 @@ const SLIDE_DETAILS=[null,
   {focus:'团队分工',output:'角色覆盖交付链',evidence:'开发·测试·设计·运维'},
   {focus:'最终结论',output:'城市可视化决策',evidence:'AI·物理·路径·协同'}
 ];
+const SEMANTIC_TITLE_TERMS=[
+  {page:1,terms:[['京域智城','cyan'],['灵境哨兵','lime']]},
+  {page:2,terms:[['政治背景','orange'],['首都治理','cyan'],['现实需求','lime']]},
+  {page:3,terms:[['城市数字底座','cyan'],['看见城市','mint'],['处置事件','orange']]},
+  {page:4,terms:[['可计算','violet'],['可行动','lime'],['可复盘','mint']]},
+  {page:5,terms:[['北京全域态势','cyan'],['核心区数字孪生','lime']]},
+  {page:6,terms:[['城市坐标','cyan'],['空间','violet'],['治理','mint'],['区县','lime']]},
+  {page:7,terms:[['统一坐标','lime'],['建筑','cyan'],['道路','violet'],['事件','orange']]},
+  {page:8,terms:[['区县气象','cyan'],['风险计算输入','orange']]},
+  {page:9,terms:[['治理指标','mint'],['三个问题','lime']]},
+  {page:10,terms:[['交互终端','cyan'],['底层数据','violet'],['职责清晰','lime']]},
+  {page:11,terms:[['状态变化','orange'],['下一轮计算','lime']]},
+  {page:12,terms:[['危化品事故','orange'],['全链路','lime'],['演示入口','cyan']]},
+  {page:13,terms:[['现场操控','cyan'],['一次处置','orange']]},
+  {page:14,terms:[['图片','orange'],['本地','cyan'],['ONNX 推理','violet']]},
+  {page:15,terms:[['模型','violet'],['能够被检验','lime']]},
+  {page:16,terms:[['Gaussian Plume','violet'],['随风传播','orange']]},
+  {page:17,terms:[['风险区','orange'],['道路权重','violet'],['重新搜索','lime']]},
+  {page:18,terms:[['智能体','violet'],['同一事件','orange'],['责任分工','mint']]},
+  {page:19,terms:[['救援动画','cyan'],['车在移动','lime']]},
+  {page:20,terms:[['演示结束','cyan'],['处置记录','mint']]},
+  {page:21,terms:[['竞争力','cyan'],['单个模型','orange'],['完整系统能力','lime']]},
+  {page:22,terms:[['创新','orange'],['城市事件决策闭环','lime']]},
+  {page:23,terms:[['团队能力','cyan'],['项目交付链','mint']]},
+  {page:24,terms:[['城市看得见','cyan'],['让处置有依据','lime']]}
+];
+function decorateSemanticTypography(controller){
+  controller.slides.forEach((slide,index)=>{
+    const config=SEMANTIC_TITLE_TERMS[index];const heading=slide.querySelector('h1,h2');
+    if(!config||!heading)return;slide.dataset.semanticColor=config.terms.map(([,color])=>color).join(' ');
+    const terms=config.terms.map(([text,color])=>({text,color})).sort((a,b)=>b.text.length-a.text.length);
+    const walker=document.createTreeWalker(heading,NodeFilter.SHOW_TEXT);const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
+    nodes.forEach(node=>{const source=node.nodeValue;if(!source.trim())return;let cursor=0;const fragment=document.createDocumentFragment();
+      while(cursor<source.length){let match=null;for(const term of terms){const at=source.indexOf(term.text,cursor);if(at>=0&&(!match||at<match.at)){match={...term,at}}}if(!match){fragment.append(source.slice(cursor));break}if(match.at>cursor)fragment.append(source.slice(cursor,match.at));const span=document.createElement('span');span.className=`semantic-word ${match.color}`;span.textContent=match.text;fragment.append(span);cursor=match.at+match.text.length}node.replaceWith(fragment)});
+  });
+}
 
 class EnhancedPresentationController{
   constructor(){
@@ -1141,6 +1178,7 @@ upgradePolicyDocuments();
 normalizeContentVisualRatios();
 const deckController=new EnhancedPresentationController();
 decorateLectureDensity(deckController);
+decorateSemanticTypography(deckController);
 const projectIntroSlide=deckController.slides[2];
 const projectIntroChapter=projectIntroSlide?.querySelector('.band-chapter b');
 const projectIntroAxis=projectIntroSlide?.querySelector('.chapter-axis');
