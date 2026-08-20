@@ -569,13 +569,6 @@
 @media(max-height:820px){.team-delivery-slide .slide-content{padding-top:5rem}.team-delivery-map{padding-top:1.8rem}.team-lane:before{top:-1.7rem}.team-person{grid-template-columns:3.2rem 1fr;margin-bottom:.35rem}.team-photo-slot{max-height:4rem}.team-proof{padding:.3rem 0}.team-handoff{margin-top:.55rem}}
 /* GLOBAL PAGE FLIP MOTION SYSTEM: directional page turns plus layered content and media reveals. */
 html{perspective:1600px;perspective-origin:50% 50%}
-body.fx-screen-forward:before,body.fx-screen-backward:before,body.fx-screen-forward:after,body.fx-screen-backward:after{content:"";position:fixed;inset:0;z-index:9999;pointer-events:none;mix-blend-mode:screen}
-body[data-fx-mode="hologram"].fx-screen-forward:before,body[data-fx-mode="hologram"].fx-screen-backward:before{background:repeating-linear-gradient(0deg,rgba(92,236,255,.72) 0 2px,transparent 2px 22px),linear-gradient(90deg,transparent,rgba(92,236,255,.28),transparent);animation:holoScan .7s steps(8,end) both}
-body[data-fx-mode="hologram"].fx-screen-forward:after,body[data-fx-mode="hologram"].fx-screen-backward:after{inset:0;background:repeating-linear-gradient(0deg,transparent 0 7vh,rgba(216,255,79,.28) 7vh 7.7vh,transparent 7.7vh 14vh);filter:none;animation:holoSlices .7s steps(6,end) both}
-body[data-fx-mode="lighttrail"].fx-screen-forward:before,body[data-fx-mode="lighttrail"].fx-screen-backward:before,body[data-fx-mode="lighttrail"].fx-screen-forward:after,body[data-fx-mode="lighttrail"].fx-screen-backward:after{display:none}
-body[data-fx-mode="glitch"].fx-screen-forward:before,body[data-fx-mode="glitch"].fx-screen-backward:before{background:repeating-linear-gradient(0deg,rgba(255,63,79,.25) 0 3px,transparent 3px 12px),linear-gradient(90deg,rgba(255,0,70,.25),transparent 34%,rgba(0,240,255,.3));animation:glitchNoise .66s steps(10,end) both}
-body[data-fx-mode="glitch"].fx-screen-forward:after,body[data-fx-mode="glitch"].fx-screen-backward:after{inset:0;background:linear-gradient(90deg,rgba(255,45,90,.38),transparent 48%,rgba(0,235,255,.4));filter:none;animation:glitchSplit .66s steps(7,end) both}
-.fx-mode-hologram .slide.page-flip-forward,.fx-mode-hologram .slide.page-flip-backward{animation:holoPage .7s steps(7,end) both}.fx-mode-glitch .slide.page-flip-forward,.fx-mode-glitch .slide.page-flip-backward{animation:glitchPage .66s steps(8,end) both}
 .slide.page-flip-forward{transform-origin:50% 0;animation:pageFlipForward .72s cubic-bezier(.18,.72,.18,1) both}
 .slide.page-flip-backward{transform-origin:50% 100%;animation:pageFlipBackward .72s cubic-bezier(.18,.72,.18,1) both}
 .slide.fx-enter .eyebrow,.slide.fx-enter .lecture-heading-band{animation:contentRise .5s .08s both}
@@ -591,26 +584,18 @@ body[data-fx-mode="glitch"].fx-screen-forward:after,body[data-fx-mode="glitch"].
 .slide.fx-enter :is(.flow-node,.time-step,.architecture-lane,.team-lane){animation:nodeIgnite .74s cubic-bezier(.16,.76,.18,1) both}
 .slide.fx-enter :is(.flow-node,.time-step,.architecture-lane,.team-lane):nth-child(2){animation-delay:.12s}.slide.fx-enter :is(.flow-node,.time-step,.architecture-lane,.team-lane):nth-child(3){animation-delay:.2s}.slide.fx-enter :is(.flow-node,.time-step,.architecture-lane,.team-lane):nth-child(4){animation-delay:.28s}.slide.fx-enter :is(.flow-node,.time-step,.architecture-lane,.team-lane):nth-child(n+5){animation-delay:.36s}
 .slide.fx-enter .photo-frame:before,.slide.fx-enter .photo-frame:after{animation:borderFlow 1.15s .18s cubic-bezier(.16,.76,.18,1) both}
-.slide.active:after{animation:cityBreath 6s ease-in-out infinite alternate}
-.slide.active :is(h1,h2){animation:headingAura 3.2s ease-in-out infinite alternate}
-.slide.active :is(.photo-frame,.content-visual-ratio,.objective-visual,.city-views-visual,.closed-loop-visual,.demo-sequence-visual,.vision-evidence-canvas,.regression-visual,.plume){animation:visualHover 5.5s ease-in-out infinite alternate}
 @keyframes titleIgnite{0%{opacity:0;transform:translateY(1.2rem) scale(.975);filter:blur(10px) brightness(.7)}48%{opacity:1;filter:blur(0) brightness(1.55) drop-shadow(0 0 1.3rem rgba(92,236,255,.62))}100%{transform:none;filter:drop-shadow(0 0 .28rem rgba(92,236,255,.18))}}
 @keyframes visualDepth{0%{opacity:.08;transform:scale(.94) translateY(1rem);filter:blur(12px) saturate(.55) brightness(.62)}58%{opacity:1;transform:scale(1.012);filter:blur(0) saturate(1.24) brightness(1.16)}100%{transform:none;filter:none}}
 @keyframes numberBloom{0%{opacity:0;transform:scale(.72);filter:blur(7px)}55%{opacity:1;transform:scale(1.12);filter:brightness(1.8) drop-shadow(0 0 .75rem currentColor)}100%{transform:none;filter:none}}
 @keyframes nodeIgnite{0%{opacity:0;transform:translateY(1rem);filter:brightness(.55)}62%{opacity:1;transform:translateY(-.12rem);filter:brightness(1.35) drop-shadow(0 0 .45rem rgba(92,236,255,.42))}100%{transform:none;filter:none}}
 @keyframes borderFlow{0%{opacity:0;clip-path:inset(0 100% 100% 0)}55%{opacity:1;filter:brightness(2) drop-shadow(0 0 .8rem var(--cyan))}100%{clip-path:inset(0);filter:none}}
-@keyframes cityBreath{0%{opacity:.72;filter:saturate(.92) brightness(.9)}100%{opacity:1;filter:saturate(1.12) brightness(1.08)}}
-@keyframes headingAura{0%{text-shadow:0 .2rem 2rem #000,0 0 .25rem rgba(92,236,255,.2);filter:brightness(.96)}100%{text-shadow:0 .2rem 2rem #000,0 0 1rem rgba(92,236,255,.72),0 0 2.4rem rgba(216,255,79,.22);filter:brightness(1.16)}}
-@keyframes visualHover{0%{transform:translateY(0) scale(1);filter:brightness(.96) saturate(.96);box-shadow:0 1.4rem 4rem #0007}100%{transform:translateY(-.42rem) scale(1.008);filter:brightness(1.08) saturate(1.12);box-shadow:0 1.8rem 4.8rem #0009,0 0 1.6rem rgba(92,236,255,.2)}}
-@media(prefers-reduced-motion:reduce){.rich-motion .slide.active:after,.rich-motion .slide.active :is(h1,h2,.photo-frame,.content-visual-ratio,.objective-visual,.city-views-visual,.closed-loop-visual,.demo-sequence-visual,.vision-evidence-canvas,.regression-visual,.plume),.rich-motion .slide.fx-enter :is(h1,h2,.photo-frame,.content-visual-ratio,.objective-visual,.city-views-visual,.closed-loop-visual,.demo-sequence-visual,.vision-evidence-canvas,.regression-visual,.plume,.metric b,.architecture-index,.detail-index,.team-lane:before,.flow-node,.time-step,.architecture-lane,.team-lane),.rich-motion .slide.fx-enter .photo-frame:before,.rich-motion .slide.fx-enter .photo-frame:after{animation:none!important}}
+@media(prefers-reduced-motion:reduce){.rich-motion .slide.fx-enter :is(h1,h2,.photo-frame,.content-visual-ratio,.objective-visual,.city-views-visual,.closed-loop-visual,.demo-sequence-visual,.vision-evidence-canvas,.regression-visual,.plume,.metric b,.architecture-index,.detail-index,.team-lane:before,.flow-node,.time-step,.architecture-lane,.team-lane),.rich-motion .slide.fx-enter .photo-frame:before,.rich-motion .slide.fx-enter .photo-frame:after{animation:none!important}}
 @keyframes pageFlipForward{0%{opacity:.12;transform:translateY(7vh) rotateX(-13deg) scale(.985);filter:blur(8px) brightness(.68)}55%{opacity:1;transform:translateY(-.6vh) rotateX(2deg) scale(1.002);filter:blur(0) brightness(1.08)}100%{opacity:1;transform:none;filter:none}}
 @keyframes pageFlipBackward{0%{opacity:.12;transform:translateY(-7vh) rotateX(13deg) scale(.985);filter:blur(8px) brightness(.68)}55%{opacity:1;transform:translateY(.6vh) rotateX(-2deg) scale(1.002);filter:blur(0) brightness(1.08)}100%{opacity:1;transform:none;filter:none}}
 @keyframes contentRise{0%{opacity:0;transform:translateY(1.1rem);filter:blur(4px)}100%{opacity:1;transform:none;filter:none}}
 @keyframes visualReveal{0%{opacity:.18;transform:scale(.975);filter:saturate(.6) brightness(.7)}100%{opacity:1;transform:none;filter:none}}
 @keyframes dataPulse{0%{opacity:.2;filter:brightness(.65)}55%{opacity:1;filter:brightness(1.7) drop-shadow(0 0 .55rem currentColor)}100%{opacity:1;filter:none}}
 @keyframes frameTrace{0%{opacity:.15;clip-path:inset(0 100% 100% 0)}100%{opacity:1;clip-path:inset(0)}}
-@keyframes holoScan{0%{opacity:0;transform:translateY(-18%)}25%{opacity:.95}100%{opacity:0;transform:translateY(18%)}}@keyframes holoSlices{0%{opacity:0;transform:translateX(-8%)}20%{opacity:.9}45%{transform:translateX(6%)}70%{transform:translateX(-2%)}100%{opacity:0;transform:none}}@keyframes holoPage{0%{opacity:.1;clip-path:polygon(0 0,100% 0,100% 8%,0 13%,0 22%,100% 17%,100% 36%,0 41%,0 56%,100% 51%,100% 72%,0 78%,0 91%,100% 86%,100% 100%,0 100%);transform:translateX(3%);filter:brightness(1.8) saturate(.6)}55%{opacity:1;transform:translateX(-.5%);filter:brightness(1.12)}100%{clip-path:inset(0);transform:none;filter:none}}
-@keyframes glitchNoise{0%{opacity:0;transform:translateY(-3%)}18%{opacity:.8}36%{transform:translateY(2%)}54%{transform:translateY(-1%)}100%{opacity:0;transform:none}}@keyframes glitchSplit{0%{opacity:0;transform:translateX(-2%)}24%{opacity:.9;transform:translateX(2%)}48%{transform:translateX(-1.2%)}72%{opacity:.65;transform:translateX(.5%)}100%{opacity:0;transform:none}}@keyframes glitchPage{0%{opacity:.15;transform:translate(-2%,1%);filter:hue-rotate(90deg) contrast(1.8)}20%{transform:translate(2%,-1%);filter:hue-rotate(-45deg) contrast(1.5)}42%{transform:translate(-1%,0);filter:saturate(2)}68%{opacity:1;transform:translate(.4%,0);filter:brightness(1.25)}100%{transform:none;filter:none}}
 @media(prefers-reduced-motion:reduce){body.fx-screen-forward:before,body.fx-screen-backward:before,body.fx-screen-forward:after,body.fx-screen-backward:after,.slide.page-flip-forward,.slide.page-flip-backward,.slide.fx-enter .eyebrow,.slide.fx-enter .lecture-heading-band,.slide.fx-enter .slide-content>*,.slide.fx-enter .safe-left>*,.slide.fx-enter :is(.photo-frame,.content-visual-ratio,.objective-visual,.city-views-visual,.closed-loop-visual,.demo-sequence-visual,.vision-evidence-canvas,.regression-visual,.plume),.slide.fx-enter :is(.metric b,.architecture-index,.detail-index),.slide.fx-enter .lecture-frame{animation:none!important}}
 .incident-context-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.65rem;margin-top:clamp(1rem,2vh,1.5rem)}
 .incident-context{padding:clamp(.7rem,1vw,1rem);border:1px solid #285c6c;background:rgba(5,25,36,.88)}
@@ -1096,28 +1081,13 @@ class EnhancedPresentationController{
   bind(){this.tocTrigger.addEventListener('click',()=>this.toggleToc());this.tocOverlay.querySelector('.toc-close').addEventListener('click',()=>this.closeToc());this.tocOverlay.querySelector('.toc-backdrop').addEventListener('click',()=>this.closeToc());addEventListener('keydown',event=>{if(event.repeat)return;if(event.key==='Escape'&&this.tocOpen){event.preventDefault();this.closeToc();return}if(this.tocOpen)return;if(['ArrowDown','ArrowRight','PageDown',' '].includes(event.key)){event.preventDefault();this.next()}if(['ArrowUp','ArrowLeft','PageUp'].includes(event.key)){event.preventDefault();this.prev()}if(event.key==='Home')this.go(0);if(event.key==='End')this.go(this.slides.length-1)});addEventListener('wheel',event=>{if(this.tocOpen||Math.abs(event.deltaY)<18)return;clearTimeout(this.wheelUnlockTimer);this.wheelUnlockTimer=setTimeout(()=>this.lock=false,220);if(this.lock)return;this.lock=true;event.deltaY>0?this.next():this.prev()},{passive:true});addEventListener('touchstart',event=>{if(this.tocOpen||this.lock)return;this.touchY=event.touches[0].clientY},{passive:true});addEventListener('touchend',event=>{if(this.tocOpen||this.lock)return;const delta=this.touchY-event.changedTouches[0].clientY;if(Math.abs(delta)>45){this.lock=true;delta>0?this.next():this.prev();setTimeout(()=>this.lock=false,1000)}},{passive:true});addEventListener('hashchange',()=>this.go(this.currentFromHash(),false))}
   toggleToc(force){const next=typeof force==='boolean'?force:!this.tocOpen;if(next&&this.index===0)return;this.tocOpen=next;this.tocOverlay.hidden=!next;document.body.classList.toggle('toc-open',next);this.tocTrigger.setAttribute('aria-expanded',String(next));if(next)requestAnimationFrame(()=>this.tocOverlay.querySelector('.toc-page.active')?.focus());else this.tocTrigger.focus({preventScroll:true})}
   closeToc(){if(this.tocOpen)this.toggleToc(false)}
-  selectTransitionMode(slide){
-    const page=this.slides.indexOf(slide)+1;
-    const chapterPages=new Set([2,6,12,14,21,24]);
-    if(chapterPages.has(page))return'hologram';
-    if(page>=15&&page<=20)return'glitch';
-    if(slide.querySelector(':is(.photo-frame,.content-visual-ratio,.objective-visual,.city-views-visual,.closed-loop-visual,.demo-sequence-visual,.vision-evidence-canvas,.regression-visual,.plume)'))return'lighttrail';
-    return'hologram';
-  }
   runPageTransition(slide,direction){
     if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
-    const requestedFx=new URLSearchParams(location.search).get('fx');
-    const allowedFx=new Set(['hologram','lighttrail','glitch']);
-    const fxMode=allowedFx.has(requestedFx)?requestedFx:this.selectTransitionMode(slide);
-    document.body.classList.remove('fx-mode-hologram','fx-mode-lighttrail','fx-mode-glitch');
-    document.body.classList.add(`fx-mode-${fxMode}`);
-    document.body.classList.remove('fx-screen-forward','fx-screen-backward');
     slide.classList.remove('page-flip-forward','page-flip-backward','fx-enter');
     void document.body.offsetWidth;
-    document.body.classList.add(direction>=0?'fx-screen-forward':'fx-screen-backward');
     slide.classList.add(direction>=0?'page-flip-forward':'page-flip-backward','fx-enter');
     clearTimeout(this.motionTimer);
-    this.motionTimer=setTimeout(()=>{document.body.classList.remove('fx-screen-forward','fx-screen-backward');slide.classList.remove('page-flip-forward','page-flip-backward','fx-enter')},1300);
+    this.motionTimer=setTimeout(()=>slide.classList.remove('page-flip-forward','page-flip-backward','fx-enter'),1300);
   }
   go(i,smooth=true){const previous=this.index;const next=Math.max(0,Math.min(this.slides.length-1,i));this.index=next;if(this.tocOpen)this.closeToc();const slide=this.slides[this.index];this.slides.forEach((candidate,j)=>candidate.classList.toggle('active',j===this.index));slide.scrollIntoView({behavior:'auto',block:'start'});history.replaceState(null,'',`#slide-${this.index+1}`);this.update();if(smooth&&next!==previous)this.runPageTransition(slide,next-previous)}
   next(){this.go(this.index+1)}prev(){this.go(this.index-1)}
