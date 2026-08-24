@@ -5,12 +5,24 @@ import { fileURLToPath } from 'node:url';
 const htmlPath = fileURLToPath(new URL('./index.html', import.meta.url));
 const html = readFileSync(htmlPath, 'utf8');
 
-const desktopRailRule = '/* Desktop: give slides 03 and 05 a compact, dedicated evidence rail */\n.project-introduction .slide-detail-rail,.scope-boundary-slide .slide-detail-rail{display:grid!important;min-height:clamp(6.5rem,13vh,9rem);bottom:clamp(1.3rem,2.4vh,2rem)}';
+const desktopRailRule = '/* Desktop: give slides 03 and 05 a compact, dedicated evidence rail */\n.project-introduction.lecture .slide-detail-rail,.scope-boundary-slide.lecture .slide-detail-rail{display:grid!important;min-height:clamp(6rem,11vh,7.5rem);bottom:clamp(1.1rem,2vh,1.7rem)}';
 assert.ok(html.includes(desktopRailRule), 'slides 03 and 05 must render a compact desktop evidence rail');
-assert.ok(html.includes('.project-introduction.lecture .slide-content,.scope-boundary-slide.lecture .slide-content{padding-bottom:clamp(9rem,16vh,11.5rem)}'), 'slides 03 and 05 must reserve space for the evidence rail');
+assert.ok(html.includes('.project-introduction.lecture .slide-content,.scope-boundary-slide.lecture .slide-content{padding-bottom:clamp(8.25rem,13.5vh,9.25rem)}'), 'slides 03 and 05 must reserve space for the evidence rail');
 assert.ok(html.includes('.scope-boundary-layout{grid-template-columns:minmax(0,1.12fr) minmax(26rem,.88fr)}'), 'slide 05 desktop copy must receive enough width to avoid vertical wrapping overflow');
 assert.ok(html.includes('.scope-boundary-copy h2{font-size:clamp(3.2rem,4.3vw,5.2rem)}'), 'slide 05 desktop heading must fit in two lines');
 assert.ok(html.includes('.scope-boundary-slide .scope-verdict{display:none!important}'), 'slide 05 desktop must remove the duplicate overlapping verdict');
+
+const compactDesktopRules = [
+  '/* Compact desktop typography for slides 03 and 05 */',
+  '.project-introduction .intro-operation-matrix{min-height:8.5rem;grid-template-rows:auto repeat(4,minmax(1.55rem,1fr))}',
+  '.project-introduction .intro-operation-matrix article{padding-top:.18rem;padding-bottom:.18rem}',
+  '.project-introduction .intro-operation-matrix b{font-size:clamp(.74rem,.96vw,1rem)}',
+  '.project-introduction .intro-operation-matrix span{font-size:clamp(.52rem,.64vw,.68rem);line-height:1.3}',
+  '.scope-boundary-slide .scope-evidence-step{padding:clamp(.42rem,.7vh,.62rem) 0}',
+  '.scope-boundary-slide .scope-evidence-step p{font-size:clamp(.66rem,.78vw,.82rem);line-height:1.35}',
+  '.scope-boundary-slide .scope-evidence-step h3{font-size:clamp(1rem,1.35vw,1.45rem)}'
+];
+for (const rule of compactDesktopRules) assert.ok(html.includes(rule), `missing compact desktop rule: ${rule}`);
 
 const requiredRules = [
   '/* Slide 03 + 05 evidence rail and narrow-screen overflow fix */',

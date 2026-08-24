@@ -1015,9 +1015,26 @@ html{perspective:1600px;perspective-origin:50% 50%}
 }
 /* Slide 03 + 05 evidence rail and narrow-screen overflow fix */
 /* Desktop: give slides 03 and 05 a compact, dedicated evidence rail */
-.project-introduction .slide-detail-rail,.scope-boundary-slide .slide-detail-rail{display:grid!important;min-height:clamp(6.5rem,13vh,9rem);bottom:clamp(1.3rem,2.4vh,2rem)}
-.project-introduction.lecture .slide-content,.scope-boundary-slide.lecture .slide-content{padding-bottom:clamp(9rem,16vh,11.5rem)}
+.project-introduction.lecture .slide-detail-rail,.scope-boundary-slide.lecture .slide-detail-rail{display:grid!important;min-height:clamp(6rem,11vh,7.5rem);bottom:clamp(1.1rem,2vh,1.7rem)}
+.project-introduction.lecture .slide-content,.scope-boundary-slide.lecture .slide-content{padding-bottom:clamp(8.25rem,13.5vh,9.25rem)}
 .project-introduction .detail-cell,.scope-boundary-slide .detail-cell{padding:clamp(.42rem,.7vw,.65rem) clamp(.58rem,.85vw,.85rem)}
+/* Compact desktop typography for slides 03 and 05 */
+.project-introduction .opening-title{margin-bottom:clamp(.3rem,.55vh,.45rem)}
+.project-introduction .intro-story{gap:clamp(.24rem,.45vh,.38rem)}
+.project-introduction .intro-position{padding:.42rem .62rem;font-size:clamp(.54rem,.68vw,.7rem);line-height:1.35}
+.project-introduction .intro-system{padding:.45rem .56rem}.project-introduction .intro-thesis{margin-top:.4rem;padding:.44rem .62rem;font-size:clamp(.58rem,.76vw,.8rem);line-height:1.38}
+.project-introduction .intro-operation-matrix{min-height:8.5rem;grid-template-rows:auto repeat(4,minmax(1.55rem,1fr))}
+.project-introduction .intro-operation-matrix article{padding-top:.18rem;padding-bottom:.18rem}
+.project-introduction .intro-operation-matrix b{font-size:clamp(.74rem,.96vw,1rem)}
+.project-introduction .intro-operation-matrix span{font-size:clamp(.52rem,.64vw,.68rem);line-height:1.3}
+.project-introduction .intro-demo-timeline{padding:.28rem .42rem}
+.scope-boundary-copy h2{margin:.38rem 0 .58rem}.scope-boundary-copy .scope-lead{font-size:clamp(.78rem,.96vw,1.02rem);line-height:1.48;margin-bottom:.42rem}
+.scope-boundary-slide .scope-evidence-rail{margin-top:.25rem}
+.scope-boundary-slide .scope-evidence-step{padding:clamp(.42rem,.7vh,.62rem) 0}
+.scope-boundary-slide .scope-evidence-step p{font-size:clamp(.66rem,.78vw,.82rem);line-height:1.35}
+.scope-boundary-slide .scope-evidence-step h3{font-size:clamp(1rem,1.35vw,1.45rem)}
+.scope-boundary-slide .scope-evidence-step small{font-size:.62rem;margin-bottom:.15rem}.scope-boundary-slide .scope-evidence-step b{font-size:clamp(.68rem,.82vw,.86rem);margin-top:.12rem}
+.scope-boundary-slide .scope-disclaimer{margin-top:.42rem;padding:.48rem 0 .48rem .75rem;font-size:clamp(.66rem,.78vw,.82rem);line-height:1.4}
 .scope-boundary-layout{grid-template-columns:minmax(0,1.12fr) minmax(26rem,.88fr)}
 .scope-boundary-copy h2{font-size:clamp(3.2rem,4.3vw,5.2rem)}
 .scope-boundary-slide .scope-verdict{display:none!important}
