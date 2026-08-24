@@ -20,7 +20,8 @@ const compactDesktopRules = [
   '.project-introduction .intro-operation-matrix span{font-size:clamp(.52rem,.64vw,.68rem);line-height:1.3}',
   '.scope-boundary-slide .scope-evidence-step{padding:clamp(.42rem,.7vh,.62rem) 0}',
   '.scope-boundary-slide .scope-evidence-step p{font-size:clamp(.66rem,.78vw,.82rem);line-height:1.35}',
-  '.scope-boundary-slide .scope-evidence-step h3{font-size:clamp(1rem,1.35vw,1.45rem)}'
+  '.scope-boundary-slide .scope-evidence-step h3{font-size:clamp(1rem,1.35vw,1.45rem)}',
+  '.scope-boundary-slide .scope-evidence-step>div:first-child{padding-left:clamp(1.35rem,1.7vw,1.8rem)}'
 ];
 for (const rule of compactDesktopRules) assert.ok(html.includes(rule), `missing compact desktop rule: ${rule}`);
 
