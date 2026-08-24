@@ -1013,20 +1013,23 @@ html{perspective:1600px;perspective-origin:50% 50%}
   .team-photo-slot{max-height:2.95rem}.team-role{font-size:.4rem;letter-spacing:.06em}.team-lane h3{font-size:.8rem}
   .team-mission{font-size:.52rem;line-height:1.2;margin:0}.team-delivery-slide .team-proof{display:none}.team-handoff{display:none}
 }
-/* Slide 03 + 05 narrow-screen overflow fix */
-/* Desktop: remove the injected detail rail from slides 03 and 05 */
-.project-introduction .slide-detail-rail,.scope-boundary-slide .slide-detail-rail{display:none!important}
-.scope-boundary-slide .slide-content{padding-bottom:clamp(2.5rem,4vh,3rem)}
+/* Slide 03 + 05 evidence rail and narrow-screen overflow fix */
+/* Desktop: give slides 03 and 05 a compact, dedicated evidence rail */
+.project-introduction .slide-detail-rail,.scope-boundary-slide .slide-detail-rail{display:grid!important;min-height:clamp(6.5rem,13vh,9rem);bottom:clamp(1.3rem,2.4vh,2rem)}
+.project-introduction.lecture .slide-content,.scope-boundary-slide.lecture .slide-content{padding-bottom:clamp(9rem,16vh,11.5rem)}
+.project-introduction .detail-cell,.scope-boundary-slide .detail-cell{padding:clamp(.42rem,.7vw,.65rem) clamp(.58rem,.85vw,.85rem)}
 .scope-boundary-layout{grid-template-columns:minmax(0,1.12fr) minmax(26rem,.88fr)}
 .scope-boundary-copy h2{font-size:clamp(3.2rem,4.3vw,5.2rem)}
 .scope-boundary-slide .scope-verdict{display:none!important}
 @media(max-width:900px){
-  .project-introduction .slide-content,.scope-boundary-slide .slide-content{min-height:100svh;padding-top:max(7.5rem,calc(7.5rem + env(safe-area-inset-top)));overflow-x:clip;overflow-y:auto;overscroll-behavior:contain}
+  .project-introduction,.scope-boundary-slide{overflow-x:clip;overflow-y:auto;overscroll-behavior:contain}
+  .project-introduction .slide-content,.scope-boundary-slide .slide-content{flex:none;min-height:100svh;padding-top:max(7.5rem,calc(7.5rem + env(safe-area-inset-top)));padding-bottom:1.5rem;overflow:visible}
   .project-introduction :is(.intro-cockpit,.intro-story,.intro-operation-matrix),.scope-boundary-slide :is(.scope-boundary-layout,.scope-boundary-copy){height:auto;min-height:0;overflow:visible}
   .scope-boundary-slide .slide-content{display:block}
   .scope-boundary-layout{grid-template-columns:minmax(0,1fr);grid-template-rows:auto}
   .scope-boundary-visual{width:100%;max-width:100%;margin-inline:0;transform:none}
   .scope-boundary-slide .scope-verdict{display:grid!important}
+  .project-introduction.lecture .slide-detail-rail,.scope-boundary-slide.lecture .slide-detail-rail{position:relative;left:auto;right:auto;bottom:auto;grid-template-columns:minmax(0,1fr);margin:1rem var(--pad) 4rem;min-height:0}
 }
 @media(max-width:700px){
   .project-introduction .slide-content,.scope-boundary-slide .slide-content{padding-inline:clamp(1rem,5vw,1.6rem);padding-bottom:1.5rem}
