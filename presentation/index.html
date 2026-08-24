@@ -1018,6 +1018,10 @@ html{perspective:1600px;perspective-origin:50% 50%}
 .project-introduction.lecture .slide-detail-rail,.scope-boundary-slide.lecture .slide-detail-rail{display:grid!important;min-height:clamp(6rem,11vh,7.5rem);bottom:clamp(1.1rem,2vh,1.7rem)}
 .project-introduction.lecture .slide-content,.scope-boundary-slide.lecture .slide-content{padding-bottom:clamp(8.25rem,13.5vh,9.25rem)}
 .project-introduction .detail-cell,.scope-boundary-slide .detail-cell{padding:clamp(.42rem,.7vw,.65rem) clamp(.58rem,.85vw,.85rem)}
+/* Open evidence band: separators instead of cards */
+.project-introduction.lecture .slide-detail-rail,.scope-boundary-slide.lecture .slide-detail-rail{border:0;border-top:1px solid rgba(91,226,248,.42);background:linear-gradient(90deg,rgba(3,25,36,.78),rgba(3,18,28,.28) 72%,transparent);box-shadow:none}
+.project-introduction.lecture .detail-cell,.scope-boundary-slide.lecture .detail-cell{border:0;border-left:1px solid rgba(91,226,248,.28);background:transparent;box-shadow:none!important}
+.project-introduction.lecture .detail-cell:first-child,.scope-boundary-slide.lecture .detail-cell:first-child{border-left:0}
 /* Compact desktop typography for slides 03 and 05 */
 .project-introduction .opening-title{margin-bottom:clamp(.3rem,.55vh,.45rem)}
 .project-introduction .intro-story{gap:clamp(.24rem,.45vh,.38rem)}
