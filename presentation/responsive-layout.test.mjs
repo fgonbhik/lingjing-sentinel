@@ -13,10 +13,10 @@ assert.ok(html.includes('.scope-boundary-copy h2{font-size:clamp(3.2rem,4.3vw,5.
 assert.ok(html.includes('.scope-boundary-slide .scope-verdict{display:none!important}'), 'slide 05 desktop must remove the duplicate overlapping verdict');
 
 const openEvidenceRailRules = [
-  '/* Open evidence band: separators instead of cards */',
-  '.project-introduction.lecture .slide-detail-rail,.scope-boundary-slide.lecture .slide-detail-rail{border:0;border-top:1px solid rgba(91,226,248,.42);background:linear-gradient(90deg,rgba(3,25,36,.78),rgba(3,18,28,.28) 72%,transparent);box-shadow:none}',
-  '.project-introduction.lecture .detail-cell,.scope-boundary-slide.lecture .detail-cell{border:0;border-left:1px solid rgba(91,226,248,.28);background:transparent;box-shadow:none!important}',
-  '.project-introduction.lecture .detail-cell:first-child,.scope-boundary-slide.lecture .detail-cell:first-child{border-left:0}'
+  '/* Global open evidence band: separators instead of cards */',
+  '.slide.lecture .slide-detail-rail{border:0;border-top:1px solid rgba(91,226,248,.42);background:linear-gradient(90deg,rgba(3,25,36,.78),rgba(3,18,28,.28) 72%,transparent);box-shadow:none}',
+  '.slide.lecture .detail-cell{border:0;border-left:1px solid rgba(91,226,248,.28);background:transparent;box-shadow:none!important}',
+  '.slide.lecture .detail-cell:first-child{border-left:0}'
 ];
 for (const rule of openEvidenceRailRules) assert.ok(html.includes(rule), `missing open evidence rail rule: ${rule}`);
 
